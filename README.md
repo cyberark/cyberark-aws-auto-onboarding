@@ -1,14 +1,13 @@
-Protecting privileged accounts is never an easy task. They must be identified and managed, but in most cases it takes time and effort to cover the entire organization network. This process is challenged even more in Cloud environments, due to its dynamic nature. Instances (containers and virtual servers) may be spinning up and down all the time, which can cause a situation in which critical applications are not managed while they are active.
+Protecting privileged accounts is never an easy task. They must be identified and managed, but in most cases it takes time and effort to cover the entire organization network. This process is challenged even more in Cloud environments, due to its dynamic nature. Instances (containers and virtual servers) are ephemeral and may be spun up and down all the time, which may cause a situation in which privilege accounts of critical applications and workloads are not managed while they are active.
 
-CyberArk provides a solution that detects unmanaged privileged SSH Keys in new Unix/Linux based EC2 instances in Amazon Web Services (AWS) environments, and automatically onboards them to the CyberArk Vault. This solution also detects when EC2 instances are deprecated and subsequently deletes the irrelevant accounts from the Vault. Once the SSH Key is onboarded, it is changed immediately.
+CyberArk provides a solution that detects unmanaged privileged SSH Keys in new created Unix/Linux EC2 instances in Amazon Web Services (AWS) environments, and automatically onboards them to the CyberArk Vault. Once an SSH Key is onboarded, it is changed immediately. This solution also detects when EC2 instances are terminated and subsequently deletes the irrelevant accounts from the Vault. 
 
-Unlike schedule-based scanners, this solution was designed using Event Driven architecture. AWS CloudWatch informs CyberArk about new EC2 instances, and triggers the CyberArk Lambda function that initiates the onboarding process.
+Unlike schedule-based scanners, this is an Event Driven discovery that detects changes in the environment in real time. AWS CloudWatch informs CyberArk about new EC2 instances, and triggers the CyberArk Lambda function that initiates the onboarding process.
 
-The solution is wrapped with a CloudFormation template, which automates deployment. We recommend that customers deploy it for all AWS accounts and on all Regions.
+The solution is packaged as CloudFormation template, which automates deployment. We recommend that customers deploy it for all AWS accounts and on all Regions.
 
 This solution supports CyberArk environments that are deployed in Cloud, and Hybrid architectures.
 
- 
 
 # Features
 - Automatic onboarding and management of new AWS Linux instances for SSH keys upon spin up
