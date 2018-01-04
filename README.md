@@ -50,20 +50,15 @@ This solution requires the following:
 
 
 # Deployment  
-1. Download the Event Driven Automatic Onboarding solution from the public GIT
-https://github.com/cyberark/cyberark-aws-auto-onboarding
+1. Download cyberark-aws-auto-onboarding solution zip files and CloudFormation template from [https://github.com/cyberark/cyberark-aws-auto-onboarding/tree/master/dist](https://github.com/cyberark/cyberark-aws-auto-onboarding/tree/master/dist)
 
 2. Upload the solution to your S3 Bucket in the same region you want to deploy the solution.(** see note) 
-3. Open the Cloud formation and fill in all the details (see below) 
-
->**Note :**  If your Linux AWS accounts are already managed by CyberArk, specify the Safe name in the "Target safe for Unix accounts"
-
-5. Execute the Cloud formation
-6. Update the Cloud Watch Lambda rule: 
+3. Launch the CloudFormation template
+4. Update the CloudWatch Lambda rule: 
 
           CloudWatch → Rules → Choose :  "Instance_Status_Change_Trigger" → Actions → Edit → Configure details → Update Rule 
 
-7. Upload the old/existing key pairs used to create instances in your AWS region to the Key Pair Safe in the Vault 
+5. Upload the old/existing key pairs used to create instances in your AWS region to the Key Pair Safe in the Vault 
 
 Update the account User name with  the following naming convention: AWS.[AWS Account].[Region name].[key pair name]
 >** **Note:** that this solution must to be installed in every AWS region. For each region, use a dedicated Vault user and make sure the Lambda VPC has a network acess to the PVWA.
