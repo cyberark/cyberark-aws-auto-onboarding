@@ -11,7 +11,9 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 DEFAULT_HEADER = {"content-type": "application/json"}
-
+UNIX_PLATFORM = "UnixSSHKeys"
+WINDOWS_PLATFORM = "WinServerLocal"
+ADMINISTRATOR = "Administrator"
 
 # return ec2 instance relevant data:
 # keyPair_name, instance_address, platform
@@ -26,11 +28,7 @@ def get_ec2_details(instanceId, context):
         raise e
 
     #  We take the instance address in the order of: public dns -> public ip -> private ip ##
-    if instanceResource.public_dns_name:
-        address = instanceResource.public_dns_name
-    elif instanceResource.public_ip_address:
-        address = instanceResource.public_ip_address
-    elif instanceResource.private_ip_address:
+    if instanceResource.private_ip_address:
         address = instanceResource.private_ip_address
     else:  # unable to retrieve address from aws
         address = None
@@ -111,7 +109,7 @@ def logoff_pvwa(pvwaUrl, connectionSessionToken):
         return False
 
 
-def create_account_on_vault(session, account_name, account_password, storeParametersClass, platform_id, address, instanceId, username):
+def create_account_on_vault(session, account_name, account_password, storeParametersClass, platform_id, address, instanceId, username, safeName):
     header = DEFAULT_HEADER
     header.update({"Authorization": session})
     url = "{0}/WebServices/PIMServices.svc/Account".format(storeParametersClass.pvwaURL)
@@ -125,7 +123,7 @@ def create_account_on_vault(session, account_name, account_password, storeParame
         "username":"{4}",
         "disableAutoMgmt":"false"
       }}
-    }}""".format(storeParametersClass.unixSafeName, platform_id, account_name, account_password,  username, address)
+    }}""".format(safeName, platform_id, account_name, account_password,  username, address)
     restResponse = call_rest_api_post(url, data, header)
     if restResponse.status_code == requests.codes.created:
         print("Account for {0} was successfully created".format(instanceId))
@@ -223,16 +221,19 @@ def get_instance_data_from_dynamo_table(instanceId):
     else:
         return False
 
-
-def convert_pem_to_ppk(pemKey):
-
-    #  Uses Puttygen sent to the lambda
-    #  Save pem to file, convert it, get ppk value
-    subprocess.call(["cp ./puttygen /tmp/puttygen"], shell=True)
-    subprocess.call(["chmod 777 /tmp/puttygen "], shell=True)
+def save_key_pair(pemKey):
+    # Save pem to file
     savePemToFileCommand = 'echo {0} > /tmp/pemValue.pem'.format(pemKey)
     subprocess.call([savePemToFileCommand], shell=True)
     subprocess.call(["chmod 777 /tmp/pemValue.pem"], shell=True)
+
+def convert_pem_to_ppk(pemKey):
+
+    #  convert pem file, get ppk value
+    #  Uses Puttygen sent to the lambda
+    save_key_pair(pemKey=pemKey)
+    subprocess.call(["cp ./puttygen /tmp/puttygen"], shell=True)
+    subprocess.call(["chmod 777 /tmp/puttygen "], shell=True)
     subprocess.check_output("ls /tmp -l", shell=True)
     subprocess.check_output("cat /tmp/pemValue.pem", shell=True)
     conversionResult = subprocess.call(["/tmp/puttygen /tmp/pemValue.pem -O private -o /tmp/ppkValue.ppk"], shell=True)
@@ -245,10 +246,15 @@ def convert_pem_to_ppk(pemKey):
 
     return ppkKey
 
+# def convert_pem_to_password(pemKey, passwordData):
+#     save_key_pair(pemKey)
+#     subprocess.call("")
+# # rc, decryptedPassword = run_command_on_container(["echo", str.strip(instancePasswordData), "|", "base64", "--decode", "|", "openssl", "rsautl", "-decrypt", "-inkey", "/tmp/pemValue.pem"], True)
 
 def get_params_from_param_store():
     # Parameters that will be retrieved from parameter store
     UNIX_SAFE_NAME_PARAM = "Unix_Safe_Name"
+    WINDOWS_SAFE_NAME_PARAM = "Windows_Safe_Name"
     VAULT_USER_PARAM = "Vault_User"
     PVWA_IP_PARAM = "PVWA_IP"
     AWS_KEYPAIR_SAFE = "KeyPair_Safe"
@@ -256,7 +262,7 @@ def get_params_from_param_store():
     lambdaClient = boto3.client('lambda')
 
     lambdaRequestData = dict()
-    lambdaRequestData["Parameters"] = [UNIX_SAFE_NAME_PARAM, VAULT_USER_PARAM,  PVWA_IP_PARAM, AWS_KEYPAIR_SAFE, VAULT_PASSWORD_PARAM_]
+    lambdaRequestData["Parameters"] = [UNIX_SAFE_NAME_PARAM, WINDOWS_SAFE_NAME_PARAM, VAULT_USER_PARAM,  PVWA_IP_PARAM, AWS_KEYPAIR_SAFE, VAULT_PASSWORD_PARAM_]
     try:
         response = lambdaClient.invoke(FunctionName='TrustMechanism',
                                       InvocationType='RequestResponse',
@@ -270,6 +276,8 @@ def get_params_from_param_store():
     for ssmStoreItem in jsonParsedResponse:
         if ssmStoreItem['Name'] == UNIX_SAFE_NAME_PARAM:
             unixSafeName = ssmStoreItem['Value']
+        elif ssmStoreItem['Name'] == WINDOWS_SAFE_NAME_PARAM:
+            windowsSafeName = ssmStoreItem['Value']
         elif ssmStoreItem['Name'] == VAULT_USER_PARAM:
             vaultUsername = ssmStoreItem['Value']
         elif ssmStoreItem['Name'] == PVWA_IP_PARAM:
@@ -280,7 +288,7 @@ def get_params_from_param_store():
             vaultPassword = ssmStoreItem['Value']
         else:
             continue
-    storeParametersClass = StoreParameters(unixSafeName, vaultUsername, vaultPassword, pvwaIP, keyPairSafeName)
+    storeParametersClass = StoreParameters(unixSafeName, windowsSafeName, vaultUsername, vaultPassword, pvwaIP, keyPairSafeName)
 
     return storeParametersClass
 
@@ -350,11 +358,15 @@ def remove_instance_from_dynamo_table(instanceId):
 
 def delete_instance(instanceId, session, storeParametersClass, instanceData, instanceDetails):
     instanceIpAddress = instanceData["Address"]["S"]
-    instanceUsername = get_OS_distribution_user(instanceDetails['image_description'])
+    if instanceDetails['platform'] == "windows":
+        safeName = storeParametersClass.windowsSafeName
+        instanceUsername = ADMINISTRATOR
+    else:
+        safeName = storeParametersClass.unixSafeName
+        instanceUsername = get_OS_distribution_user(instanceDetails['image_description'])
     searchPattern = "{0},{1}".format(instanceIpAddress, instanceUsername)
-    # AWSAccountName = 'AWS.{0}.unix'.format(instanceId)
     instanceAccountId = retrieve_accountId_from_account_name(session, searchPattern,
-                                                storeParametersClass.unixSafeName, instanceId,
+                                                safeName, instanceId,
                                                 storeParametersClass.pvwaURL)
     if not instanceAccountId:
         print("Instance AccountId not found on safe")
@@ -364,6 +376,28 @@ def delete_instance(instanceId, session, storeParametersClass, instanceData, ins
     remove_instance_from_dynamo_table(instanceId)
     return
 
+def print_process_outputs_on_end(p):
+    out = p.communicate()[0].decode('utf-8')
+    # out = filter(None, map(str.strip, out.decode('utf-8').split('\n')))
+    return out
+
+def run_command_on_container(command, print_output):
+    decryptedPassword= ""
+    with subprocess.Popen(' '.join(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True) as p:
+        if print_output:
+            decryptedPassword = print_process_outputs_on_end(p)
+        else:
+            p.wait()
+    return [p.returncode, decryptedPassword]
+
+def get_instance_password_data(instanceId):
+    # wait until password data available when Windows instance is up
+    ec2 = boto3.client('ec2')
+    print("Waiting for instance - {0} to become available: ".format(instanceId))
+    waiter = ec2.get_waiter('password_data_available')
+    waiter.wait(InstanceId=instanceId)
+    instancePasswordData = ec2.get_password_data(InstanceId=instanceId)
+    return instancePasswordData['PasswordData']
 
 def create_instance(instanceId, session, instanceDetails, storeParametersClass, logName):
     # get key pair
@@ -388,31 +422,44 @@ def create_instance(instanceId, session, instanceDetails, storeParametersClass, 
     if instanceAccountPassword is False:
         return
 
-    ppkKey = convert_pem_to_ppk(instanceAccountPassword)
-    if not ppkKey:
-        raise Exception("Error on key conversion")
-    # ppkKey contains \r\n on each row end, adding escape char '\'
-    trimmedPPKKey = str(ppkKey).replace("\n", "\\n")
-    trimmedPPKKey = trimmedPPKKey.replace("\r", "\\r")
-    AWSAccountName = 'AWS.{0}.Unix'.format(instanceId)
-    instanceUsername = get_OS_distribution_user(instanceDetails['image_description'])
+    if instanceDetails['platform'] == "windows":  # Windows machine return 'windows' all other return 'None'
+        save_key_pair(instanceAccountPassword)
+        instancePasswordData = get_instance_password_data(instanceId)
+        # decryptedPassword = convert_pem_to_password(instanceAccountPassword, instancePasswordData)
+        rc, decryptedPassword = run_command_on_container(["echo", str.strip(instancePasswordData), "|", "base64", "--decode", "|", "openssl", "rsautl", "-decrypt", "-inkey", "/tmp/pemValue.pem"], True)
+        AWSAccountName = 'AWS.{0}.Windows'.format(instanceId)
+        instanceKey = decryptedPassword
+        platform = WINDOWS_PLATFORM
+        instanceUsername = ADMINISTRATOR
+        safeName = storeParametersClass.windowsSafeName
+    else:
+        ppkKey = convert_pem_to_ppk(instanceAccountPassword)
+        if not ppkKey:
+            raise Exception("Error on key conversion")
+        # ppkKey contains \r\n on each row end, adding escape char '\'
+        trimmedPPKKey = str(ppkKey).replace("\n", "\\n")
+        instanceKey = trimmedPPKKey.replace("\r", "\\r")
+        AWSAccountName = 'AWS.{0}.Unix'.format(instanceId)
+        platform = UNIX_PLATFORM
+        safeName = storeParametersClass.unixSafeName
+        instanceUsername = get_OS_distribution_user(instanceDetails['image_description'])
 
     # Check if account already exist - in case exist - just add it to DynamoDB
 
     searchAccountPattern = "{0},{1}".format(instanceDetails["address"], instanceUsername)
-    existingInstanceAccountId = retrieve_accountId_from_account_name(session, searchAccountPattern, storeParametersClass.unixSafeName,
+    existingInstanceAccountId = retrieve_accountId_from_account_name(session, searchAccountPattern, safeName,
                                                                      instanceId, storeParametersClass.pvwaURL)
     if existingInstanceAccountId:  # account already exist and managed on vault, no need to create it again
         print("Account already exists in vault")
         put_instance_to_dynamo_table(instanceId, instanceDetails['address'], OnBoardStatus.OnBoarded, "None", logName)
         return
     else:
-        accountCreated, errorMessage = create_account_on_vault(session, AWSAccountName, trimmedPPKKey, storeParametersClass,
-                                                               'UnixSSHKeys', instanceDetails['address'], instanceId, instanceUsername)
+        accountCreated, errorMessage = create_account_on_vault(session, AWSAccountName, instanceKey, storeParametersClass,
+                                                               platform, instanceDetails['address'], instanceId, instanceUsername, safeName)
 
         if accountCreated:
             # if account created, rotate the key immediately
-            instanceAccountId = retrieve_accountId_from_account_name(session, searchAccountPattern, storeParametersClass.unixSafeName,
+            instanceAccountId = retrieve_accountId_from_account_name(session, searchAccountPattern, safeName,
                                                                      instanceId, storeParametersClass.pvwaURL)
 
             rotate_credentials_immediately(session, storeParametersClass.pvwaURL, instanceAccountId, instanceId)
@@ -427,8 +474,6 @@ def lambda_handler(event, context):
     instanceId, actionType = event.split(";")
     try:
         instanceDetails = get_ec2_details(instanceId, context)
-        if instanceDetails['platform'] == "windows":  # Windows machine return 'windows' all other return 'None'
-            return None
 
         instanceData = get_instance_data_from_dynamo_table(instanceId)
         if actionType == 'terminated':
@@ -571,13 +616,15 @@ def get_OS_distribution_user(imageDescription):
 
 class StoreParameters:
     unixSafeName = ""
+    windowsSafeName = ""
     vaultUsername = ""
     vaultPassword = ""
     pvwaURL = "https://{0}/PasswordVault"
     keyPairSafeName = ""
 
-    def __init__(self, safeName, username, password, ip, keyPairSafe):
-        self.unixSafeName = safeName
+    def __init__(self, unixSafeName, windowsSafeName, username, password, ip, keyPairSafe):
+        self.unixSafeName = unixSafeName
+        self.windowsSafeName = windowsSafeName
         self.vaultUsername = username
         self.vaultPassword = password
         self.pvwaURL = self.pvwaURL.format(ip)
@@ -588,4 +635,3 @@ class OnBoardStatus:
     OnBoarded = "on boarded"
     OnBoarded_Failed = "on board failed"
     Delete_Failed = "delete failed"
-

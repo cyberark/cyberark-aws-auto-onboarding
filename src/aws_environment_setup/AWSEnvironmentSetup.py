@@ -11,7 +11,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 DEFAULT_HEADER = {"content-type": "application/json"}
 
-
+#git patch
 def lambda_handler(event, context):
 
     try:
@@ -28,9 +28,11 @@ def lambda_handler(event, context):
 
         if event['RequestType'] == 'Create':
 
-            requestCPMName = event['ResourceProperties']['CPM']
+            requestUnixCPMName = event['ResourceProperties']['CPMUnix']
+            requestWindowsCPMName = event['ResourceProperties']['CPMWindows']
             requestUsername = event['ResourceProperties']['Username']
-            requestUnixSafeName = event['ResourceProperties']['SafeName']
+            requestUnixSafeName = event['ResourceProperties']['UnixSafeName']
+            requestWindowsSafeName = event['ResourceProperties']['WindowsSafeName']
             requestPvwaIp = event['ResourceProperties']['PVWAIP']
             requestPassword = event['ResourceProperties']['Password']
             requestKeyPairSafe = event['ResourceProperties']['KeyPairSafe']
@@ -48,11 +50,19 @@ def lambda_handler(event, context):
                 return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to connect to PVWA, see detailed error in logs",
                                         {}, physicalResourceId)
 
-            isSafeCreated = create_safe(requestUnixSafeName, requestCPMName, requestPvwaIp, pvwaSessionId, 1)
+            isSafeCreated = create_safe(requestUnixSafeName, requestUnixCPMName, requestPvwaIp, pvwaSessionId, 1)
 
             if not isSafeCreated:
                 return cfnresponse.send(event, context, cfnresponse.FAILED,
                                         "Failed to create the Safe '{0}', see detailed error in logs".format(requestUnixSafeName),
+                                        {}, physicalResourceId)
+
+            isSafeCreated = create_safe(requestWindowsSafeName, requestWindowsCPMName, requestPvwaIp, pvwaSessionId, 1)
+
+            if not isSafeCreated:
+                return cfnresponse.send(event, context, cfnresponse.FAILED,
+                                        "Failed to create the Safe '{0}', see detailed error in logs".format(
+                                            requestWindowsSafeName),
                                         {}, physicalResourceId)
 
             if not create_session_table():
@@ -64,7 +74,7 @@ def lambda_handler(event, context):
             isSafeCreated = create_safe(requestKeyPairSafe, "", requestPvwaIp, pvwaSessionId)
             if not isSafeCreated:
                 return cfnresponse.send(event, context, cfnresponse.FAILED,
-                                        "Failed to create the Key Pairs safe: {0}, see detailed error in logs".format(requestUnixSafeName),
+                                        "Failed to create the Key Pairs safe: {0}, see detailed error in logs".format(requestKeyPairSafe),
                                         {}, physicalResourceId)
 
             #  key pair is optional parameter
