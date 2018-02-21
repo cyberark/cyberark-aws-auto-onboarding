@@ -70,6 +70,7 @@ This template will be called by the main CFT as a nested template and will creat
 Update the account User name with  the following naming convention: AWS.[AWS Account].[Region name].[key pair name]
 
 > ***Note:** that this solution must to be installed in every AWS region. For each region, use a dedicated Vault user and make sure the Lambda VPC has a network acess to the PVWA.
+
 > ****Note:** This step is only relevant if you deploy the NAT CFT - aws _auto_onboarding_0.1.1_with_NAT.json
 
 # CloudFormation Template 
