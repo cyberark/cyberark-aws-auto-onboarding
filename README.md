@@ -10,8 +10,8 @@ This solution supports CyberArk environments that are deployed in Cloud, and Hyb
 
 
 # Features
-- Automatic onboarding and management of new AWS Linux instances for SSH keys upon spin up
-- Automatic deletion of AWS instance accounts upon spin down 
+- Automatic onboarding and management of new AWS instances upon spin up
+- Automatic de-provision accounts for terminated AWS instances
 
 
 # Prerequisites
@@ -24,13 +24,14 @@ This solution requires the following:
 5. To connect to new instances, PSM must have a network connection to the target devices
 6. The expected maximum number of instances must be within the number of accounts license limits  
 7. In the "UnixSSH" platform, set the "ChangeNotificationPeriod" value to 60 sec (this platform will be used for managing Unix accounts, and setting this parameter gives the instance time to boot before attempting to change the password) 
-8. Dedicated Vault user for the solution with the following authorizations (not Admin):
+8. In the "WinServerLocal" platform, set the "ChangeNotificationPeriod" value to 60 sec (this platform will be used for managing Unix accounts, and setting this parameter gives the instance time to boot before attempting to change the password) 
+9. Dedicated Vault user for the solution with the following authorizations (not Admin):
 
 | General Vault Permissions|
 | ------ |
 |Add Safes|
 
-9. If the Keypair and/or the Unix Accounts Safes already exist (not created by the solution), the Vault user must be the owner of these Safes with the following permissions:
+10. If the Keypair and/or the Safes already exist (not created by the solution), the Vault user must be the owner of these Safes with the following permissions:
 
 |Key Pair Safe Permissions|
 | ------ |
@@ -48,19 +49,28 @@ This solution requires the following:
 |Initiate CPM account management operations|
 
 
-# Deployment  
+# Deployment
+
+This solution requires NAT GW to allow Lambda access to the AWS resources  
+Reference for further information: https://docs.aws.amazon.com/lambda/latest/dg/vpc.html
+
+The following CloudFormation templates are available:
+- aws _auto_onboarding_0.1.1.json - This CFT is for use when you already have NAT GW in the VPC you plan to use for the Lambda deployment 
+- aws _auto_onboarding_0.1.1_with_NAT.json - This CFT is for use when you do not have NAT GW in the VPC you plan to use for the Lambda deployment 
+
+
 1. Download cyberark-aws-auto-onboarding solution zip files and CloudFormation template from [https://github.com/cyberark/cyberark-aws-auto-onboarding/tree/master/dist](https://github.com/cyberark/cyberark-aws-auto-onboarding/tree/master/dist)
 
-2. Upload the solution to your S3 Bucket in the same region you want to deploy the solution.(** see note) 
-3. Launch the CloudFormation template
-4. Update the CloudWatch Lambda rule: 
-
-          CloudWatch → Rules → Choose :  "Instance_Status_Change_Trigger" → Actions → Edit → Configure details → Update Rule 
-
+2. Upload the solution to your S3 Bucket in the same region you want to deploy the solution.(* see note) 
+3. Upload the NAT-Gateway_0.1.0.json template to the bucket as well.(** see note)
+This template will be called by the main CFT as a nested template and will create the NAT GW in the VPC
+4. Open the CloudFormation, fill in all the details (see below) and launch it
 5. Upload the old/existing key pairs used to create instances in your AWS region to the Key Pair Safe in the Vault 
 
 Update the account User name with  the following naming convention: AWS.[AWS Account].[Region name].[key pair name]
->** **Note:** that this solution must to be installed in every AWS region. For each region, use a dedicated Vault user and make sure the Lambda VPC has a network acess to the PVWA.
+
+> ***Note:** that this solution must to be installed in every AWS region. For each region, use a dedicated Vault user and make sure the Lambda VPC has a network acess to the PVWA.
+> ****Note:** This step is only relevant if you deploy the NAT CFT - aws _auto_onboarding_0.1.1_with_NAT.json
 
 # CloudFormation Template 
 The following table lists the parameters to provide in the CloudFormation:
@@ -77,14 +87,15 @@ The following table lists the parameters to provide in the CloudFormation:
 |CPM name | The name of the CPM that will manage the onboarded SSH Keys|
 |Target safe for the Key Pairs| The name of the Safe to which the Key Pairs created by CyberArk will be onboarded (Note: If this Safe does not exist, it will be created automatically)|
 |Key Pair name|The name of the Key Pair, if it needs to be created by CyberArk (Note: CyberArk creates the Key Pair and stores it in the Vault. The Key Pair is never downloaded to users' endpoints.)|
+|Public NAT GW CIDR*|The IPv4 range of addresses for the NAT GW public subnet|
+|Private NAT GW CIDR*|The IPv4 range of addresses for the NAT GW private subnet|
+|Internet GW ID*|The ID of the internet GW that exist in the VPC|
 
-
-
-
+>***Note:** These fields only exist in the Elasticity v0.1.1 - With NAT.json template 
 
 # Solution Upgrade Procedure 
 1. Replace the solution files in the bucket 
-2. Update the cloud formation stack with the new template
+2. Update the cloudFormation stack with the new template
 
 # Limitations
 1. CyberArk currently supports onboarding SSH keys for the following AWS accounts:
@@ -98,6 +109,27 @@ The following table lists the parameters to provide in the CloudFormation:
 
 2. Existing AWS instances (pre-installed) are not onboarded automatically
 3. This solution currently handles a maximum of 100 events in 4 seconds
+4. EC2 instance public IPs must be elastic IPs to allow continous access and management after changing the instance state.
+5. in order for the CPM to manage new Windows instances for some versions (you can find the list below), the user must run the following command manually on all new Windows instances:
+
+```sh
+netsh firewall set service RemoteAdmin enable
+```
+
+>**Note**: The CPM will fail to rotate the password in a case this command hasn't been executed
+
+###### List of Windows instances that require this command to be run manually:
+
+- Microsoft Windows Server 2016 Base
+- Microsoft Windows Server 2016 Base with Containers
+- Microsoft Windows Server 2016 with SQL Server 2017 Express
+- Microsoft Windows Server 2016 with SQL Server 2017 Web 
+- Microsoft Windows Server 2016 with SQL Server 2017 Standard
+- Microsoft Windows Server 2016 with SQL Server 2017 Enterprise
+- Microsoft Windows Server 2016 with SQL Server 2016 Express
+- Microsoft Windows Server 2016 with SQL Server 2016 Web 
+- Microsoft Windows Server 2016 with SQL Server 2016 Standard
+- Microsoft Windows Server 2016 with SQL Server 2016 Enterprise
 
 # Debugging
 All information about debugging is available through AWS CloudWatch
