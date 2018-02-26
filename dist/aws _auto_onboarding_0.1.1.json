@@ -375,6 +375,16 @@
                 }
 			}
 		},
+		"SecurityGroupPVWAIngress": {
+			"Type": "AWS::EC2::SecurityGroupIngress",
+			"Properties" : {   
+				"GroupId": {"Ref": "PVWASG"},
+				"FromPort": "443",
+				"ToPort": "443",
+				"IpProtocol": "tcp",
+				"SourceSecurityGroupId": {"Fn::GetAtt": ["ElasticityLambdaSecurityGroup", "GroupId"]}
+			}
+		},
 		"TrustMechanismSecurityGroup": {
 		"Type" : "AWS::EC2::SecurityGroup",
 			"Properties" : {
@@ -609,6 +619,11 @@
             "Description": "VPC where the solution will be deployed. The VPC must contain a subnet with access to the PVWA",
 			"MinLength": "1"
         },
+		"PVWASG": {
+            "Type": "AWS::EC2::SecurityGroup::Id",
+            "Description": "Security Group of the PVWA",
+			"MinLength": "1"
+        },
 		"KeyPairsSafe": {
             "Type": "String",
             "Description": "Name of the Safe that will store all Key Pairs used by the solution. If this Safe does not yet exist, it will be created automatically.",
@@ -636,6 +651,7 @@
 						"LambdasBucket",
                         "PvwaIP",
 						"ComponentsVPC",
+						"PVWASG",
 						"ComponentsSubnet",
 						"VaultUser",
 						"VaultPassword",
@@ -691,6 +707,9 @@
 				},
 				"KeyPairName": {
 					"default": "Key Pair name:"
+				},
+				"PVWASG": {
+					"default": "PVWA Security Group"
 				}
             }
         }
