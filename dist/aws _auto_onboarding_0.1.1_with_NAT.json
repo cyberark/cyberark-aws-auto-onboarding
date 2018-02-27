@@ -563,7 +563,7 @@
 		"NATGatewayStack": {
 		  "Type": "AWS::CloudFormation::Stack",
 			"Properties": {
-				"TemplateURL": { "Fn::Join" : [ "", [ "https:\/\/", {"Ref": "LambdasBucket"}, ".s3.amazonaws.com\/NAT-Gateway_0.1.0.json" ] ] },
+				"TemplateURL": { "Fn::Join" : [ "", [ "https:\/\/", {"Ref": "LambdasBucket"}, ".s3.amazonaws.com\/NAT-Gateway_0.1.1.json" ] ] },
 				"Parameters": {
 					"PrivateNATGWSubnetCIDR": {"Ref":"PrivateNATGWSubnetCIDR"},
 					"ComponentsVpc": {"Ref": "ComponentsVPC"},
