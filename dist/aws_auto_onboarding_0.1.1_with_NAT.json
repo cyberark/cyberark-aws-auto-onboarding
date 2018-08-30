@@ -239,6 +239,11 @@
 								"    except Exception as e:",
 								"        raise e",
 								"",
+								"    for ssmObject in response['Parameters']:",
+								"        lastDate = ssmObject['LastModifiedDate']",
+								"        print('LastDate:{0}'.format(lastDate))",
+								"        ssmObject['LastModifiedDate'] = lastDate.strftime('%m/%d/%Y')",
+								"",
 								"    if response:",
 								"",
 								"        print ('get_parameters_from_store(): finished successfully')",
@@ -259,7 +264,7 @@
 			"Runtime" : "python3.6",
 			"Timeout" : 10,
 			"VpcConfig" : {"SecurityGroupIds" : [{"Fn::GetAtt": ["TrustMechanismSecurityGroup", "GroupId"]}],
-							"SubnetIds" : [{"Ref": "ComponentsSubnet"}]
+							"SubnetIds" : [{ "Fn::GetAtt": [ "NATGatewayStack", "Outputs.PrivateNATSubnetOutput"]}]
 						}
 		  }
 		},
@@ -279,9 +284,9 @@
                     ]
                 },
 			"Runtime" : "python3.6",
-			"Timeout" : 240,
+			"Timeout" : 60,
 			"VpcConfig" : {"SecurityGroupIds" : [{"Fn::GetAtt": ["ElasticityLambdaSecurityGroup", "GroupId"]}],
-							"SubnetIds" : [{"Ref": "ComponentsSubnet"}]
+							"SubnetIds" : [{ "Fn::GetAtt": [ "NATGatewayStack", "Outputs.PrivateNATSubnetOutput"]}]
 						}
 		  }
 		},
@@ -310,12 +315,11 @@
 				"Password": {
 					"Ref": "VaultPassword"
 				},
-    			"CPMUnix": {
+				"CPMUnix": {
 					"Ref": "CPMNameUnixSafe"
 				},
 				"CPMWindows": {
-					"Ref": "CPMNameWindowsSafe"
-				},
+					"Ref": "CPMNameWindowsSafe"				},
 				"KeyPairSafe": {
 					"Ref": "KeyPairsSafe"
 				},
@@ -358,12 +362,13 @@
 			"Runtime" : "python2.7",
 			"Timeout" : 35,
 			"VpcConfig" : {"SecurityGroupIds" : [{"Fn::GetAtt": ["ElasticityLambdaSecurityGroup", "GroupId"]}],
-							"SubnetIds" : [{"Ref": "ComponentsSubnet"}]
+							"SubnetIds" : [{ "Fn::GetAtt": [ "NATGatewayStack", "Outputs.PrivateNATSubnetOutput"]}]
 						}
 		  },
 		  "DependsOn": [
                 "SafeHandlerLambdaRole",
-                "SafehandlingLambdaPolicy"
+                "SafehandlingLambdaPolicy",
+				"NATGatewayStack"
             ]
 		},
 		"ElasticityLambdaSecurityGroup": {
@@ -559,13 +564,28 @@
 				"Type" : "String",
 				"Value" : {"Ref": "KeyPairsSafe"}
 			}
+		},
+		"NATGatewayStack": {
+		  "Type": "AWS::CloudFormation::Stack",
+			"Properties": {
+				"TemplateURL": { "Fn::Join" : [ "", [ "https:\/\/", {"Ref": "LambdasBucket"}, ".s3.amazonaws.com\/NAT-Gateway_0.1.1.json" ] ] },
+				"Parameters": {
+					"PrivateNATGWSubnetCIDR": {"Ref":"PrivateNATGWSubnetCIDR"},
+					"ComponentsVpc": {"Ref": "ComponentsVPC"},
+					"PublicNATGWSubnetCIDR": {"Ref": "PublicNATGWSubnetCIDR"},
+					"CurrentIGWInComponentsVPC": {"Ref": "CurrentIGWInComponentsVPC"}
+				}
+			}
 		}
+		
 	},
 	"Description": "",
 	"Parameters": {
 		"LambdasBucket": {
             "Type": "String",
-            "Description": "Name of the bucket containing the solution files. The bucket must be in the same region where the solution is deployed."
+            "Description": "Name of the bucket containing the solution files. The bucket must be in the same region where the solution is deployed.",
+			"MinLength": "1"
+			
         },
 		"PvwaIP": {
 			"Type": "String",
@@ -609,11 +629,6 @@
 			"MinLength": "1",
 			"Default": "PasswordManager"
 		},
-		"ComponentsSubnet": {
-            "Type": "AWS::EC2::Subnet::Id",
-            "Description": "Subnet where the solution will be deployed. The subnet must have access to the PVWA",
-			"MinLength": "1"
-        },
 		"ComponentsVPC": {
             "Type": "AWS::EC2::VPC::Id",
             "Description": "VPC where the solution will be deployed. The VPC must contain a subnet with access to the PVWA",
@@ -635,11 +650,25 @@
             "Type": "String",
             "Description": "Name of the Key pair",
 			"MaxLength": "255"
-        }
+        },
+		"PrivateNATGWSubnetCIDR": {
+            "Description": "IPv4 address range for the NAT Gateway private subnet",
+            "Type": "String",
+            "Default": "10.10.10.0/28"
+        },
+		"PublicNATGWSubnetCIDR": {
+            "Description": "IPv4 address range for the NAT Gateway public subnet",
+            "Type": "String",
+            "Default": "10.10.0.0/28"
+        },
+		"CurrentIGWInComponentsVPC": {
+			"Description": "Type the existing IGW in the VPC",
+            "Type": "String"
+		}
 	},
 	"Conditions": {
-		
-	},
+    },
+	
 	"Metadata": {
 		"AWS::CloudFormation::Interface": {
             "ParameterGroups": [
@@ -652,7 +681,6 @@
                         "PvwaIP",
 						"ComponentsVPC",
 						"PVWASG",
-						"ComponentsSubnet",
 						"VaultUser",
 						"VaultPassword",
 						"UnixSafeName",
@@ -664,10 +692,20 @@
                 },
                 {
 					"Label": {
-						"default": "Optional: Create new KeyPair for the solution:"
+						"default": "Optional: Create new KeyPair for the solution"
 					},
                     "Parameters": [
 						"KeyPairName"
+                    ]
+                },
+				{
+					"Label": {
+						"default": "Create NAT Gateway"
+					},
+                    "Parameters": [
+						"PublicNATGWSubnetCIDR",
+						"PrivateNATGWSubnetCIDR",
+						"CurrentIGWInComponentsVPC"
                     ]
                 }
             ],
@@ -675,9 +713,6 @@
                 "LambdasBucket": {
                     "default": "Bucket Name"
                 },
-				"ComponentsSubnet": {
-					"default": "Solution subnet:"
-				},
 				"ComponentsVPC": {
 					"default": "VPC:"
 				},
@@ -687,7 +722,7 @@
 				"UnixSafeName": {
                     "default": "Target Safe for Unix accounts:"
                 },
-                "WindowsSafeName": {
+				"WindowsSafeName": {
                     "default": "Target Safe for Windows accounts:"
                 },
 				"VaultUser": {
@@ -699,9 +734,6 @@
 				"CPMNameUnixSafe": {
 					"default": "CPM name for managing Unix safe:"
 				},
-				"CPMNameWindowsSafe": {
-					"default": "CPM name for managing Windows safe:"
-				},
 				"KeyPairsSafe": {
 					"default": "Target Safe for the Key pairs:"
 				},
@@ -710,6 +742,15 @@
 				},
 				"PVWASG": {
 					"default": "PVWA Security Group"
+				},
+				"PrivateNATGWSubnetCIDR": {
+					"default": "Private NAT Gateway CIDR"
+				},
+				"CurrentIGWInComponentsVPC": {
+					"default": "VPC IGW"
+				},
+				"PublicNATGWSubnetCIDR": {
+					"default": "Public NAT Gateway CIDR"
 				}
             }
         }
