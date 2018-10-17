@@ -1,4 +1,3 @@
-import boto3
 import json
 import requests
 import urllib3
