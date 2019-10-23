@@ -302,7 +302,6 @@ def retrieve_accountId_from_account_name(session, accountName, safeName, instanc
         pvwaUrl = "{0}/api/accounts?search={1}&filter=safeName eq &Safe={2}".format(restURL, accountName, safeName)
     else:  # has no value
         pvwaUrl = "{0}/api/accounts?search={1}".format(restURL, accountName)
-        print(pvwaUrl)
 
     restResponse = call_rest_api_get(pvwaUrl, header)
     if not restResponse:
