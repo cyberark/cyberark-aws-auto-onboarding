@@ -64,7 +64,7 @@ def call_rest_api_post(url, request, header):
 # performs logon to PVWA and return the session token
 def logon_pvwa(username, password, pvwaUrl, connectionSessionId):
     print('Start Logon to PVWA REST API')
-    logonUrl = '{0}/WebServices/auth/Cyberark/CyberArkAuthenticationService.svc/Logon'.format(pvwaUrl)
+    logonUrl = '{0}/API/auth/Cyberark/Logon'.format(pvwaUrl)
     restLogonData = """{{
         "username": "{0}",
         "password": "{1}",
@@ -81,8 +81,7 @@ def logon_pvwa(username, password, pvwaUrl, connectionSessionId):
     if restResponse.status_code == requests.codes.ok:
         jsonParsedResponse = restResponse.json()
         print("User authenticated")
-        # jsonParsedResponse['CyberArkLogonResult'] is the session token #
-        return jsonParsedResponse['CyberArkLogonResult']
+        return jsonParsedResponse
     else:
         print("Authentication failed to REST API")
         raise Exception("Authentication failed to REST API")
@@ -92,7 +91,7 @@ def logoff_pvwa(pvwaUrl, connectionSessionToken):
     print('Start Logoff to PVWA REST API')
     header = DEFAULT_HEADER
     header.update({"Authorization": connectionSessionToken})
-    logoffUrl = '{0}/WebServices/auth/Cyberark/CyberArkAuthenticationService.svc/Logoff'.format(pvwaUrl)
+    logoffUrl = '{0}/API/auth/Logoff'.format(pvwaUrl)
     restLogoffData = ""
     try:
         restResponse = call_rest_api_post(logoffUrl, restLogoffData, DEFAULT_HEADER)
@@ -150,8 +149,9 @@ def rotate_credentials_immediately(session, pvwaUrl, accountId, instanceId):
 def get_account_value(session, account, instanceId, restURL):
     header = DEFAULT_HEADER
     header.update({"Authorization": session})
-    pvwaUrl = "{0}/API/Accounts/{1}/Content?Reason={2}".format(restURL, account, "Auto Retrieve account for AWS")
-    restResponse = call_rest_api_get(pvwaUrl, header)
+    pvwaUrl = "{0}/api/Accounts/{1}/Password/Retrieve".format(restURL, account)
+    restLogonData = """{ "reason":"AWS Auto On-Boarding Solution" }"""
+    restResponse = call_rest_api_post(pvwaUrl, restLogonData, header)
     if restResponse.status_code == requests.codes.ok:
         return restResponse.text
     elif restResponse.status_code == requests.codes.not_found:
@@ -299,9 +299,10 @@ def retrieve_accountId_from_account_name(session, accountName, safeName, instanc
 
     # 2 options of search - if safe name not empty, add it to query, if not - search without it
     if safeName:  # has value
-        pvwaUrl = "{0}/WebServices/PIMServices.svc/Accounts?Keywords={1}&Safe={2}".format(restURL, accountName, safeName)
+        pvwaUrl = "{0}/api/accounts?search={1}&filter=safeName eq &Safe={2}".format(restURL, accountName, safeName)
     else:  # has no value
-        pvwaUrl = "{0}/WebServices/PIMServices.svc/Accounts?Keywords={1}".format(restURL, accountName)
+        pvwaUrl = "{0}/api/accounts?search={1}".format(restURL, accountName)
+        print(pvwaUrl)
 
     restResponse = call_rest_api_get(pvwaUrl, header)
     if not restResponse:
@@ -309,9 +310,9 @@ def retrieve_accountId_from_account_name(session, accountName, safeName, instanc
 
     if restResponse.status_code == requests.codes.ok:
         # if response received, check account is not empty {"Count": 0,"accounts": []}
-        if 'accounts' in restResponse.json() and restResponse.json()["accounts"]:
-            parsedJsonResponse = restResponse.json()['accounts']
-            return parsedJsonResponse[0]['AccountID']
+        if 'value' in restResponse.json() and restResponse.json()["value"]:
+            parsedJsonResponse = restResponse.json()['value']
+            return parsedJsonResponse[0]['id']
         else:
             return False
     else:
@@ -365,12 +366,14 @@ def delete_instance(instanceId, session, storeParametersClass, instanceData, ins
         safeName = storeParametersClass.unixSafeName
         instanceUsername = get_OS_distribution_user(instanceDetails['image_description'])
     searchPattern = "{0},{1}".format(instanceIpAddress, instanceUsername)
+
     instanceAccountId = retrieve_accountId_from_account_name(session, searchPattern,
                                                 safeName, instanceId,
                                                 storeParametersClass.pvwaURL)
     if not instanceAccountId:
         print("Instance AccountId not found on safe")
         return
+
     delete_account_from_vault(session, instanceAccountId, instanceId, storeParametersClass.pvwaURL)
 
     remove_instance_from_dynamo_table(instanceId)
@@ -417,7 +420,6 @@ def create_instance(instanceId, session, instanceDetails, storeParametersClass, 
     if not keyPairAccountId:
         print("Key Pair '{0}' does not exist in safe '{1}'".format(keyPairValueOnSafe, storeParametersClass.keyPairSafeName))
         return
-
     instanceAccountPassword = get_account_value(session, keyPairAccountId, instanceId, storeParametersClass.pvwaURL)
     if instanceAccountPassword is False:
         return
