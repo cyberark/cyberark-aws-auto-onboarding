@@ -36,6 +36,7 @@ def run_command_on_container(command, print_output):
             p.wait()
     return [p.returncode, decryptedPassword]
 
+
 def print_process_outputs_on_end(p):
     out = p.communicate()[0].decode('utf-8')
     # out = filter(None, map(str.strip, out.decode('utf-8').split('\n')))
