@@ -11,7 +11,6 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 DEFAULT_HEADER = {"content-type": "application/json"}
 
-#git patch
 def lambda_handler(event, context):
 
     try:
