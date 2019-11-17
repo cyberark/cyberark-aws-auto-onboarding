@@ -2,15 +2,53 @@ import urllib3
 import pvwa_integration
 import aws_services
 import instance_processing
+import json
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def lambda_handler(event, context):
-    logName = context.log_stream_name if context.log_stream_name else "None"
-    instanceId, actionType = event.split(";")
+
+    print (event)
+
     try:
-        instanceDetails = aws_services.get_ec2_details(instanceId, context)
+        message = event["Records"][0]["Sns"]["Message"]
+        data = json.loads(message)
+    except Exception as e:
+        print ("Error on retrieving Message Data from Event Message. Error: {0}".format(e))
+
+    try:
+        instance_arn = data["resources"][0]
+    except Exception as e:
+        print ("Error on retrieving instance_arn from Event Message. Error: {0}".format(e))
+
+    try:
+        instanceId = data["detail"]["instance-id"]
+    except Exception as e:
+        print ("Error on retrieving Instance Id from Event Message. Error: {0}".format(e))
+
+    try:
+        actionType = data["detail"]["state"]
+    except Exception as e:
+        print ("Error on retrieving Action Type from Event Message. Error: {0}".format(e))
+
+
+    try:
+        eventAccountId = data["account"]
+    except Exception as e:
+        print ("Error on retrieving Event Account Id from Event Message. Error: {0}".format(e))
+
+
+    try:
+        eventRegion = data["region"]
+    except Exception as e:
+        print ("Error on retrieving Event Region from Event Message. Error: {0}".format(e))
+
+
+    logName = context.log_stream_name if context.log_stream_name else "None"
+
+    try:
+        instanceDetails = aws_services.get_ec2_details(instanceId, context, eventRegion, eventAccountId)
 
         instanceData = aws_services.get_instance_data_from_dynamo_table(instanceId)
         if actionType == 'terminated':
@@ -54,7 +92,7 @@ def lambda_handler(event, context):
         if actionType == 'terminated':
             instance_processing.delete_instance(instanceId, sessionToken, storeParametersClass, instanceData, instanceDetails)
         elif actionType == 'running':
-            instance_processing.create_instance(instanceId, sessionToken, instanceDetails, storeParametersClass, logName)
+            instance_processing.create_instance(instanceId, sessionToken, instanceDetails, storeParametersClass, logName, eventRegion)
         else:
             print('Unknown instance state')
             return

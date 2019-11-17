@@ -22,6 +22,7 @@
 							"ec2:CreateNetworkInterface",
 							"ec2:DescribeNetworkInterfaces",
 							"ec2:DeleteNetworkInterface",
+							"ec2:DeleteNetworkInterface",
 							"ec2:DescribeVpcs",
 							"ec2:DescribeVpcAttribute",
 							"ec2:DescribeImages",
@@ -75,6 +76,63 @@
                     "Ref": "ElasticityLambdaPolicy"
                 } ]
 		  }
+		},
+		"ElasticityLambdaToCloudWatchPermission": {
+			"Type" : "AWS::Lambda::Permission",
+			"Properties" : {
+				"Action" : "lambda:InvokeFunction",
+				"FunctionName" : {
+					"Fn::GetAtt": [
+						"ElasticityLambda",
+						"Arn"
+					]
+				},
+				"Principal" : "events.amazonaws.com",
+				"SourceArn" : {
+					"Fn::GetAtt": [
+						"CloudWatchInstanceChangeTrigger",
+						"Arn"
+					]
+				}
+			}
+		},
+		"ElasticityLambdaToCloudWatchPermission": {
+			"Type" : "AWS::Lambda::Permission",
+			"Properties" : {
+				"Action" : "lambda:InvokeFunction",
+				"FunctionName" : {
+					"Fn::GetAtt": [
+						"ElasticityLambda",
+						"Arn"
+					]
+				},
+				"Principal" : "events.amazonaws.com",
+				"SourceArn" : {
+					"Fn::GetAtt": [
+						"CloudWatchInstanceChangeTrigger",
+						"Arn"
+					]
+				}
+			}
+		},
+		"ElasticityLambdaToCloudWatchPermission": {
+			"Type" : "AWS::Lambda::Permission",
+			"Properties" : {
+				"Action" : "lambda:InvokeFunction",
+				"FunctionName" : {
+					"Fn::GetAtt": [
+						"ElasticityLambda",
+						"Arn"
+					]
+				},
+				"Principal" : "events.amazonaws.com",
+				"SourceArn" : {
+					"Fn::GetAtt": [
+						"CloudWatchInstanceChangeTrigger",
+						"Arn"
+					]
+				}
+			}
 		},
 		"TrustMechanismLambdaRole": {
 			"Type": "AWS::IAM::Role",
@@ -271,272 +329,6 @@
 						}
 		  }
 		},
-		"ElasticityLambdaToSNSPermission": {
-			"Type" : "AWS::Lambda::Permission",
-			"Properties" : {
-				"Action" : "lambda:InvokeFunction",
-				"FunctionName" : {
-                    "Fn::GetAtt": [
-                        "ElasticityLambda",
-                        "Arn"
-                    ]
-                },
-				"Principal" : "events.amazonaws.com",
-				"SourceArn" : "arn:aws:sns:us-east-2:138339392836:CyberArkAOBTopic"
-			}
-		},
-		"ElasticityLambdaToSNSPermission": {
-			"Type" : "AWS::Lambda::Permission",
-			"Properties" : {
-				"Action" : "lambda:InvokeFunction",
-				"FunctionName" : {
-                    "Fn::GetAtt": [
-                        "ElasticityLambda",
-                        "Arn"
-                    ]
-                },
-				"Principal" : "events.amazonaws.com",
-				"SourceArn" : "arn:aws:sns:us-east-1:138339392836:CyberArkAOBTopic"
-			}
-		},
-		"ElasticityLambdaToSNSPermission": {
-			"Type" : "AWS::Lambda::Permission",
-			"Properties" : {
-				"Action" : "lambda:InvokeFunction",
-				"FunctionName" : {
-                    "Fn::GetAtt": [
-                        "ElasticityLambda",
-                        "Arn"
-                    ]
-                },
-				"Principal" : "events.amazonaws.com",
-				"SourceArn" : "arn:aws:sns:us-west-1:138339392836:CyberArkAOBTopic"
-			}
-		},
-		"ElasticityLambdaToSNSPermission": {
-			"Type" : "AWS::Lambda::Permission",
-			"Properties" : {
-				"Action" : "lambda:InvokeFunction",
-				"FunctionName" : {
-                    "Fn::GetAtt": [
-                        "ElasticityLambda",
-                        "Arn"
-                    ]
-                },
-				"Principal" : "events.amazonaws.com",
-				"SourceArn" : "arn:aws:sns:us-west-2:138339392836:CyberArkAOBTopic"
-			}
-		},
-		"ElasticityLambdaToSNSPermission": {
-			"Type" : "AWS::Lambda::Permission",
-			"Properties" : {
-				"Action" : "lambda:InvokeFunction",
-				"FunctionName" : {
-                    "Fn::GetAtt": [
-                        "ElasticityLambda",
-                        "Arn"
-                    ]
-                },
-				"Principal" : "events.amazonaws.com",
-				"SourceArn" : "arn:aws:sns:ap-east-1:138339392836:CyberArkAOBTopic"
-			}
-		},
-		"ElasticityLambdaToSNSPermission": {
-			"Type" : "AWS::Lambda::Permission",
-			"Properties" : {
-				"Action" : "lambda:InvokeFunction",
-				"FunctionName" : {
-                    "Fn::GetAtt": [
-                        "ElasticityLambda",
-                        "Arn"
-                    ]
-                },
-				"Principal" : "events.amazonaws.com",
-				"SourceArn" : "arn:aws:sns:ap-south-1:138339392836:CyberArkAOBTopic"
-			}
-		},
-		"ElasticityLambdaToSNSPermission": {
-			"Type" : "AWS::Lambda::Permission",
-			"Properties" : {
-				"Action" : "lambda:InvokeFunction",
-				"FunctionName" : {
-                    "Fn::GetAtt": [
-                        "ElasticityLambda",
-                        "Arn"
-                    ]
-                },
-				"Principal" : "events.amazonaws.com",
-				"SourceArn" : "arn:aws:sns:ap-northeast-1:138339392836:CyberArkAOBTopic"
-			}
-		},
-		"ElasticityLambdaToSNSPermission": {
-			"Type" : "AWS::Lambda::Permission",
-			"Properties" : {
-				"Action" : "lambda:InvokeFunction",
-				"FunctionName" : {
-                    "Fn::GetAtt": [
-                        "ElasticityLambda",
-                        "Arn"
-                    ]
-                },
-				"Principal" : "events.amazonaws.com",
-				"SourceArn" : "arn:aws:sns:ap-northeast-2:138339392836:CyberArkAOBTopic"
-			}
-		},
-		"ElasticityLambdaToSNSPermission": {
-			"Type" : "AWS::Lambda::Permission",
-			"Properties" : {
-				"Action" : "lambda:InvokeFunction",
-				"FunctionName" : {
-                    "Fn::GetAtt": [
-                        "ElasticityLambda",
-                        "Arn"
-                    ]
-                },
-				"Principal" : "events.amazonaws.com",
-				"SourceArn" : "arn:aws:sns:ap-northeast-3:138339392836:CyberArkAOBTopic"
-			}
-		},
-		"ElasticityLambdaToSNSPermission": {
-			"Type" : "AWS::Lambda::Permission",
-			"Properties" : {
-				"Action" : "lambda:InvokeFunction",
-				"FunctionName" : {
-                    "Fn::GetAtt": [
-                        "ElasticityLambda",
-                        "Arn"
-                    ]
-                },
-				"Principal" : "events.amazonaws.com",
-				"SourceArn" : "arn:aws:sns:ap-northeast-1:138339392836:CyberArkAOBTopic"
-			}
-		},
-		"ElasticityLambdaToSNSPermission": {
-			"Type" : "AWS::Lambda::Permission",
-			"Properties" : {
-				"Action" : "lambda:InvokeFunction",
-				"FunctionName" : {
-                    "Fn::GetAtt": [
-                        "ElasticityLambda",
-                        "Arn"
-                    ]
-                },
-				"Principal" : "events.amazonaws.com",
-				"SourceArn" : "arn:aws:sns:ap-northeast-2:138339392836:CyberArkAOBTopic"
-			}
-		},
-		"ElasticityLambdaToSNSPermission": {
-			"Type" : "AWS::Lambda::Permission",
-			"Properties" : {
-				"Action" : "lambda:InvokeFunction",
-				"FunctionName" : {
-                    "Fn::GetAtt": [
-                        "ElasticityLambda",
-                        "Arn"
-                    ]
-                },
-				"Principal" : "events.amazonaws.com",
-				"SourceArn" : "arn:aws:sns:ap-southeast-1:138339392836:CyberArkAOBTopic"
-			}
-		},
-		"ElasticityLambdaToSNSPermission": {
-			"Type" : "AWS::Lambda::Permission",
-			"Properties" : {
-				"Action" : "lambda:InvokeFunction",
-				"FunctionName" : {
-                    "Fn::GetAtt": [
-                        "ElasticityLambda",
-                        "Arn"
-                    ]
-                },
-				"Principal" : "events.amazonaws.com",
-				"SourceArn" : "arn:aws:sns:ap-southeast-2:138339392836:CyberArkAOBTopic"
-			}
-		},
-		"ElasticityLambdaToSNSPermission": {
-			"Type" : "AWS::Lambda::Permission",
-			"Properties" : {
-				"Action" : "lambda:InvokeFunction",
-				"FunctionName" : {
-                    "Fn::GetAtt": [
-                        "ElasticityLambda",
-                        "Arn"
-                    ]
-                },
-				"Principal" : "events.amazonaws.com",
-				"SourceArn" : "arn:aws:sns:ca-central-1:138339392836:CyberArkAOBTopic"
-			}
-		},
-		"ElasticityLambdaToSNSPermission": {
-			"Type" : "AWS::Lambda::Permission",
-			"Properties" : {
-				"Action" : "lambda:InvokeFunction",
-				"FunctionName" : {
-                    "Fn::GetAtt": [
-                        "ElasticityLambda",
-                        "Arn"
-                    ]
-                },
-				"Principal" : "events.amazonaws.com",
-				"SourceArn" : "arn:aws:sns:eu-west-1:138339392836:CyberArkAOBTopic"
-			}
-		},
-		"ElasticityLambdaToSNSPermission": {
-			"Type" : "AWS::Lambda::Permission",
-			"Properties" : {
-				"Action" : "lambda:InvokeFunction",
-				"FunctionName" : {
-                    "Fn::GetAtt": [
-                        "ElasticityLambda",
-                        "Arn"
-                    ]
-                },
-				"Principal" : "events.amazonaws.com",
-				"SourceArn" : "arn:aws:sns:eu-west-2:138339392836:CyberArkAOBTopic"
-			}
-		},
-		"ElasticityLambdaToSNSPermission": {
-			"Type" : "AWS::Lambda::Permission",
-			"Properties" : {
-				"Action" : "lambda:InvokeFunction",
-				"FunctionName" : {
-                    "Fn::GetAtt": [
-                        "ElasticityLambda",
-                        "Arn"
-                    ]
-                },
-				"Principal" : "events.amazonaws.com",
-				"SourceArn" : "arn:aws:sns:eu-west-3:138339392836:CyberArkAOBTopic"
-			}
-		},
-		"ElasticityLambdaToSNSPermission": {
-			"Type" : "AWS::Lambda::Permission",
-			"Properties" : {
-				"Action" : "lambda:InvokeFunction",
-				"FunctionName" : {
-                    "Fn::GetAtt": [
-                        "ElasticityLambda",
-                        "Arn"
-                    ]
-                },
-				"Principal" : "events.amazonaws.com",
-				"SourceArn" : "arn:aws:sns:eu-north-1:138339392836:CyberArkAOBTopic"
-			}
-		},
-		"ElasticityLambdaToSNSPermission": {
-			"Type" : "AWS::Lambda::Permission",
-			"Properties" : {
-				"Action" : "lambda:InvokeFunction",
-				"FunctionName" : {
-                    "Fn::GetAtt": [
-                        "ElasticityLambda",
-                        "Arn"
-                    ]
-                },
-				"Principal" : "events.amazonaws.com",
-				"SourceArn" : "arn:aws:sns:sa-east-1:138339392836:CyberArkAOBTopic"
-			}
-		},
 		"CreateSafe": {
             "Type": "AWS::CloudFormation::CustomResource",
             "Version": "1.0",
@@ -692,13 +484,59 @@
                             ],
                             "Resource": {
                                 "Fn::Join": [
-                                    "",
+
+		"CloudWatchInstanceChangeTrigger": {
+			"Type" : "AWS::Events::Rule",
+			  "Properties" : {
+				"Description" : "CloudWatch event which fires on create/start/termination of an EC2 Instance ",
+				"EventPattern" : {
+				  "source": [
+					"aws.ec2"
+				  ],
+				  "detail-type": [
+					"EC2 Instance State-change Notification"
+				  ],
+				  "detail": {
+					"state": [
+					  "running",
+					  "terminated"
+					]
+				  }
+				},
+				"Name" : "Instance_Status_Change_Trigger",
+				"State": "ENABLED",
+				"Targets" : [ {
+					"Arn" : {"Fn::GetAtt": [
+                        "ElasticityLambda",
+                        "Arn"
+                    ]},
+					"Id" : "CloudWatch_Instance_Change_Target",
+					"InputTransformer" : {"InputPathsMap" : {"instanceId":"$.detail.instance-id","action":"$.detail.state"},
+										  "InputTemplate" : "\"<instanceId>;<action>\""}
+				}]
+			  },
+			  "DependsOn": [
+                "CreateSafe"
+            ]
+		},
+		"LambdaToCloudWatchPermission": {
+			"Type" : "AWS::Lambda::Permission",
+			"Properties" : {
+				"Action" : "lambda:InvokeFunction",
+				"FunctionName" : {"Fn::GetAtt": ["ElasticityLambda", "Arn"]},
+				"Principal" : "lambda.amazonaws.com",
+				"SourceArn" : {"Fn::GetAtt": ["CloudWatchInstanceChangeTrigger", "Arn"]}
+			}
+		},
+
+                          "",
                                     [
                                         "arn:aws:s3:::",
                                         {
                                             "Ref": "LambdasBucket"
                                         },
-                                        "/*"
+                               
+         "/*"
                                     ]
                                 ]
                             }
@@ -712,6 +550,96 @@
                 ]
             }
         },
+		"CloudWatchInstanceChangeTrigger": {
+			"Type" : "AWS::Events::Rule",
+			  "Properties" : {
+				"Description" : "CloudWatch event which fires on create/start/termination of an EC2 Instance ",
+				"EventPattern" : {
+				  "source": [
+					"aws.ec2"
+				  ],
+				  "detail-type": [
+					"EC2 Instance State-change Notification"
+				  ],
+				  "detail": {
+					"state": [
+					  "running",
+					  "terminated"
+					]
+				  }
+				},
+				"Name" : "Instance_Status_Change_Trigger",
+				"State": "ENABLED",
+				"Targets" : [ {
+					"Arn" : {"Fn::GetAtt": [
+                        "ElasticityLambda",
+                        "Arn"
+                    ]},
+					"Id" : "CloudWatch_Instance_Change_Target",
+					"InputTransformer" : {"InputPathsMap" : {"instanceId":"$.detail.instance-id","action":"$.detail.state"},
+										  "InputTemplate" : "\"<instanceId>;<action>\""}
+				}]
+			  },
+			  "DependsOn": [
+                "CreateSafe"
+            ]
+		},
+		"LambdaToCloudWatchPermission": {
+			"Type" : "AWS::Lambda::Permission",
+			"Properties" : {
+				"Action" : "lambda:InvokeFunction",
+				"FunctionName" : {"Fn::GetAtt": ["ElasticityLambda", "Arn"]},
+				"Principal" : "lambda.amazonaws.com",
+				"SourceArn" : {"Fn::GetAtt": ["CloudWatchInstanceChangeTrigger", "Arn"]}
+			}
+		},
+
+
+		"CloudWatchInstanceChangeTrigger": {
+			"Type" : "AWS::Events::Rule",
+			  "Properties" : {
+				"Description" : "CloudWatch event which fires on create/start/termination of an EC2 Instance ",
+				"EventPattern" : {
+				  "source": [
+					"aws.ec2"
+				  ],
+				  "detail-type": [
+					"EC2 Instance State-change Notification"
+				  ],
+				  "detail": {
+					"state": [
+					  "running",
+					  "terminated"
+					]
+				  }
+				},
+				"Name" : "Instance_Status_Change_Trigger",
+				"State": "ENABLED",
+				"Targets" : [ {
+					"Arn" : {"Fn::GetAtt": [
+                        "ElasticityLambda",
+                        "Arn"
+                    ]},
+					"Id" : "CloudWatch_Instance_Change_Target",
+					"InputTransformer" : {"InputPathsMap" : {"instanceId":"$.detail.instance-id","action":"$.detail.state"},
+										  "InputTemplate" : "\"<instanceId>;<action>\""}
+				}]
+			  },
+			  "DependsOn": [
+                "CreateSafe"
+            ]
+		},
+		"LambdaToCloudWatchPermission": {
+			"Type" : "AWS::Lambda::Permission",
+			"Properties" : {
+				"Action" : "lambda:InvokeFunction",
+				"FunctionName" : {"Fn::GetAtt": ["ElasticityLambda", "Arn"]},
+				"Principal" : "lambda.amazonaws.com",
+				"SourceArn" : {"Fn::GetAtt": ["CloudWatchInstanceChangeTrigger", "Arn"]}
+			}
+		},
+
+
 		"DynamoDBTableInstances": {
 		  "Type" : "AWS::DynamoDB::Table",
 		  "Properties" : {
@@ -860,7 +788,7 @@
 						"ComponentsVPC",
 						"PVWASG",
 						"ComponentsSubnet",
-						"VaultUser",
+						"VaultUser",עכש
 						"VaultPassword",
 						"UnixSafeName",
 						"CPMNameUnixSafe",

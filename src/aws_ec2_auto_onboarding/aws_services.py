@@ -7,9 +7,43 @@ from dynamo_lock import LockerClient
 
 # return ec2 instance relevant data:
 # keyPair_name, instance_address, platform
-def get_ec2_details(instanceId, context):
+def get_ec2_details(instanceId, context, region, eventAccountId):
+
     try:
-        ec2Resource = boto3.resource('ec2')
+        solutionAccountId = context.invoked_function_arn.split(':')[4]
+    except Exception:
+        print("AWS account Id wasn't found")
+
+    if eventAccountId == solutionAccountId:
+        try:
+            ec2Resource = boto3.resource('ec2', region)
+        except Exception as e:
+            print('Error on creating boto3 session: {0}'.format(e))
+    else:
+        try:
+            sts_connection = boto3.client('sts')
+            acct_b = sts_connection.assume_role(
+                RoleArn="arn:aws:iam::{0}:role/assume_role_on_lambda".format(eventAccountId),
+                RoleSessionName="cross_acct_lambda"
+            )
+
+            ACCESS_KEY = acct_b['Credentials']['AccessKeyId']
+            SECRET_KEY = acct_b['Credentials']['SecretAccessKey']
+            SESSION_TOKEN = acct_b['Credentials']['SessionToken']
+
+            # create service client using the assumed role credentials, e.g. S3
+            ec2Resource = boto3.resource(
+                'ec2',
+                region_name=region,
+                aws_access_key_id=ACCESS_KEY,
+                aws_secret_access_key=SECRET_KEY,
+                aws_session_token=SESSION_TOKEN,
+            )
+        except Exception as e:
+            print('Error on getting token from account: {0}'.format(eventAccountId))
+
+
+    try:
         instanceResource = ec2Resource.Instance(instanceId)
         instanceImage = ec2Resource.Image(instanceResource.image_id)
         imageDescription = instanceImage.description
@@ -23,11 +57,7 @@ def get_ec2_details(instanceId, context):
     else:  # unable to retrieve address from aws
         address = None
 
-    try:
-        awsAccountId = context.invoked_function_arn.split(':')[4]
-    except Exception:
-        print("AWS account Id wasn't found")
-        awsAccountId = ""
+
 
     if not imageDescription:
         raise Exception("Determining OS type failed")
@@ -37,7 +67,7 @@ def get_ec2_details(instanceId, context):
     details['address'] = address
     details['platform'] = instanceResource.platform
     details['image_description'] = imageDescription
-    details['aws_account_id'] = awsAccountId
+    details['aws_account_id'] = eventAccountId
     return details
 
 
