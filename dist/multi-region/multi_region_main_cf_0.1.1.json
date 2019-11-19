@@ -363,7 +363,7 @@
                         "Arn"
                     ]
                 },
-				"Principal" : "events.amazonaws.com",
+				"Principal" : "sns.amazonaws.com",
 				"SourceArn" : {
 				    "Fn::Join": [
                                     "",
@@ -391,7 +391,7 @@
                         "Arn"
                     ]
                 },
-				"Principal" : "events.amazonaws.com",
+				"Principal" : "sns.amazonaws.com",
 				"SourceArn" : {"Fn::Join": [
                                     "",
                                     [
@@ -418,7 +418,7 @@
                         "Arn"
                     ]
                 },
-				"Principal" : "events.amazonaws.com",
+				"Principal" : "sns.amazonaws.com",
 				"SourceArn" : {"Fn::Join": [
                                     "",
                                     [
@@ -445,7 +445,7 @@
                         "Arn"
                     ]
                 },
-				"Principal" : "events.amazonaws.com",
+				"Principal" : "sns.amazonaws.com",
 				"SourceArn" : {"Fn::Join": [
                                     "",
                                     [
@@ -472,7 +472,7 @@
                         "Arn"
                     ]
                 },
-				"Principal" : "events.amazonaws.com",
+				"Principal" : "sns.amazonaws.com",
 				"SourceArn" : {"Fn::Join": [
                                     "",
                                     [
@@ -499,7 +499,7 @@
                         "Arn"
                     ]
                 },
-				"Principal" : "events.amazonaws.com",
+				"Principal" : "sns.amazonaws.com",
 				"SourceArn" : {"Fn::Join": [
                                     "",
                                     [
@@ -526,7 +526,7 @@
                         "Arn"
                     ]
                 },
-				"Principal" : "events.amazonaws.com",
+				"Principal" : "sns.amazonaws.com",
 				"SourceArn" : {"Fn::Join": [
                                     "",
                                     [
@@ -553,7 +553,7 @@
                         "Arn"
                     ]
                 },
-				"Principal" : "events.amazonaws.com",
+				"Principal" : "sns.amazonaws.com",
 				"SourceArn" : {"Fn::Join": [
                                     "",
                                     [
@@ -580,7 +580,7 @@
                         "Arn"
                     ]
                 },
-				"Principal" : "events.amazonaws.com",
+				"Principal" : "sns.amazonaws.com",
 				"SourceArn" : {"Fn::Join": [
                                     "",
                                     [
@@ -607,7 +607,7 @@
                         "Arn"
                     ]
                 },
-				"Principal" : "events.amazonaws.com",
+				"Principal" : "sns.amazonaws.com",
 				"SourceArn" : {"Fn::Join": [
                                     "",
                                     [
@@ -634,7 +634,7 @@
                         "Arn"
                     ]
                 },
-				"Principal" : "events.amazonaws.com",
+				"Principal" : "sns.amazonaws.com",
 				"SourceArn" : {"Fn::Join": [
                                     "",
                                     [
@@ -661,7 +661,7 @@
                         "Arn"
                     ]
                 },
-				"Principal" : "events.amazonaws.com",
+				"Principal" : "sns.amazonaws.com",
 				"SourceArn" : {"Fn::Join": [
                                     "",
                                     [
@@ -688,7 +688,7 @@
                         "Arn"
                     ]
                 },
-				"Principal" : "events.amazonaws.com",
+				"Principal" : "sns.amazonaws.com",
 				"SourceArn" : {"Fn::Join": [
                                     "",
                                     [
@@ -715,7 +715,7 @@
                         "Arn"
                     ]
                 },
-				"Principal" : "events.amazonaws.com",
+				"Principal" : "sns.amazonaws.com",
 				"SourceArn" : {"Fn::Join": [
                                     "",
                                     [
