@@ -61,9 +61,7 @@
 						"State": "ENABLED",
 						"Targets" : [ {
 							"Arn": { "Ref": "SNSTopicToElasticityLambda" },
-							"Id" : "CloudWatch_Instance_Change_Target",
-							"InputTransformer" : {"InputPathsMap" : {"instanceId":"$.detail.instance-id","action":"$.detail.state"},
-												  "InputTemplate" : "\"<instanceId>;<action>\""}
+							"Id" : "CloudWatch_Instance_Change_Target"
 						}]
 					  }
 				}
