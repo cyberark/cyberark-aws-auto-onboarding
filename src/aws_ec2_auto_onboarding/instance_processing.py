@@ -41,7 +41,7 @@ def get_instance_password_data(instanceId):
     return instancePasswordData['PasswordData']
 
 
-def create_instance(instanceId, session, instanceDetails, storeParametersClass, logName):
+def create_instance(instanceId, session, instanceDetails, storeParametersClass, logName, eventRegion):
     # get key pair
 
     # Retrieving the account id of the account where the instance keyPair is stored
