@@ -52,7 +52,7 @@ def create_instance(instanceId, session, instanceDetails, storeParametersClass, 
         print("AWS region name could not be retrieved")
         raise Exception("AWS region name could not be retrieved")
     # AWS.<AWS Account>.<Region name>.<key pair name>
-    keyPairValueOnSafe = "AWS.{0}.{1}.{2}".format(instanceDetails["aws_account_id"], awsRegionName,
+    keyPairValueOnSafe = "AWS.{0}.{1}.{2}".format(instanceDetails["aws_account_id"], eventRegion,
                                                   instanceDetails["key_name"])
     keyPairAccountId = pvwa_api_calls.retrieve_accountId_from_account_name(session, keyPairValueOnSafe,
                                                                            storeParametersClass.keyPairSafeName,
