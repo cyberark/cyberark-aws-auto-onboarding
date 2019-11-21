@@ -1,0 +1,152 @@
+{
+	"AWSTemplateFormatVersion": "2010-09-09",
+	"Resources": {
+		"EventBridgePolicyForSendingMessagesToMainAccount": {
+			"Type": "AWS::IAM::ManagedPolicy",
+			"Properties": {
+				"Description" : "Policy for Event Bridge Rule for sending messages to main account",
+				"PolicyDocument" : {
+					"Version": "2012-10-17",
+					"Statement": [
+					{
+						"Effect": "Allow",
+						"Action": [
+							"events:PutEvents"
+						],
+						"Resource": [
+							{
+								"Fn::Join":
+								[
+									"",
+									[
+										"arn:aws:events:",
+										{
+											"Ref": "AWS::Region"
+										},
+										":",
+										{
+										"Ref": "MainAccountID"
+										},
+										":event-bus/default"
+									]
+								]
+							}
+						]
+					}
+					]
+				}
+			}
+		},
+		"EventBridgeRoleForSendingMessagesToMainAccount":
+		{
+			"Type": "AWS::IAM::Role",
+			"Properties": {
+				"AssumeRolePolicyDocument": {
+					"Statement": [
+						{
+							"Effect": "Allow",
+							"Principal": {
+								"Service": [
+									"events.amazonaws.com"
+								]
+							},
+							"Action": [
+								"sts:AssumeRole"
+							]
+						}
+					]
+				},
+				"ManagedPolicyArns": [ {
+						"Ref": "EventBridgePolicyForSendingMessagesToMainAccount"
+					} ]
+			},
+			"DependsOn": [
+						"EventBridgePolicyForSendingMessagesToMainAccount"
+					 ]
+		},
+		"EventBridgeRuleInstanceChangeTrigger": {
+					"Type" : "AWS::Events::Rule",
+					  "Properties" : {
+						"Description" : "Event Bridge event rule which fires on create/start/termination of an EC2 Instance ",
+						"EventPattern" : {
+						  "source": [
+							"aws.ec2"
+						  ],
+						  "detail-type": [
+							"EC2 Instance State-change Notification"
+						  ],
+						  "detail": {
+							"state": [
+							  "running",
+							  "terminated"
+							]
+						  }
+						},
+						"Name" : "Instance_Status_Change_Trigger",
+						"State": "ENABLED",
+						"RoleArn": {
+                    "Fn::GetAtt": [
+                        "EventBridgeRoleForSendingMessagesToMainAccount",
+                        "Arn"
+                    ]
+                },
+						"Targets" : [ {
+							"Arn": {
+								"Fn::Join":
+								[
+									"",
+									[
+										"arn:aws:events:",
+										{
+											"Ref": "AWS::Region"
+										},
+										":",
+										{
+										"Ref": "MainAccountID"
+										},
+										":event-bus/default"
+									]
+								]
+							},
+							"Id" : "CloudWatch_Instance_Change_Target"
+						}]
+					  },
+					  "DependsOn": [
+						"EventBridgeRoleForSendingMessagesToMainAccount"
+					 ]
+				}
+
+		},
+	"Description": "",
+	"Parameters": {
+		"MainAccountID": {
+            "Type": "String",
+            "Description": "The ID of the Main Account"
+        }
+	},
+	"Conditions": {
+
+	},
+	"Metadata": {
+		"AWS::CloudFormation::Interface": {
+            "ParameterGroups": [
+                {
+					"Label": {
+						"default": "General parameters"
+					},
+                    "Parameters": [
+						"MainAccountID"
+                    ]
+                }
+            ],
+            "ParameterLabels": {
+                "MainAccountID": {
+                    "default": "Main Account ID"
+                }
+        }
+	}
+	},
+	"Mappings": {
+
+	}
+}
