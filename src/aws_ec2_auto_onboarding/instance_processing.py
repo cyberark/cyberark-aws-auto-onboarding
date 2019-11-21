@@ -31,9 +31,9 @@ def delete_instance(instanceId, session, storeParametersClass, instanceData, ins
     return
 
 
-def get_instance_password_data(instanceId):
+def get_instance_password_data(instanceId,evnetRegion):
     # wait until password data available when Windows instance is up
-    ec2 = boto3.client('ec2')
+    ec2 = boto3.client('ec2', evnetRegion)
     print("Waiting for instance - {0} to become available: ".format(instanceId))
     waiter = ec2.get_waiter('password_data_available')
     waiter.wait(InstanceId=instanceId)
@@ -45,13 +45,7 @@ def create_instance(instanceId, session, instanceDetails, storeParametersClass, 
     # get key pair
 
     # Retrieving the account id of the account where the instance keyPair is stored
-    try:
-        currentSession = boto3.session.Session()
-        awsRegionName = currentSession.region_name
-    except Exception:
-        print("AWS region name could not be retrieved")
-        raise Exception("AWS region name could not be retrieved")
-    # AWS.<AWS Account>.<Region name>.<key pair name>
+    # AWS.<AWS Account>.<Event Region name>.<key pair name>
     keyPairValueOnSafe = "AWS.{0}.{1}.{2}".format(instanceDetails["aws_account_id"], eventRegion,
                                                   instanceDetails["key_name"])
     keyPairAccountId = pvwa_api_calls.retrieve_accountId_from_account_name(session, keyPairValueOnSafe,
@@ -69,7 +63,7 @@ def create_instance(instanceId, session, instanceDetails, storeParametersClass, 
 
     if instanceDetails['platform'] == "windows":  # Windows machine return 'windows' all other return 'None'
         kp_processing.save_key_pair(instanceAccountPassword)
-        instancePasswordData = get_instance_password_data(instanceId)
+        instancePasswordData = get_instance_password_data(instanceId, eventRegion)
         # decryptedPassword = convert_pem_to_password(instanceAccountPassword, instancePasswordData)
         rc, decryptedPassword = kp_processing.run_command_on_container(
             ["echo", str.strip(instancePasswordData), "|", "base64", "--decode", "|", "openssl", "rsautl", "-decrypt",
