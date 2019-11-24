@@ -19,6 +19,7 @@
 									"",
 									[
 										"arn:aws:iam::",
+										{
 										"Ref": "MainAccountID"
 										},
 										":role/ElasticityLambdaRole"
@@ -46,6 +47,7 @@
 		{
 			"Type": "AWS::IAM::Role",
 			"Properties": {
+				"RoleName": "AssumeRoleForElasticityLambdaInMainAccount",
 				"AssumeRolePolicyDocument": {
 					"Statement": [
 						{
@@ -70,7 +72,7 @@
 					 ]
 		}
 	},
-	Description": "",
+	"Description": "",
 	"Parameters": {
 		"MainAccountID": {
             "Type": "String",
