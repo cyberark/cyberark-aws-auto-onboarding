@@ -1,0 +1,105 @@
+{
+	"AWSTemplateFormatVersion": "2010-09-09",
+	"Resources": {
+		"ElasticityLambdaTrustPolicy": {
+			"Type": "AWS::IAM::ManagedPolicy",
+			"Properties": {
+				"Description" : "Policy for Elasticity Lambda in Main Account to assume",
+				"PolicyDocument" : {
+					"Version": "2012-10-17",
+					"Statement": [
+						{
+							"Sid": "VisualEditor0",
+							"Effect": "Allow",
+							"Action": "sts:AssumeRole",
+							"Resource": [
+							{
+								"Fn::Join":
+								[
+									"",
+									[
+										"arn:aws:iam::",
+										"Ref": "MainAccountID"
+										},
+										":role/ElasticityLambdaRole"
+									]
+								]
+							}
+						]
+						},
+						{
+							"Action": [
+								"ec2:DescribeInstances",
+								"ec2:DescribeNetworkInterfaces",
+								"ec2:DescribeVpcs",
+								"ec2:DescribeVpcAttribute",
+								"ec2:DescribeImages"
+							],
+							"Resource": "*",
+							"Effect": "Allow"
+						}
+					]
+				}
+			}
+		},
+		"AssumeRoleForElasticityLambdaInMainAccount":
+		{
+			"Type": "AWS::IAM::Role",
+			"Properties": {
+				"AssumeRolePolicyDocument": {
+					"Statement": [
+						{
+							"Effect": "Allow",
+							"Principal": {
+								"Service": [
+									"lambda.amazonaws.com"
+								]
+							},
+							"Action": [
+								"sts:AssumeRole"
+							]
+						}
+					]
+				},
+				"ManagedPolicyArns": [ {
+						"Ref": "ElasticityLambdaTrustPolicy"
+					} ]
+			},
+			"DependsOn": [
+						"ElasticityLambdaTrustPolicy"
+					 ]
+		}
+	},
+	Description": "",
+	"Parameters": {
+		"MainAccountID": {
+            "Type": "String",
+            "Description": "The ID of the Main Account"
+        }
+	},
+	"Conditions": {
+
+	},
+	"Metadata": {
+		"AWS::CloudFormation::Interface": {
+            "ParameterGroups": [
+                {
+					"Label": {
+						"default": "General parameters"
+					},
+                    "Parameters": [
+						"MainAccountID"
+                    ]
+                }
+            ],
+            "ParameterLabels": {
+                "MainAccountID": {
+                    "default": "Main Account ID"
+                }
+        }
+	}
+	},
+	"Mappings": {
+
+	}
+}
