@@ -1,0 +1,59 @@
+{
+	"AWSTemplateFormatVersion": "2010-09-09",
+	"Resources": {
+		"SampleEventBusPolicy": {
+			"Type": "AWS::Events::EventBusPolicy",
+			"Properties": {
+				"Action": "events:PutEvents",
+				"Principal": {
+							"Ref": "SecondaryAccountID"
+							},
+				"StatementId":
+				{
+					"Fn::Join":
+					[
+						"",
+						[
+							"AOB-",
+							{
+							"Ref": "SecondaryAccountID"
+							}
+						]
+					]
+				}
+			}
+		}
+	},
+	"Description": "",
+	"Parameters": {
+		"SecondaryAccountID": {
+			"Type": "String",
+			"Description": "The ID of the Secondary Account"
+		}
+	},
+	"Conditions": {
+
+	},
+	"Metadata": {
+		"AWS::CloudFormation::Interface": {
+			"ParameterGroups": [
+				{
+					"Label": {
+						"default": "General parameters"
+					},
+					"Parameters": [
+						"SecondaryAccountID"
+					]
+				}
+			],
+			"ParameterLabels": {
+				"SecondaryAccountID": {
+					"default": "Secondary Account ID"
+				}
+		}
+	}
+	},
+	"Mappings": {
+
+	}
+}
