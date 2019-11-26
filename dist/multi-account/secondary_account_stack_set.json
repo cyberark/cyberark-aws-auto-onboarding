@@ -4,7 +4,7 @@
 		"EventBridgePolicyForSendingMessagesToMainAccount": {
 			"Type": "AWS::IAM::ManagedPolicy",
 			"Properties": {
-				"Description" : "Policy for Event Bridge Rule for sending messages to main account",
+				"Description" : "CyberArk Auto On Boarding Policy for Event Bridge Rule in order to send messages to main account",
 				"PolicyDocument" : {
 					"Version": "2012-10-17",
 					"Statement": [
@@ -67,7 +67,7 @@
 		"EventBridgeRuleInstanceChangeTrigger": {
 					"Type" : "AWS::Events::Rule",
 					  "Properties" : {
-						"Description" : "Event Bridge event rule which fires on create/start/termination of an EC2 Instance ",
+						"Description" : "CyberArk Auto On Boarding rule which fires on create/termination of an EC2 Instance ",
 						"EventPattern" : {
 						  "source": [
 							"aws.ec2"

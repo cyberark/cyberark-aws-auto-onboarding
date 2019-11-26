@@ -4,7 +4,7 @@
 		"ElasticityLambdaTrustPolicy": {
 			"Type": "AWS::IAM::ManagedPolicy",
 			"Properties": {
-				"Description" : "Policy for Elasticity Lambda in Main Account to assume",
+				"Description" : "CyberArk Auto On Boarding Policy for Elasticity Lambda in Main Account to assume",
 				"PolicyDocument" : {
 					"Version": "2012-10-17",
 					"Statement": [
@@ -22,7 +22,7 @@
 										{
 										"Ref": "MainAccountID"
 										},
-										":role/ElasticityLambdaRole"
+										":role/CyberArk-AOB-ElasticityLambdaRole"
 									]
 								]
 							}
@@ -47,7 +47,7 @@
 		{
 			"Type": "AWS::IAM::Role",
 			"Properties": {
-				"RoleName": "AssumeRoleForElasticityLambdaInMainAccount",
+				"RoleName": "CyberArk-AOB-AssumeRoleForElasticityLambda",
 				"AssumeRolePolicyDocument": {
 					"Statement": [
 						{
