@@ -69,7 +69,7 @@ pipeline {
             steps {
                 sh '''
                     source ./.testenv/bin/activate
-                    safety check -r requirements.txt --full-report > reports/safety.txt
+                    safety check -r requirements.txt --full-report > reports/safety.txt || true
                 '''
             }
         }
@@ -77,7 +77,7 @@ pipeline {
             steps {
                 sh '''
                     source ./.testenv/bin/activate
-                    bandit -r artifacts/. --format html > reports/bandit.html
+                    bandit -r artifacts/. --format html > reports/bandit.html || true
                 '''
             }
         }
