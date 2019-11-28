@@ -58,8 +58,8 @@ pipeline {
                     cp src/aws_ec2_auto_onboarding/aws_ec2_auto_onboarding.zip artifacts/
                     cp src/aws_environment_setup/aws_environment_setup.zip artifacts/
                     cd artifacts
-                    unzip aws_ec2_auto_onboarding.zip -d artifacts/aws_ec2_auto_onboarding
-                    unzip aws_environment_setup.zip -d artifacts/aws_environment_setup
+                    unzip aws_ec2_auto_onboarding.zip -d aws_ec2_auto_onboarding
+                    unzip aws_environment_setup.zip -d aws_environment_setup
                 '''
             }
         }
