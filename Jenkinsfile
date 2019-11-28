@@ -25,7 +25,7 @@ pipeline {
                 '''
             }
         }
-        stage('Package aws environment setup lambda function') {
+        stage('Package aws_environment_setup lambda function') {
             steps {
                 sh '''
                     cd src/aws_environment_setup
@@ -36,7 +36,7 @@ pipeline {
                 '''
             }
         }
-        stage('Package aws environment setup lambda function') {
+        stage('Package aws_ec2_auto_onboarding lambda function') {
             steps {
                 sh '''
                     cd src/aws_ec2_auto_onboarding
