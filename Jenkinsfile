@@ -66,6 +66,7 @@ pipeline {
         stage('Scan requirements file for vulnerabilities') {
             steps {
                 sh '''
+                    source ./.testenv/bin/activate
                     safety check -r requirements.txt --full-report > reports/safety.txt
                 '''
             }
@@ -73,6 +74,7 @@ pipeline {
         stage('Scan distributables code for vulnerabilities') {
             steps {
                 sh '''
+                    source ./.testenv/bin/activate
                     bandit -r artifacts/. --format html > reports/bandit.html
                 '''
             }
