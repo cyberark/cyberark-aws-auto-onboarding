@@ -10,5 +10,5 @@ jmespath==0.9.3
 python-dateutil==2.6.1
 requests==2.18.4
 s3transfer==0.1.13
-six==1.13.0
+six==1.11.0
 urllib3==1.22
