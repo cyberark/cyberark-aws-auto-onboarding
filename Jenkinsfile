@@ -12,6 +12,7 @@ pipeline {
         stage('Install virtual environment') {
             steps {
                 sh '''
+                    apt-get install zip
                     python -m pip install --user virtualenv
                     python -m virtualenv --no-site-packages .testenv
                     source ./.testenv/bin/activate
