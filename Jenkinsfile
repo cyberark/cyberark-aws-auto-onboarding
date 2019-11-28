@@ -12,7 +12,7 @@ pipeline {
         stage('Install virtual environment') {
             steps {
                 sh '''
-                    sudo apt-get install zip
+                    sudo apt-get install -y zip
                     python -m pip install --user virtualenv
                     python -m virtualenv --no-site-packages .testenv
                     source ./.testenv/bin/activate
@@ -48,11 +48,42 @@ pipeline {
                 '''
             }
         }
+        stage('Copy zips') {
+            steps {
+                sh '''
+                    rm -rf artifacts/
+                    mkdir artifacts
+                    mkdir artifacts/aws_ec2_auto_onboarding
+                    mkdir artifacts/aws_environment_setup
+                    cp src/aws_ec2_auto_onboarding/aws_ec2_auto_onboarding.zip artifacts/
+                    cp src/aws_environment_setup/aws_environment_setup.zip artifacts/
+                    cd artifacts
+                    unzip aws_ec2_auto_onboarding.zip -d artifacts/aws_ec2_auto_onboarding
+                    unzip aws_environment_setup.zip -d artifacts/aws_environment_setup
+                '''
+            }
+        }
+        stage('Scan requirements file for vulnerabilities') {
+            steps {
+                sh '''
+                    safety check -r requirements.txt --full-report > reports/safety.txt
+                '''
+            }
+        }
+        stage('Scan distributables code for vulnerabilities') {
+            steps {
+                sh '''
+                    bandit -r artifacts/. --format html > reports/bandit.html
+                '''
+            }
+        }
     }
     post {
         success {
             archiveArtifacts artifacts: 'src/aws_ec2_auto_onboarding/aws_ec2_auto_onboarding.zip', fingerprint: true
             archiveArtifacts artifacts: 'src/aws_environment_setup/aws_environment_setup.zip', fingerprint: true
+            archiveArtifacts artifacts: 'src/aws_environment_setup/aws_environment_setup.zip', fingerprint: true
+            archiveArtifacts artifacts: 'reports/*', fingerprint: true
         }
     }
 }
