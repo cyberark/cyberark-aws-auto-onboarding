@@ -22,6 +22,8 @@ def get_ec2_details(instanceId, context, region, eventAccountId):
     else:
         try:
             sts_connection = boto3.client('sts')
+            RoleArn="arn:aws:iam::{0}:role/CyberArk-AOB-AssumeRoleForElasticityLambda".format(eventAccountId)
+            print (RoleArn)
             acct_b = sts_connection.assume_role(
                 RoleArn="arn:aws:iam::{0}:role/CyberArk-AOB-AssumeRoleForElasticityLambda".format(eventAccountId),
                 RoleSessionName="cross_acct_lambda"
