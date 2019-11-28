@@ -51,7 +51,9 @@ pipeline {
         stage('Copy zips') {
             steps {
                 sh '''
+                    rm -rf reports/
                     rm -rf artifacts/
+                    mkdir reports
                     mkdir artifacts
                     mkdir artifacts/aws_ec2_auto_onboarding
                     mkdir artifacts/aws_environment_setup
