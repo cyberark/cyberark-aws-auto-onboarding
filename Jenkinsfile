@@ -84,9 +84,7 @@ pipeline {
     }
     post {
         success {
-            archiveArtifacts artifacts: 'src/aws_ec2_auto_onboarding/aws_ec2_auto_onboarding.zip', fingerprint: true
-            archiveArtifacts artifacts: 'src/aws_environment_setup/aws_environment_setup.zip', fingerprint: true
-            archiveArtifacts artifacts: 'src/aws_environment_setup/aws_environment_setup.zip', fingerprint: true
+            archiveArtifacts artifacts: 'artifacts/*.zip', fingerprint: true
             archiveArtifacts artifacts: 'reports/*', fingerprint: true
         }
     }
