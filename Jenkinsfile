@@ -17,8 +17,8 @@ pipeline {
                     source ./.testenv/bin/activate
                     
                     # Install lambda functions requirements
-                    pip install -r requirements.txt --target ./aws_ec2_auto_onboarding/package
-                    pip install -r requirements.txt --target ./aws_environment_setup/package
+                    pip install -r requirements.txt --target ./src/aws_ec2_auto_onboarding/package
+                    pip install -r requirements.txt --target ./src/aws_environment_setup/package
                     
                     # Install security tools
                     pip install safety bandit
