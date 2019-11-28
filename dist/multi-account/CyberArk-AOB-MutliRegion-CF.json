@@ -56,7 +56,7 @@
 		"ElasticityLambdaRole": {
 		  "Type": "AWS::IAM::Role",
 		  "Properties": {
-		  	"RoleName": "ElasticityLambdaRole",
+		  	"RoleName": "CyberArk-AOB-ElasticityLambdaRole",
 			"AssumeRolePolicyDocument": {
 				"Statement": [
 					{
