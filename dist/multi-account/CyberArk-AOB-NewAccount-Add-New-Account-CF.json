@@ -9,11 +9,36 @@
 					"Version": "2012-10-17",
 					"Statement": [
 						{
-							"Sid": "VisualEditor0",
+							"Action": [
+								"ec2:DescribeInstances",
+								"ec2:DescribeNetworkInterfaces",
+								"ec2:DescribeVpcs",
+								"ec2:DescribeVpcAttribute",
+								"ec2:DescribeImages"
+							],
+							"Resource": "*",
+							"Effect": "Allow"
+						}
+					]
+				},
+			"Roles": [ {
+               "Ref": "AssumeRoleForElasticityLambdaInMainAccount"
+            } ]
+			}
+		},
+		"AssumeRoleForElasticityLambdaInMainAccount":
+		{
+			"Type": "AWS::IAM::Role",
+			"Properties": {
+				"RoleName": "CyberArk-AOB-AssumeRoleForElasticityLambda",
+				"AssumeRolePolicyDocument": {
+					"Statement": [
+						{
 							"Effect": "Allow",
 							"Action": "sts:AssumeRole",
-							"Resource": [
+							"Principal":
 							{
+								"AWS": {
 								"Fn::Join":
 								[
 									"",
@@ -26,50 +51,12 @@
 									]
 								]
 							}
-						]
-						},
-						{
-							"Action": [
-								"ec2:DescribeInstances",
-								"ec2:DescribeNetworkInterfaces",
-								"ec2:DescribeVpcs",
-								"ec2:DescribeVpcAttribute",
-								"ec2:DescribeImages"
-							],
-							"Resource": "*",
-							"Effect": "Allow"
+							}
+
 						}
 					]
 				}
 			}
-		},
-		"AssumeRoleForElasticityLambdaInMainAccount":
-		{
-			"Type": "AWS::IAM::Role",
-			"Properties": {
-				"RoleName": "CyberArk-AOB-AssumeRoleForElasticityLambda",
-				"AssumeRolePolicyDocument": {
-					"Statement": [
-						{
-							"Effect": "Allow",
-							"Principal": {
-								"Service": [
-									"lambda.amazonaws.com"
-								]
-							},
-							"Action": [
-								"sts:AssumeRole"
-							]
-						}
-					]
-				},
-				"ManagedPolicyArns": [ {
-						"Ref": "ElasticityLambdaTrustPolicy"
-					} ]
-			},
-			"DependsOn": [
-						"ElasticityLambdaTrustPolicy"
-					 ]
 		}
 	},
 	"Description": "",
