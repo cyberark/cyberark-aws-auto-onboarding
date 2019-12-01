@@ -3,57 +3,28 @@
 - hosts: localhost
   gather_facts: no
   tasks:
-    - name: Collect Details From CF
-      cloudformation_facts:
-        stack_name: "ansible-cloudformation-FullPass-{{ TimeStamp }}"
-      register: cf
-    - set_fact:
-        SName: "ansible-cloudformation-FullPass-{{ TimeStamp }}"
-    - name: Collect Defails From PVWA Ec2
-      ec2_instance_info:
-        filters:
-          "tag:Name": "{{ cf.ansible_facts.cloudformation[SName].stack_parameters.PVWAInstanceName}}"
-      register: PVWAEc2
 
-    - name: Collect Details From Igw
-      ec2_vpc_igw_info:
-        filters:
-          "attachment.vpc-id": "{{ PVWAEc2.instances[0].network_interfaces[0].vpc_id }}"
-      register: Igw
-
-    - debug:
-        msg: "{{ Igw.internet_gateways[0].internet_gateway_id }}"
-
-    - name: Include Full-PAS Variables
+    - name: Include AOB Variables
       include_vars:
-        file: vars/AutoOnboardingParams.yml
-        name: cf_fullpas_vars
+        file: vars/AOB-Params.yml
+        name: aob_vars
     
-    - name: Git Clone
-      git:
-        repo: 'https://{{ gitUN }}:{{ gitPW }}@github.cyberng.com/Cloud-Initiatives/test-cyberark-auto-onboarding'
-        clone: yes
-        update: yes
-        version: develop
-        dest: /tmp/templates_git/AutoOnboarding{{ TimeStamp }}
-    - name: Check clone
-      shell: ls /tmp/templates_git/AutoOnboarding{{ TimeStamp }}
-      register: gitchk 
-    - debug:
-        msg: "{{ gitchk }}"
-
     - name: Stack Name
       set_fact:
-        StackName: "ansible-cloudformation-AutoOnboarding-{{ TimeStamp }}"
+        CFStackName: "AOB-CF"
+        SSStackName: "AOB-SS"
 
-    - name: Deploy Full PAS from Template
+    - name: Deploy AOB from CloudFormation Template
       include_role:
         name: cf_deploy
       vars:
-        cf_template_file: "/tmp/templates_git/AutoOnboarding{{ TimeStamp }}/dist/aws_auto_onboarding_0.1.1.json"
-        cf_template_parameters: "{{ cf_fullpas_vars.template_parameters }}"
-
-    - name: Clean artifact path
-      file:
-        state: absent
-        path: /tmp/templates_git/AutoOnboarding{{ TimeStamp }}
+        cf_template_file: "{{ aob_vars.CloudFormation_parameters.TemplatePath }}"
+        cf_template_parameters: "{{ aob_vars.CloudFormation_parameters }}"
+    
+    - name: Deploy 
+      include_role:
+        name: ss_deploy
+      vars:
+        cf_template_file: "{{ aob_vars.StackSet_parameters.TemplatePath }}"
+        cf_template_parameters: "{{ aob_vars.StackSet_parameters }}"
+    

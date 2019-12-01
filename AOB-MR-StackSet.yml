@@ -1,0 +1,11 @@
+---
+
+- hosts: localhost
+  gather_facts: no
+  tasks:
+
+    - name: "Deploy Cloud Formation Stack Set"
+      include_role:
+        name: ss_deploy
+      vars:
+        cf_template_parameters: "{{ ss_params.template_parameters }}"

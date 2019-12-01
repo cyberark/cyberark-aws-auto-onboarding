@@ -1,0 +1,62 @@
+---
+# tasks file for cf_deploy
+
+- name: Get Timestamp and Store it in a variable
+  set_fact: "timestamp={{ lookup('pipe','date +%Y-%m-%d-%H-%M-%S') }}"
+  
+- name: Set String for CloudFormation Stack ID
+  set_fact:
+    cloudformation_stack_id: "{{ CFStackName }}"
+  
+- name: Create workspace directory on temp folder
+  file:
+    path: "/tmp/{{ cloudformation_stack_id }}-{{ timestamp }}"
+    state: directory
+  register: workspace
+  
+- set_fact:
+    tmp_path: "{{ workspace.path }}"
+
+- name: Get CloudFormation Template from local file
+  copy:
+    src: "{{ cf_template_file }}"
+    dest: "{{ tmp_path }}/cf.json"
+
+- name: Manipulate CloudFormation
+  shell: "{{ manipulation_commands }}"
+  when: manipulation_commands != ""
+
+- name: Out file when manipulate cloudFormation is empty
+  shell: "cat {{ tmp_path }}/cf.json > {{ tmp_path }}/cf-out.json"
+  when: manipulation_commands == ""
+
+- name: Upload CloudFormation Template to S3
+  aws_s3:
+    bucket: "{{ deploy_bucket }}"
+    object: "{{ tmp_path }}/cf.json"
+    src: "{{ tmp_path }}/cf-out.json"
+    mode: put
+    
+- name: Create CloudFormation Stack
+  cloudformation:
+    stack_name: "{{ CFStackName }}"
+    state: "present"
+    region: "{{ aws_region }}"
+    disable_rollback: true
+    template_url: "https://s3.amazonaws.com/{{ deploy_bucket }}{{ tmp_path }}/cf.json"
+    template_parameters: "{{ cf_template_parameters }}"
+    tags:
+      Stack: "ansible-cloudformation"
+      Automated: ""
+  register: cf
+
+- name: Get all stack output info
+  cloudformation_facts:
+    region: "{{ aws_region }}"
+    stack_name: "{{ cloudformation_stack_id }}"
+    all_facts: true
+  register: cf_facts
+
+- name: Register Output to ansible fact
+  set_fact:
+    cf_output: "{{ cf_facts.ansible_facts.cloudformation[cloudformation_stack_id].stack_resources }}"

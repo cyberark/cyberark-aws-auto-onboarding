@@ -1,16 +1,2 @@
 ---
 
-# pvwa git repo
-- src: https://github.com/cyberark/pvwa.git
-  scm: git
-  version: v11.1
-
-# cpm git repo
-- src: https://github.com/cyberark/cpm.git
-  scm: git
-  version: v11.1
-
-# psm git repo
-- src: https://github.com/cyberark/psm.git
-  scm: git
-  version: v11.1
