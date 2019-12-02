@@ -46,8 +46,7 @@
     template_url: "https://s3.amazonaws.com/{{ deploy_bucket }}{{ tmp_path }}/cf.json"
     template_parameters: "{{ cf_template_parameters }}"
     tags:
-      Stack: "ansible-cloudformation"
-      Automated: ""
+      AOB: "Deployed"
   register: cf
 
 - name: Get all stack output info

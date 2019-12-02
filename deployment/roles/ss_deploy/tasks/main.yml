@@ -45,7 +45,7 @@
     template_url: "https://s3.amazonaws.com/{{ deploy_bucket }}{{ tmp_path }}/ss.json"
     template_parameters: "{{ cf_template_parameters }}"
     tags:
-      Stack: "aob-stackset-{{ timestamp }}"
+      AOB: "Deployed"
   register: cf
 
 # - name: Get all stack output info
