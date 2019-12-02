@@ -17,46 +17,44 @@
 - set_fact:
     tmp_path: "{{ workspace.path }}"
 
-- name: Get CloudFormation Template from local file
+- name: Get StackSet Template from local file
   copy:
     src: "{{ cf_template_file }}"
-    dest: "{{ tmp_path }}/cf.json"
+    dest: "{{ tmp_path }}/ss.json"
 
-- name: Manipulate CloudFormation
+- name: Manipulate StackSet
   shell: "{{ manipulation_commands }}"
   when: manipulation_commands != ""
 
-- name: Out file when manipulate cloudFormation is empty
-  shell: "cat {{ tmp_path }}/cf.json > {{ tmp_path }}/cf-out.json"
+- name: Out file when manipulate StackSet is empty
+  shell: "cat {{ tmp_path }}/ss.json > {{ tmp_path }}/ss-out.json"
   when: manipulation_commands == ""
 
-- name: Upload CloudFormation Template to S3
+- name: Upload StackSet Template to S3
   aws_s3:
     bucket: "{{ deploy_bucket }}"
-    object: "{{ tmp_path }}/cf.json"
-    src: "{{ tmp_path }}/cf-out.json"
+    object: "{{ tmp_path }}/ss.json"
+    src: "{{ tmp_path }}/ss-out.json"
     mode: put
     
-- name: Create CloudFormation Stack
-  cloudformation:
-    stack_name: "{{ StackName }}"
+- name: Create StackSet Stack
+  cloudformation_stack_set :
+    name: "{{ StackName }}"
     state: "present"
-    region: "{{ aws_region }}"
-    disable_rollback: true
-    template_url: "https://s3.amazonaws.com/{{ deploy_bucket }}{{ tmp_path }}/cf.json"
+    regions: "{{ Regions }}"
+    template_url: "https://s3.amazonaws.com/{{ deploy_bucket }}{{ tmp_path }}/ss.json"
     template_parameters: "{{ cf_template_parameters }}"
     tags:
-      Stack: "ansible-cloudformation-{{ timestamp }}"
-      Automated: "{{ timestamp }}"
+      Stack: "aob-stackset-{{ timestamp }}"
   register: cf
 
-- name: Get all stack output info
-  cloudformation_facts:
-    region: "{{ aws_region }}"
-    stack_name: "{{ stack_set_id }}"
-    all_facts: true
-  register: cf_facts
+# - name: Get all stack output info
+#   cloudformation_facts:
+#     region: "{{ aws_region }}"
+#     stack_name: "{{ stack_set_id }}"
+#     all_facts: true
+#   register: cf_facts
 
-- name: Register Output to ansible fact
-  set_fact:
-    cf_output: "{{ cf_facts.ansible_facts.cloudformation[stack_set_id].stack_resources }}"
+# - name: Register Output to ansible fact
+#   set_fact:
+#     cf_output: "{{ cf_facts.ansible_facts.cloudformation[stack_set_id].stack_resources }}"
