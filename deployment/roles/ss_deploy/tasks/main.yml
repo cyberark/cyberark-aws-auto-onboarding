@@ -36,14 +36,21 @@
     object: "{{ tmp_path }}/ss.json"
     src: "{{ tmp_path }}/ss-out.json"
     mode: put
-    
-- name: Create StackSet Stack
+
+- name: Assume role for stack set
+  sts_assume_role:
+    role_arn: "arn:aws:iam::*:role/AWSCloudFormationStackSetExecutionRole"
+    role_session_name: "AWSCloudFormationStackSetExecutionRole"
+
+- name: Create stackset stack
   cloudformation_stack_set :
     name: "{{ StackName }}"
     state: "present"
     regions: "{{ Regions }}"
     template_url: "https://s3.amazonaws.com/{{ deploy_bucket }}{{ tmp_path }}/ss.json"
     template_parameters: "{{ ss_template_parameters }}"
+    administration_role_arn: "arn:aws:iam::*:role/AWSCloudFormationStackSetExecutionRole"
+    execution_role_name: "AWSCloudFormationStackSetExecutionRole"
     tags:
       AOB: "Deployed"
   register: cf
