@@ -48,8 +48,14 @@ This solution requires the following:
 |Update Accounts Properties|
 |Initiate CPM account management operations|
 
+# Automatic Deployment Using Ansible
+Requirements for deployment:
+- PAS environment already deployed - Vault, PVWA, CPM, PSM, PSMP
+- Any Vault Admin user + password 
+- AWS IAM User strong privileges for deploying IAM roles and policies with CloudFormation
 
-# Deployment
+
+# Manual Deployment
 
 This solution requires NAT GW to allow Lambda access to the AWS resources  
 Reference for further information: https://docs.aws.amazon.com/lambda/latest/dg/vpc.html
