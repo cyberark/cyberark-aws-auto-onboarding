@@ -1,5 +1,5 @@
 ---
-# tasks file for cf_deploy
+# tasks file for ss_deploy
 
 - name: Get Timestamp and Store it in a variable
   set_fact: "timestamp={{ lookup('pipe','date +%Y-%m-%d-%H-%M-%S') }}"
@@ -19,7 +19,7 @@
 
 - name: Get StackSet Template from local file
   copy:
-    src: "{{ cf_template_file }}"
+    src: "{{ ss_template_file }}"
     dest: "{{ tmp_path }}/ss.json"
 
 - name: Manipulate StackSet
@@ -43,7 +43,7 @@
     state: "present"
     regions: "{{ Regions }}"
     template_url: "https://s3.amazonaws.com/{{ deploy_bucket }}{{ tmp_path }}/ss.json"
-    template_parameters: "{{ cf_template_parameters }}"
+    template_parameters: "{{ ss_template_parameters }}"
     tags:
       AOB: "Deployed"
   register: cf
@@ -53,8 +53,8 @@
 #     region: "{{ aws_region }}"
 #     stack_name: "{{ stack_set_id }}"
 #     all_facts: true
-#   register: cf_facts
+#   register: ss_facts
 
 # - name: Register Output to ansible fact
 #   set_fact:
-#     cf_output: "{{ cf_facts.ansible_facts.cloudformation[stack_set_id].stack_resources }}"
+#     ss_output: "{{ ss_facts.ansible_facts.cloudformation[stack_set_id].stack_resources }}"

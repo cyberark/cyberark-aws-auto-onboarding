@@ -25,6 +25,6 @@
       include_role:
         name: ss_deploy
       vars:
-        cf_template_file: "{{ aob_vars.StackSet_parameters.TemplatePath }}"
-        cf_template_parameters: "{{ aob_vars.StackSet_parameters }}"
+        ss_template_file: "{{ aob_vars.StackSet_parameters.TemplatePath }}"
+        ss_template_parameters: "{{ aob_vars.StackSet_parameters }}"
     
