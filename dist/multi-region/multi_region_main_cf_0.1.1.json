@@ -1117,6 +1117,16 @@
 	},
 	"Mappings": {
 
-	}
-
+	},
+	"Outputs": {
+        "ElasticityLambdaArnOutput": {
+            "Description": "Information about the value",
+            "Value": {
+                "Fn::GetAtt": [
+                    "ElasticityLambda",
+                    "Arn"
+                ]
+            }
+        }
+    }
 }

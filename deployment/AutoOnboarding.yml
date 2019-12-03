@@ -11,7 +11,7 @@
     
     - name: Stack Name
       set_fact:
-        CFStackName: "AOB2-CF"
+        CFStackName: "AOB-CF"
         SSStackName: "AOB-SS"
 
     - name: Deploy AOB CloudFormation
@@ -27,6 +27,6 @@
         name: ss_deploy
       vars:
         ss_template_file: "{{ aob_vars.SSTemplatePath }}"
-        ss_template_parameters: "{{ aob_vars.StackSet_parameters }}"
+        ss_template_parameters: "{{ cf_arn.ElasticityLambdaArnOutput }}"
         runtime_parameters: "{{ aob_vars.Runtime_parameters }}"
     

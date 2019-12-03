@@ -60,3 +60,4 @@
 - name: Register Output to ansible fact
   set_fact:
     cf_output: "{{ cf_facts.ansible_facts.cloudformation[cloudformation_stack_id].stack_resources }}"
+    cf_arn: "{{ cf_facts.ansible_facts.cloudformation[cloudformation_stack_id].stack_outputs }}"

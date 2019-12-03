@@ -22,13 +22,9 @@ CloudFormation_parameters:
     VaultUser: "Administrator" # Vault user that will be used by the solution.
     VaultPassword: "Noam3110!" # Password of the Vault user.
     UnixSafeName: "UxSafe" # Name of the Safe that will store all the Unix accounts created by the solution. If this Safe does not yet exist, it will be created automatically.
-    CPMNameUnixSafe: "CUxSafe" # Name of the CPM manager to manage Unix Accounts Safe
+    CPMNameUnixSafe: "PasswordManager" # Name of the CPM manager to manage Unix Accounts Safe
     WindowsSafeName: "WinSafe" # Name of the Safe that will store all the Windows accounts created by the solution. If this Safe does not yet exist, it will be created automatically.
-    CPMNameWindowsSafe: "CWinSafe" # Name of the CPM manager to manage Windows Accounts Safe
+    CPMNameWindowsSafe: "PasswordManager" # Name of the CPM manager to manage Windows Accounts Safe
     KeyPairsSafe: "KpSafe" # Name of the Safe that will store all Key Pairs used by the solution. If this Safe does not yet exist, it will be created automatically.
     KeyPairName: "Noam-Tokyo.pem" # Name of the Key pair
-
-
-StackSet_parameters:
-    LambdaArn: "arn:aws:lambda:eu-west-2:138339392836:function:ansible-cloudformation-AutoOnboar-ElasticityLambda-1HGHLZBRW658O" # The ARN of Elasticity Lambda in the Main Account and Region
 
