@@ -32,7 +32,8 @@
 
 - name: Upload CloudFormation Template to S3
   aws_s3:
-    bucket: "{{ deploy_bucket }}"
+    region: "{{ runtime_parameters.MainRegion }}"
+    bucket: "{{ cf_template_parameters.LambdasBucket }}"
     object: "{{ tmp_path }}/cf.json"
     src: "{{ tmp_path }}/cf-out.json"
     mode: put
@@ -41,9 +42,9 @@
   cloudformation:
     stack_name: "{{ CFStackName }}"
     state: "present"
-    region: "{{ aws_region }}"
-    disable_rollback: true
-    template_url: "https://s3.amazonaws.com/{{ deploy_bucket }}{{ tmp_path }}/cf.json"
+    region: "{{ runtime_parameters.MainRegion }}"
+    disable_rollback: "{{ runtime_parameters.DisableRollback }}"
+    template_url: "https://s3.amazonaws.com/{{ cf_template_parameters.LambdasBucket }}{{ tmp_path }}/cf.json"
     template_parameters: "{{ cf_template_parameters }}"
     tags:
       AOB: "Deployed"
@@ -51,7 +52,7 @@
 
 - name: Get all stack output info
   cloudformation_facts:
-    region: "{{ aws_region }}"
+    region: "{{ runtime_parameters.MainRegion }}"
     stack_name: "{{ cloudformation_stack_id }}"
     all_facts: true
   register: cf_facts

@@ -1,22 +1,34 @@
 ---
 # Vars for auto onboarding
 
+CFTemplatePath: "/home/ec2-user/environment/git/cyberark-aws-auto-onboarding/dist/multi-region/multi_region_main_cf_0.1.1.json" # The path of the json file which deploys the CloudFormation
+                                                                                                                                # The file is located in the git repository under dist/multi-region
+SSTemplatePath: "/home/ec2-user/environment/git/cyberark-aws-auto-onboarding/dist/multi-region/multi_region_stack_set_0.1.1.json" # The path of the json file which deploys the StackSet - 
+                                                                                                                                # The file is located in the git repository under dist/multi-region
+Runtime_parameters:
+    MainRegion: "ap-northeast-1" # The region that the solution will be deployed in
+    DisableRollback: "true" # Determines if the CloudFormation should rollback upon failure:
+                                                                                    # true - rollback is disabled
+                                                                                    # false - rollback is enabled
+    Regions: "['eu-west-2','eu-west-1','us-east-2','us-east-1']" # List of regions in which the stack sets will be deployed
+
+    
 CloudFormation_parameters:
-    TemplatePath: "/tmp/AOB/Templates/cf.json" # The path of the json file which deploys the CloudFormation
-    LambdasBucket: "Cyberark-Aob-London" # Name of the bucket containing the solution files. The bucket must be in the same region where the solution is deployed.
-    PvwaIP: "10.10.12.18" # PVWA IP address or host name
-    ComponentsVPC: "vpc-0a6549f084e920c0f" # VPC where the solution will be deployed. The VPC must contain a subnet with access to the PVWA
-    PVWASG: "sg-0ef2da6510d3e1f57" # Security Group of the PVWA
-    ComponentsSubnet: " " # Subnet where the solution will be deployed. The subnet must have access to the PVWA
-    VaultUser: "VAdministrator" # Vault user that will be used by the solution.
-    VaultPassword: "BestPassword911#" # Password of the Vault user.
+    LambdasBucket: "aws-aob-tokyo" # Name of the bucket containing the solution files. The bucket must be in the same region where the solution is deployed.
+    PvwaIP: "10.10.1.10" # PVWA IP address or host name
+    ComponentsVPC: "vpc-0a0b1b35368b2e2fc" # VPC where the solution will be deployed. The VPC must contain a subnet with access to the PVWA
+    PVWASG: "sg-06a491b55aa7a197e" # Security Group of the PVWA
+    ComponentsSubnet: "subnet-007426a62cd617ec2" # Subnet where the solution will be deployed. The subnet must have access to the PVWA
+    VaultUser: "Administrator" # Vault user that will be used by the solution.
+    VaultPassword: "Noam3110!" # Password of the Vault user.
     UnixSafeName: "UxSafe" # Name of the Safe that will store all the Unix accounts created by the solution. If this Safe does not yet exist, it will be created automatically.
     CPMNameUnixSafe: "CUxSafe" # Name of the CPM manager to manage Unix Accounts Safe
     WindowsSafeName: "WinSafe" # Name of the Safe that will store all the Windows accounts created by the solution. If this Safe does not yet exist, it will be created automatically.
     CPMNameWindowsSafe: "CWinSafe" # Name of the CPM manager to manage Windows Accounts Safe
     KeyPairsSafe: "KpSafe" # Name of the Safe that will store all Key Pairs used by the solution. If this Safe does not yet exist, it will be created automatically.
-    KeyPairName: "CyberArk.pem" # Name of the Key pair
+    KeyPairName: "Noam-Tokyo.pem" # Name of the Key pair
+
+
 StackSet_parameters:
-    TemplatePath: "/tmp/AOB/Templates/ss.json" # The path of the json file which deploys the StackSet
-    Regions: "['eu-west-2','eu-west-1','us-east-2','us-east-1']" # List of regions in which the solution will be deployed
     LambdaArn: "arn:aws:lambda:eu-west-2:138339392836:function:ansible-cloudformation-AutoOnboar-ElasticityLambda-1HGHLZBRW658O" # The ARN of Elasticity Lambda in the Main Account and Region
+

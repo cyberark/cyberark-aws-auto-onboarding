@@ -32,7 +32,8 @@
 
 - name: Upload StackSet Template to S3
   aws_s3:
-    bucket: "{{ deploy_bucket }}"
+    region: "{{ runtime_parameters.MainRegion }}"
+    bucket: "{{  aob_vars.CloudFormation_parameters.LambdasBucket }}"
     object: "{{ tmp_path }}/ss.json"
     src: "{{ tmp_path }}/ss-out.json"
     mode: put
@@ -46,9 +47,9 @@
   cloudformation_stack_set :
     name: "{{ StackName }}"
     state: "present"
-    regions: "{{ Regions }}"
-    template_url: "https://s3.amazonaws.com/{{ deploy_bucket }}{{ tmp_path }}/ss.json"
-    template_parameters: "{{ ss_template_parameters }}"
+    regions: "{{ Runtime_parameters.Regions }}"
+    template_url: "https://s3.amazonaws.com/{{  aob_vars.CloudFormation_parameters.LambdasBucket }}{{ tmp_path }}/ss.json"
+    parameters: "{{ ss_template_parameters }}"
     administration_role_arn: "arn:aws:iam::*:role/AWSCloudFormationStackSetExecutionRole"
     execution_role_name: "AWSCloudFormationStackSetExecutionRole"
     tags:

@@ -11,20 +11,22 @@
     
     - name: Stack Name
       set_fact:
-        CFStackName: "AOB-CF"
+        CFStackName: "AOB2-CF"
         SSStackName: "AOB-SS"
 
-    - name: Deploy AOB from CloudFormation Template
+    - name: Deploy AOB CloudFormation
       include_role:
         name: cf_deploy
       vars:
-        cf_template_file: "{{ aob_vars.CloudFormation_parameters.TemplatePath }}"
+        cf_template_file: "{{ aob_vars.CFTemplatePath }}"
         cf_template_parameters: "{{ aob_vars.CloudFormation_parameters }}"
+        runtime_parameters: "{{ aob_vars.Runtime_parameters }}"
     
-    - name: Deploy 
+    - name: Deploy AOB StackSet
       include_role:
         name: ss_deploy
       vars:
-        ss_template_file: "{{ aob_vars.StackSet_parameters.TemplatePath }}"
+        ss_template_file: "{{ aob_vars.SSTemplatePath }}"
         ss_template_parameters: "{{ aob_vars.StackSet_parameters }}"
+        runtime_parameters: "{{ aob_vars.Runtime_parameters }}"
     
