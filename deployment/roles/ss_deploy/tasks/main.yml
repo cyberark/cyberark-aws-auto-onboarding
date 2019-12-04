@@ -57,6 +57,8 @@
     parameters: "{{ ss_template_parameters }}"
     administration_role_arn: "{{ role.arn }}"
     execution_role_name: "AWSCloudFormationStackSetExecutionRole"
+    tags:
+      ansible_automated: "True"
   register: cf
 
 # - name: Get all stack output info
