@@ -20,8 +20,6 @@ CloudFormation_parameters:
     ComponentsVPC: "vpc-0a0b1b35368b2e2fc" # VPC where the solution will be deployed. The VPC must contain a subnet with access to the PVWA
     PVWASG: "sg-06a491b55aa7a197e" # Security Group of the PVWA
     ComponentsSubnet: "subnet-007426a62cd617ec2" # Subnet where the solution will be deployed. The subnet must have access to the PVWA
-    VaultUser: "Administrator" # Vault user that will be used by the solution.
-    VaultPassword: "Noam3110!" # Password of the Vault user.
     UnixSafeName: "UxSafe2" # Name of the Safe that will store all the Unix accounts created by the solution. If this Safe does not yet exist, it will be created automatically.
     CPMNameUnixSafe: "PasswordManager" # Name of the CPM manager to manage Unix Accounts Safe
     WindowsSafeName: "WinSafe2" # Name of the Safe that will store all the Windows accounts created by the solution. If this Safe does not yet exist, it will be created automatically.
