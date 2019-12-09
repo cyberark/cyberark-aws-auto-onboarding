@@ -3,9 +3,13 @@ import pvwa_integration
 import boto3
 import aws_services
 import time
+import kp_processing
+from datetime import datetime
+import instance_processing
 
-# import pytest
-
+# Constants:
+win_account_name = "Administrator"
+lin_account_name = "ec2-user"
 EC2 = boto3.resource('ec2')
 EC2_DETAILS = boto3.client('ec2')
 DDB = boto3.client('dynamodb')
@@ -46,19 +50,34 @@ def create_vm(key_pair, subnet_id, security_group_id, ami_owner, image_type, gue
                               )
     vm_info = EC2_DETAILS.describe_instances(InstanceIds=[vm[0].id])
     vm_info = vm_info['Reservations'][0]['Instances'][0]['PrivateIpAddress']
+    print (vm)
     return vm_info
+
+
+def create_kp():
+    kp_name = str(datetime.utcnow())
+    kp_name = kp_name.replace(" ", "_")
+    kp_name = kp_name.replace(":", "-")
+    kp_name = kp_name.split(".")[0]
+    kp_value = EC2_DETAILS.create_key_pair(KeyName=kp_name)
+    return kp_name,kp_value
+
+
+def delete_kp(kp_name):
+    EC2_DETAILS.delete_key_pair(KeyName=kp_name)
 
 
 def main():
     session_token = pvwa_integration.logon_pvwa("Administrator", "Noam3110!", PVWA_URL, 1)
-    windows_vm = create_vm('pcloud-test-instances-KP',
+    kp = create_kp()
+    windows_vm = create_vm(kp[0],
                            'subnet-007426a62cd617ec2',
                            'sg-06a491b55aa7a197e',
                            WINDOWS_OWNER,
                            WINDOWS,
                            '[AOB-Test]Windows')
     print("Windows Deployed")
-    linux_vm = create_vm('pcloud-test-instances-KP',
+    linux_vm = create_vm(kp[0],
                          'subnet-007426a62cd617ec2',
                          'sg-06a491b55aa7a197e',
                          LINUX_OWNER,
@@ -69,11 +88,11 @@ def main():
     LinuxDDBQuery = aws_services.get_instance_data_from_dynamo_table(linux_vm)
     if "on boarded" in LinuxDDBQuery:
         print("Linux succuess")
-        print(vault_onbaord)
         vault_onbaord = pvwa_api_calls.retrieve_accountId_from_account_name(session_token, 'pcloud-test-instances-KP',
                                                                             'KpSafe5',
                                                                             linux_vm,
                                                                             PVWA_URL)
+        print(vault_onbaord)
     WindowsDDBQuery = aws_services.get_instance_data_from_dynamo_table(windows_vm)
     if "on boarded" in WindowsDDBQuery:
         time.sleep(360)
@@ -83,7 +102,11 @@ def main():
                                                                             windows_vm,
                                                                             PVWA_URL)
         print(vault_onbaord)
+    pvwa_api_calls.create_account_on_vault(session_token, str(windows_vm), kp[1],
+                                                                              storeParametersClass,
+                                                                              platform, windows_vm,
+                                                                              instanceId, win_account_name, safeName))
+    delete_kp(kp[0])
     pvwa_integration.logoff_pvwa(PVWA_URL, session_token)
-
 
 main()
