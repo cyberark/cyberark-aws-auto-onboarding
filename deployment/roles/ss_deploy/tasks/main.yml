@@ -38,22 +38,27 @@
     src: "{{ tmp_path }}/ss-out.json"
     mode: put
 
-- name: Assume role for stack set
-  sts_assume_role:
-    role_arn: "arn:aws:iam::*:role/AWSCloudFormationStackSetExecutionRole"
-    role_session_name: "AWSCloudFormationStackSetExecutionRole"
-
-- name: Create stackset stack
-  cloudformation_stack_set :
-    name: "{{ StackName }}"
+- name: AssumeRole
+  iam_role:
+    name: "AWSCloudFormationStackSetExecutionRole"
     state: "present"
-    regions: "{{ Runtime_parameters.Regions }}"
+    assume_role_policy_document: "{{ lookup('file','policy.json') }}"
+    purge_policies: no
+    managed_policy: "AdministratorAccess"
+  register: role
+  
+- name: Create stackset stack
+  cloudformation_stack_set:
+    name: "{{ SSStackName }}"
+    state: "present"
+    accounts: "{{ runtime_parameters.Accounts }}"
+    regions: "{{ runtime_parameters.Regions }}"
     template_url: "https://s3.amazonaws.com/{{  aob_vars.CloudFormation_parameters.LambdasBucket }}{{ tmp_path }}/ss.json"
     parameters: "{{ ss_template_parameters }}"
-    administration_role_arn: "arn:aws:iam::*:role/AWSCloudFormationStackSetExecutionRole"
+    administration_role_arn: "{{ role.arn }}"
     execution_role_name: "AWSCloudFormationStackSetExecutionRole"
     tags:
-      AOB: "Deployed"
+      ansible_automated: "True"
   register: cf
 
 # - name: Get all stack output info

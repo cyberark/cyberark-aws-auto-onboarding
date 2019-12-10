@@ -59,18 +59,18 @@ Requirements for deployment:
 Steps:
 1. Install virtual environment
     `pip install virtualenv`
-2. Clone auto-onboarding repository
+2. Clone auto-onboarding repository  
     `git clone https://github.com/cyberark/cyberark-aws-auto-onboarding.git`
-3. Create a new virtual environment using Requirements.txt
+3. Create a new virtual environment using Requirements.txt  
     `virtualenv AOB`
-3. Activate the virtualenv
+3. Activate the virtualenv  
     `source AOB/bin/activate`
-4. Change directory to cyberark-aws-auto-onboarding/deployment
+4. Change directory to cyberark-aws-auto-onboarding/deployment  
     `cd cyberark-aws-auto-onboarding/deployment`
-5. Install required packages using requirements.txt
+5. Install required packages using requirements.txt  
     `pip install -r cyberark-aws-auto-onboarding/`
 6. edit vars/AOB-Params.yml according to the comments
-7. run the playbook and provide two parameters - VaultUser , VaultPassword
+7. run the playbook and provide two parameters - VaultUser , VaultPassword  
     `ansible-playbook VaultUser=<Vault Administrative user > VaultPassword=<MuchSecureVeryWow> `
 
 # Manual Deployment

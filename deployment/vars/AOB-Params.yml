@@ -10,6 +10,7 @@ Runtime_parameters:
     DisableRollback: "true" # Determines if the CloudFormation should rollback upon failure:
                                                                                     # true - rollback is disabled
                                                                                     # false - rollback is enabled
+    Accounts: ['138339392836']
     Regions: "['eu-west-2','eu-west-1','us-east-2','us-east-1']" # List of regions in which the stack sets will be deployed
 
     
@@ -19,12 +20,14 @@ CloudFormation_parameters:
     ComponentsVPC: "vpc-0a0b1b35368b2e2fc" # VPC where the solution will be deployed. The VPC must contain a subnet with access to the PVWA
     PVWASG: "sg-06a491b55aa7a197e" # Security Group of the PVWA
     ComponentsSubnet: "subnet-007426a62cd617ec2" # Subnet where the solution will be deployed. The subnet must have access to the PVWA
-    VaultUser: "Administrator" # Vault user that will be used by the solution.
-    VaultPassword: "Noam3110!" # Password of the Vault user.
-    UnixSafeName: "UxSafe" # Name of the Safe that will store all the Unix accounts created by the solution. If this Safe does not yet exist, it will be created automatically.
+    UnixSafeName: "UxSafe2" # Name of the Safe that will store all the Unix accounts created by the solution. If this Safe does not yet exist, it will be created automatically.
     CPMNameUnixSafe: "PasswordManager" # Name of the CPM manager to manage Unix Accounts Safe
-    WindowsSafeName: "WinSafe" # Name of the Safe that will store all the Windows accounts created by the solution. If this Safe does not yet exist, it will be created automatically.
+    WindowsSafeName: "WinSafe2" # Name of the Safe that will store all the Windows accounts created by the solution. If this Safe does not yet exist, it will be created automatically.
     CPMNameWindowsSafe: "PasswordManager" # Name of the CPM manager to manage Windows Accounts Safe
-    KeyPairsSafe: "KpSafe" # Name of the Safe that will store all Key Pairs used by the solution. If this Safe does not yet exist, it will be created automatically.
-    KeyPairName: "Noam-Tokyo.pem" # Name of the Key pair
+    KeyPairsSafe: "KpSafe2" # Name of the Safe that will store all Key Pairs used by the solution. If this Safe does not yet exist, it will be created automatically.
+    KeyPairName: "Noam-Tokyo1.pem" # Name of the Key pair
+
+
+#StackSet_parameters:
+    #LambdaArn: "arn:aws:lambda:eu-west-2:138339392836:function:ansible-cloudformation-AutoOnboar-ElasticityLambda-1HGHLZBRW658O" # The ARN of Elasticity Lambda in the Main Account and Region
 

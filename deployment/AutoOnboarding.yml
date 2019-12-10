@@ -27,6 +27,7 @@
         name: ss_deploy
       vars:
         ss_template_file: "{{ aob_vars.SSTemplatePath }}"
-        ss_template_parameters: "{{ cf_arn.ElasticityLambdaArnOutput }}"
+        ss_template_parameters:
+          LambdaARN: "{{ cf_arn.ElasticityLambdaArnOutput }}"
         runtime_parameters: "{{ aob_vars.Runtime_parameters }}"
     
