@@ -95,16 +95,16 @@ pipeline {
                 }
             }
         }
-        stage('Deploy AOB solution')
-        {
-            steps{
-                script{
-                    sh '''
-                        pytest blah blah
-                    '''
-                }
-            }
-        }
+        // stage('Deploy AOB solution')
+        // {
+        //     steps{
+        //         script{
+        //             sh '''
+        //                 pytest blah blah
+        //             '''
+        //         }
+        //     }
+        // }
     }
     post {
         success {
