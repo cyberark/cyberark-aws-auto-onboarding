@@ -48,7 +48,8 @@ def lambda_handler(event, context):
     logName = context.log_stream_name if context.log_stream_name else "None"
 
     try:
-        instanceDetails = aws_services.get_ec2_details(instanceId, context, eventRegion, eventAccountId)
+        solutionAccountId = context.invoked_function_arn.split(':')[4]
+        instanceDetails = aws_services.get_ec2_details(instanceId, solutionAccountId, eventRegion, eventAccountId)
 
         instanceData = aws_services.get_instance_data_from_dynamo_table(instanceId)
         if actionType == 'terminated':
@@ -92,7 +93,7 @@ def lambda_handler(event, context):
         if actionType == 'terminated':
             instance_processing.delete_instance(instanceId, sessionToken, storeParametersClass, instanceData, instanceDetails)
         elif actionType == 'running':
-            instance_processing.create_instance(instanceId, sessionToken, instanceDetails, storeParametersClass, logName, eventRegion)
+            instance_processing.create_instance(instanceId, sessionToken, instanceDetails, storeParametersClass, logName, solutionAccountId, eventRegion, eventAccountId)
         else:
             print('Unknown instance state')
             return

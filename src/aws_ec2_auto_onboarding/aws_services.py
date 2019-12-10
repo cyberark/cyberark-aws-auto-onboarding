@@ -7,23 +7,16 @@ from dynamo_lock import LockerClient
 
 # return ec2 instance relevant data:
 # keyPair_name, instance_address, platform
-def get_ec2_details(instanceId, context, region, eventAccountId):
-
-    try:
-        solutionAccountId = context.invoked_function_arn.split(':')[4]
-    except Exception:
-        print("AWS account Id wasn't found")
+def get_ec2_details(instanceId, solutionAccountId, eventRegion, eventAccountId):
 
     if eventAccountId == solutionAccountId:
         try:
-            ec2Resource = boto3.resource('ec2', region)
+            ec2Resource = boto3.resource('ec2', eventRegion)
         except Exception as e:
             print('Error on creating boto3 session: {0}'.format(e))
     else:
         try:
             sts_connection = boto3.client('sts')
-            RoleArn="arn:aws:iam::{0}:role/CyberArk-AOB-AssumeRoleForElasticityLambda".format(eventAccountId)
-            print (RoleArn)
             acct_b = sts_connection.assume_role(
                 RoleArn="arn:aws:iam::{0}:role/CyberArk-AOB-AssumeRoleForElasticityLambda".format(eventAccountId),
                 RoleSessionName="cross_acct_lambda"
@@ -36,7 +29,7 @@ def get_ec2_details(instanceId, context, region, eventAccountId):
             # create service client using the assumed role credentials, e.g. S3
             ec2Resource = boto3.resource(
                 'ec2',
-                region_name=region,
+                region_name=eventRegion,
                 aws_access_key_id=ACCESS_KEY,
                 aws_secret_access_key=SECRET_KEY,
                 aws_session_token=SESSION_TOKEN,

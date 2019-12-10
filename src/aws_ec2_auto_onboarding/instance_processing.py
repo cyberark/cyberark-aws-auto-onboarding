@@ -31,17 +31,45 @@ def delete_instance(instanceId, session, storeParametersClass, instanceData, ins
     return
 
 
-def get_instance_password_data(instanceId,evnetRegion):
-    # wait until password data available when Windows instance is up
-    ec2 = boto3.client('ec2', evnetRegion)
-    print("Waiting for instance - {0} to become available: ".format(instanceId))
-    waiter = ec2.get_waiter('password_data_available')
-    waiter.wait(InstanceId=instanceId)
-    instancePasswordData = ec2.get_password_data(InstanceId=instanceId)
-    return instancePasswordData['PasswordData']
+def get_instance_password_data(instanceId,solutionAccountId,eventRegion,eventAccountId):
+	if eventAccountId == solutionAccountId:
+		try:
+			ec2Resource = boto3.client('ec2', eventRegion)
+		except Exception as e:
+			print('Error on creating boto3 session: {0}'.format(e))
+	else:
+		try:
+			sts_connection = boto3.client('sts')
+			acct_b = sts_connection.assume_role(
+				RoleArn="arn:aws:iam::{0}:role/CyberArk-AOB-AssumeRoleForElasticityLambda".format(eventAccountId),
+				RoleSessionName="cross_acct_lambda"
+			)
+			ACCESS_KEY = acct_b['Credentials']['AccessKeyId']
+			SECRET_KEY = acct_b['Credentials']['SecretAccessKey']
+			SESSION_TOKEN = acct_b['Credentials']['SessionToken']
+
+			ec2Resource = boto3.client(
+				'ec2',
+				region_name=eventRegion,
+				aws_access_key_id=ACCESS_KEY,
+				aws_secret_access_key=SECRET_KEY,
+				aws_session_token=SESSION_TOKEN,
+			)
+		except Exception as e:
+			print('Error on getting token from account: {0}'.format(eventAccountId))
+
+	try:
+		# wait until password data available when Windows instance is up
+		print("Waiting for instance - {0} to become available: ".format(instanceId))
+		waiter = ec2Resource.get_waiter('password_data_available')
+		waiter.wait(InstanceId=instanceId)
+		instancePasswordData = ec2Resource.get_password_data(InstanceId=instanceId)
+		return instancePasswordData['PasswordData']
+	except Exception as e:
+		print('Error on waiting for instance password: {0}'.format(e))
 
 
-def create_instance(instanceId, session, instanceDetails, storeParametersClass, logName, eventRegion):
+def create_instance(instanceId, session, instanceDetails, storeParametersClass, logName, solutionAccountId, eventRegion, eventAccountId):
     # get key pair
 
     # Retrieving the account id of the account where the instance keyPair is stored
@@ -63,7 +91,7 @@ def create_instance(instanceId, session, instanceDetails, storeParametersClass, 
 
     if instanceDetails['platform'] == "windows":  # Windows machine return 'windows' all other return 'None'
         kp_processing.save_key_pair(instanceAccountPassword)
-        instancePasswordData = get_instance_password_data(instanceId, eventRegion)
+        instancePasswordData = get_instance_password_data(instanceId, solutionAccountId, eventRegion, eventAccountId)
         # decryptedPassword = convert_pem_to_password(instanceAccountPassword, instancePasswordData)
         rc, decryptedPassword = kp_processing.run_command_on_container(
             ["echo", str.strip(instancePasswordData), "|", "base64", "--decode", "|", "openssl", "rsautl", "-decrypt",
