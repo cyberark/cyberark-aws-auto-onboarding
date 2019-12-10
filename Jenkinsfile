@@ -89,7 +89,8 @@ pipeline {
                             usernamePassword(credentialsId: 'aob-autodeployment-user', usernameVariable: 'VAULT_USERNAME', passwordVariable: 'VAULT_PASSWORD')
                         ])
                     sh '''
-                        anisble-playbook deployment/AutoOnboarding.yml -e VaultUser=${VAULT_USERNAME} VaultPassword=${VAULT_PASSWORD} Accounts='138339392836' PvwaIP='' ComponentsVPC='vpc-075eadb618b1a070f' PVWASG='vpc-075eadb618b1a070f' ComponentsSubnet='subnet-0bb6e84a4548c51b1' KeyPairName='pcloud-test-instances-KP'
+                        params=`python tests/describe_resources.py`
+                        anisble-playbook deployment/AutoOnboarding.yml -e VaultUser=${VAULT_USERNAME} VaultPassword=${VAULT_PASSWORD} $params
                     '''
                 }
             }
