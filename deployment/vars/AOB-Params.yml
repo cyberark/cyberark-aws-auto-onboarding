@@ -10,24 +10,19 @@ Runtime_parameters:
     DisableRollback: "true" # Determines if the CloudFormation should rollback upon failure:
                                                                                     # true - rollback is disabled
                                                                                     # false - rollback is enabled
-    Accounts: ['138339392836']
+    Accounts: ['0123456789']
     Regions: "['eu-west-2','eu-west-1','us-east-2','us-east-1']" # List of regions in which the stack sets will be deployed
 
     
 CloudFormation_parameters:
-    LambdasBucket: "aws-aob-tokyo" # Name of the bucket containing the solution files. The bucket must be in the same region where the solution is deployed.
-    PvwaIP: "10.10.1.10" # PVWA IP address or host name
-    ComponentsVPC: "vpc-0a0b1b35368b2e2fc" # VPC where the solution will be deployed. The VPC must contain a subnet with access to the PVWA
-    PVWASG: "sg-06a491b55aa7a197e" # Security Group of the PVWA
-    ComponentsSubnet: "subnet-007426a62cd617ec2" # Subnet where the solution will be deployed. The subnet must have access to the PVWA
+    LambdasBucket: "my-bucket" # Name of the bucket containing the solution files. The bucket must be in the same region where the solution is deployed.
+    PvwaIP: "1.1.1.1" # PVWA IP address or host name
+    ComponentsVPC: "vpc-123456789abc" # VPC where the solution will be deployed. The VPC must contain a subnet with access to the PVWA
+    PVWASG: "sg-123456789abc" # Security Group of the PVWA
+    ComponentsSubnet: "subnet-123456789abc" # Subnet where the solution will be deployed. The subnet must have access to the PVWA
     UnixSafeName: "UxSafe2" # Name of the Safe that will store all the Unix accounts created by the solution. If this Safe does not yet exist, it will be created automatically.
     CPMNameUnixSafe: "PasswordManager" # Name of the CPM manager to manage Unix Accounts Safe
     WindowsSafeName: "WinSafe2" # Name of the Safe that will store all the Windows accounts created by the solution. If this Safe does not yet exist, it will be created automatically.
     CPMNameWindowsSafe: "PasswordManager" # Name of the CPM manager to manage Windows Accounts Safe
     KeyPairsSafe: "KpSafe2" # Name of the Safe that will store all Key Pairs used by the solution. If this Safe does not yet exist, it will be created automatically.
-    KeyPairName: "Noam-Tokyo1.pem" # Name of the Key pair
-
-
-#StackSet_parameters:
-    #LambdaArn: "arn:aws:lambda:eu-west-2:138339392836:function:ansible-cloudformation-AutoOnboar-ElasticityLambda-1HGHLZBRW658O" # The ARN of Elasticity Lambda in the Main Account and Region
-
+    KeyPairName: "YourKP.pem" # Name of the Key pair
