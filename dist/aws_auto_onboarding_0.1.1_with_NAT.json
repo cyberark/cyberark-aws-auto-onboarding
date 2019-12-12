@@ -273,7 +273,7 @@
 		  "Properties" : {
 			"Code" : {
 					  "S3Bucket" : {"Ref": "LambdasBucket"}, 
-					  "S3Key" : "aws_ec2_auto_onboarding_0.1.1.zip"
+					  "S3Key" : "aws_ec2_auto_onboarding_cybr_aws.zip"
                 },
 			"Description" : "Main Auto Onboarding Lambda",
 			"Handler" : "AWSEc2AutoOnboarding.lambda_handler",
@@ -319,7 +319,8 @@
 					"Ref": "CPMNameUnixSafe"
 				},
 				"CPMWindows": {
-					"Ref": "CPMNameWindowsSafe"				},
+					"Ref": "CPMNameWindowsSafe"				
+				},
 				"KeyPairSafe": {
 					"Ref": "KeyPairsSafe"
 				},
@@ -349,7 +350,7 @@
 		  "Properties" : {
 			"Code" : {
 					  "S3Bucket" : {"Ref": "LambdasBucket"}, 
-					  "S3Key" : "aws_environment_setup_0.1.1.zip"
+					  "S3Key" : "aws_environment_setup_cybr_aws.zip"
                 },
 			"Description" : "Environment initial setup Lambda",
 			"Handler" : "AWSEnvironmentSetup.lambda_handler",
