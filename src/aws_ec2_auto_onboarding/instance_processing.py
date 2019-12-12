@@ -3,8 +3,8 @@ import aws_services
 import kp_processing
 import boto3
 
-UNIX_PLATFORM = "UnixSSHKeys"
-WINDOWS_PLATFORM = "WinServerLocal"
+UNIX_PLATFORM = "CYBR_Lambda_UnixSSHKeys"
+WINDOWS_PLATFORM = "CYBR_Lambda_WinServerLocal"
 ADMINISTRATOR = "Administrator"
 
 

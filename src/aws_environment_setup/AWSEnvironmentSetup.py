@@ -257,7 +257,7 @@ def create_key_pair_in_vault(session, awsKeyName, privateKeyValue, pvwaIP, safeN
         "disableAutoMgmt":"true",
         "disableAutoMgmtReason":"Unmanaged account"
       }}
-    }}""".format(safeName, "UnixSSHKeys", trimmedPEMKey, uniqueUsername)
+    }}""".format(safeName, "CYBR_Lambda_UnixSSHKeys", trimmedPEMKey, uniqueUsername)
     restResponse = call_rest_api_post(url, data, header)
 
     if restResponse.status_code == requests.codes.created:
