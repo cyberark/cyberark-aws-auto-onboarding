@@ -20,9 +20,9 @@ CloudFormation_parameters:
     ComponentsVPC: "vpc-123456789abc" # VPC where the solution will be deployed. The VPC must contain a subnet with access to the PVWA
     PVWASG: "sg-123456789abc" # Security Group of the PVWA
     ComponentsSubnet: "subnet-123456789abc" # Subnet where the solution will be deployed. The subnet must have access to the PVWA
-    UnixSafeName: "UxSafe2" # Name of the Safe that will store all the Unix accounts created by the solution. If this Safe does not yet exist, it will be created automatically.
+    UnixSafeName: "UxSafeCark" # Name of the Safe that will store all the Unix accounts created by the solution. If this Safe does not yet exist, it will be created automatically.
     CPMNameUnixSafe: "PasswordManager" # Name of the CPM manager to manage Unix Accounts Safe
-    WindowsSafeName: "WinSafe2" # Name of the Safe that will store all the Windows accounts created by the solution. If this Safe does not yet exist, it will be created automatically.
+    WindowsSafeName: "WinSafeCark" # Name of the Safe that will store all the Windows accounts created by the solution. If this Safe does not yet exist, it will be created automatically.
     CPMNameWindowsSafe: "PasswordManager" # Name of the CPM manager to manage Windows Accounts Safe
     KeyPairsSafe: "KpSafe2" # Name of the Safe that will store all Key Pairs used by the solution. If this Safe does not yet exist, it will be created automatically.
     KeyPairName: "YourKP.pem" # Name of the Key pair
