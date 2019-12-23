@@ -1,5 +1,5 @@
 {
-    "AWSTemplateFormatVersion": "2010-09-09",
+    "AWSTemplateFormatVersion": "2010-12-23",
     "Resources": {
         "ElasticityLambda": {
             "Type": "AWS::Lambda::Function",
@@ -138,6 +138,9 @@
             "Properties": {
                 "Description": "CloudWatch event which fires on create/start/termination of an EC2 Instance ",
                 "EventPattern": {
+                    "region": [
+                        "eu-west-3"
+                    ],
                     "source": [
                         "aws.ec2"
                     ],
