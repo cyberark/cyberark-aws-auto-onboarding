@@ -8,9 +8,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 def lambda_handler(event, context):
     logName = context.log_stream_name if context.log_stream_name else "None"
-    print(event)
-    instanceId = event["detail"]["instance-id"]
-    actionType = event["detail"]["state"]
+    instanceId, actionType = event.split(";")
     try:
         instanceDetails = aws_services.get_ec2_details(instanceId, context)
 
