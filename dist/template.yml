@@ -1,0 +1,542 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+
+#########################################
+# Lambda3: Onboarding Lambda definition #
+#########################################
+
+## Lambda
+  ElasticityLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Ref 'LambdasBucket'
+        S3Key: aws_ec2_auto_onboarding_cybr_aws.zip
+      Description: Main Auto Onboarding Lambda
+      Handler: AWSEc2AutoOnboarding.lambda_handler
+      Role: !GetAtt 'ElasticityLambdaRole.Arn'
+      Runtime: python3.6
+      Timeout: 240
+      VpcConfig:
+        SecurityGroupIds:
+          - !GetAtt 'ElasticityLambdaSecurityGroup.GroupId'
+          - !Ref 'PVWASG'
+        SubnetIds:
+          - !Ref 'ComponentsSubnet'
+
+## Role: Authorize this Lambda to execute the TrustMechanismLambda
+  ElasticityLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - !Ref 'ElasticityLambdaPolicy'
+
+## Policy
+  ElasticityLambdaPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: Policy for Elasticity Lambda
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - lambda:InvokeFunction
+            Resource: '*'
+          - Effect: Allow
+            Action:
+              - ec2:DescribeInstances
+              - ec2:CreateNetworkInterface
+              - ec2:DescribeNetworkInterfaces
+              - ec2:DeleteNetworkInterface
+              - ec2:DescribeVpcs
+              - ec2:DescribeVpcAttribute
+              - ec2:DescribeImages
+              - ec2:GetPasswordData
+            Resource: '*'
+          - Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+              - dynamodb:DeleteItem
+              - dynamodb:Query
+            Resource: '*'
+          - Effect: Allow
+            Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource: arn:aws:logs:*:*:*
+
+## Permission: Authorize this Lambda to be triggered by CloudWatchInstanceChangeTrigger
+  ElasticityLambdaToCloudWatchPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt 'ElasticityLambda.Arn'
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt 'CloudWatchInstanceChangeTrigger.Arn'
+
+## Trigger: The CloudWatchInstanceChangeTrigger
+  CloudWatchInstanceChangeTrigger:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: 'CloudWatch event which fires on create/start/termination of an
+        EC2 Instance '
+      EventPattern:
+        source:
+          - aws.ec2
+        detail-type:
+          - EC2 Instance State-change Notification
+        detail:
+          state:
+            - running
+            - terminated
+      Name: Instance_Status_Change_Trigger
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt 'ElasticityLambda.Arn'
+          Id: CloudWatch_Instance_Change_Target
+          InputTransformer:
+            InputPathsMap:
+              instanceId: $.detail.instance-id
+              action: $.detail.state
+            InputTemplate: '"<instanceId>;<action>"'
+    DependsOn:
+      - CreateSafe
+
+## Table: Where are stored already onboarded ec2 instances.
+  DynamoDBTableInstances:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: InstanceId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: InstanceId
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      TableName: Instances
+
+## Security Group
+  ElasticityLambdaSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for elasticity lambda
+      VpcId: !Ref 'ComponentsVPC'
+
+### Add an inbound rule to ElasticityLambdaSecurityGroup
+  SecurityGroupPVWAIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref 'PVWASG'
+      FromPort: '443'
+      ToPort: '443'
+      IpProtocol: tcp
+      SourceSecurityGroupId: !GetAtt 'ElasticityLambdaSecurityGroup.GroupId'
+
+### Add an outbound rule to ElasticityLambdaSecurityGroup
+  EgressAccessHTTPS:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId: !Ref 'ElasticityLambdaSecurityGroup'
+      IpProtocol: tcp
+      FromPort: '443'
+      ToPort: '443'
+      CidrIp: '0.0.0.0/0'
+
+###################################################
+# Lambda1: authorized to acces the ParameterStore #
+###################################################
+
+## Lambda
+  TrustMechanismLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        ZipFile: !Join
+          - "\n"
+          - - import uuid
+            - import boto3
+            - ''
+            - ''
+            - 'def lambda_handler(event, context):'
+            - '    creds = get_parameters_from_store(event[''Parameters''])'
+            - '    return creds'
+            - ''
+            - 'def get_parameters_from_store(paramKeys):'
+            - '    client = boto3.client(''ssm'')'
+            - ''
+            - '    try:'
+            - '        response = client.get_parameters('
+            - '            Names=paramKeys,'
+            - '            WithDecryption=True)'
+            - '    except Exception as e:'
+            - '        raise e'
+            - ''
+            - '    for ssmObject in response[''Parameters'']:'
+            - '        lastDate = ssmObject[''LastModifiedDate'']'
+            - '        print(''LastDate:{0}''.format(lastDate))'
+            - '        ssmObject[''LastModifiedDate''] = lastDate.strftime(''%m/%d/%Y'')'
+            - ''
+            - '    if response:'
+            - ''
+            - '        print (''get_parameters_from_store(): finished successfully'')'
+            - '        return response[''Parameters'']'
+      Description: Lambda with permissions to get/set parameters on parameter store
+      FunctionName: TrustMechanism
+      Handler: index.lambda_handler
+      Role: !GetAtt 'TrustMechanismLambdaRole.Arn'
+      Runtime: python3.6
+      Timeout: 10
+      VpcConfig:
+        SecurityGroupIds:
+          - !GetAtt 'TrustMechanismSecurityGroup.GroupId'
+        SubnetIds:
+          - !Ref 'ComponentsSubnet'
+
+## Role
+  TrustMechanismLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: TrustMechanismLambdaPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParameters
+                  - ssm:GetParameter
+                  - ssm:DeleteParameter
+                  - ec2:DescribeInstances
+                  - ec2:CreateNetworkInterface
+                  - ec2:DescribeNetworkInterfaces
+                  - ec2:DeleteNetworkInterface
+                  - ec2:DetachNetworkInterface
+                  - ec2:*Vpc*
+                Resource:
+                  - '*'
+
+## Security Group
+  TrustMechanismSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for TrustMechanism lambda
+      VpcId: !Ref 'ComponentsVPC'
+
+##################################
+# Lambda2: Create required Safes #
+##################################
+
+## Lambda
+  SafeHandlerLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Ref 'LambdasBucket'
+        S3Key: aws_environment_setup_cybr_aws.zip
+      Description: Environment initial setup Lambda
+      Handler: AWSEnvironmentSetup.lambda_handler
+      Role: !GetAtt 'SafeHandlerLambdaRole.Arn'
+      Runtime: python2.7
+      Timeout: 35
+      VpcConfig:
+        SecurityGroupIds:
+          - !GetAtt 'ElasticityLambdaSecurityGroup.GroupId'
+          - !Ref 'PVWASG'
+        SubnetIds:
+          - !Ref 'ComponentsSubnet'
+    DependsOn:
+      - SafeHandlerLambdaRole
+      - SafehandlingLambdaPolicy
+
+## Role
+  SafeHandlerLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - !Ref 'SafehandlingLambdaPolicy'
+
+## Policy
+  SafehandlingLambdaPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: Policy for SafeHandler Lambda
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - ec2:DescribeInstances
+              - ec2:CreateNetworkInterface
+              - ec2:DescribeNetworkInterfaces
+              - ec2:DeleteNetworkInterface
+              - ec2:DetachNetworkInterface
+              - ec2:*Vpc*
+              - ec2:CreateKeyPair
+              - ec2:DescribeKeyPairs
+            Resource: '*'
+          - Effect: Allow
+            Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource: arn:aws:logs:*:*:*
+          - Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+              - dynamodb:DeleteItem
+              - dynamodb:CreateTable
+              - dynamodb:DeleteTable
+              - ssm:PutParameter
+              - ssm:DeleteParameter
+            Resource: '*'
+
+## Custom ressource: To run the lambda during the stack deployment
+  CreateSafe:
+    Type: AWS::CloudFormation::CustomResource
+    Version: '1.0'
+    Properties:
+      ServiceToken: !GetAtt 'SafeHandlerLambda.Arn'
+      PVWAIP: !Ref 'PvwaIP'
+      UnixSafeName: !Ref 'UnixSafeName'
+      WindowsSafeName: !Ref 'WindowsSafeName'
+      Username: !Ref 'VaultUser'
+      Password: !Ref 'VaultPassword'
+      CPMUnix: !Ref 'CPMNameUnixSafe'
+      CPMWindows: !Ref 'CPMNameWindowsSafe'
+      KeyPairSafe: !Ref 'KeyPairsSafe'
+      KeyPairName: !Ref 'KeyPairName'
+      AWSRegionName: !Ref 'AWS::Region'
+      AWSAccountId: !Ref 'AWS::AccountId'
+    DependsOn:
+      - SafeHandlerLambdaRole
+      - SafehandlingLambdaPolicy
+      - SafeHandlerLambda
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT2M
+
+########################################## 
+# LambdaS3Bucket thing (to be explained) #
+##########################################
+
+## Role
+  LambdaS3BucketRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - s3.amazonaws.com
+            Action:
+              - sts:AssumeRole
+
+## Policy
+  LambdaS3BucketPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: LambdaBucketAccess
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:GetObjectVersion
+            Resource: !Join
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref 'LambdasBucket'
+                - /*
+      Roles:
+        - !Ref 'LambdaS3BucketRole'
+
+##############
+# Parameters #
+##############
+  ParameterPVWA:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: PVWA_IP
+      Description: The IP of the PVWA
+      Type: String
+      Value: !Ref 'PvwaIP'
+  ParameterUnixAccountsSafe:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: Unix_Safe_Name
+      Description: Safe name for UNIX accounts
+      Type: String
+      Value: !Ref 'UnixSafeName'
+  ParameterWindowsAccountsSafe:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: Windows_Safe_Name
+      Description: Safe name for Windows accounts
+      Type: String
+      Value: !Ref 'WindowsSafeName'
+  ParameterUsername:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: Vault_User
+      Description: Vault Username
+      Type: String
+      Value: !Ref 'VaultUser'
+  ParameterAWSKeyPairSafe:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: KeyPair_Safe
+      Description: Safe where all the AWS KeyPair are stored
+      Type: String
+      Value: !Ref 'KeyPairsSafe'
+Description: ''
+Parameters:
+  LambdasBucket:
+    Type: String
+    Description: Name of the bucket containing the solution files. The bucket must
+      be in the same region where the solution is deployed.
+  PvwaIP:
+    Type: String
+    Description: PVWA IP address or host name
+    MinLength: '1'
+  UnixSafeName:
+    Type: String
+    Description: Name of the Safe that will store all the Unix accounts created by
+      the solution. If this Safe does not yet exist, it will be created automatically.
+    AllowedPattern: ^[^\\:\*<>\"\.\|\\/]*$
+    MinLength: '1'
+    MaxLength: '28'
+  WindowsSafeName:
+    Type: String
+    Description: Name of the Safe that will store all the Windows accounts created
+      by the solution. If this Safe does not yet exist, it will be created automatically.
+    AllowedPattern: ^[^\\:\*<>\"\.\|\\/]*$
+    MinLength: '1'
+    MaxLength: '28'
+  VaultUser:
+    Type: String
+    Description: Vault user that will be used by the solution.
+    MinLength: '1'
+  VaultPassword:
+    Type: String
+    Description: Password of the Vault user.
+    NoEcho: true
+    MinLength: '1'
+  CPMNameUnixSafe:
+    Type: String
+    Description: Name of the CPM manager to manage Unix Accounts Safe
+    MinLength: '1'
+    Default: PasswordManager
+  CPMNameWindowsSafe:
+    Type: String
+    Description: Name of the CPM manager to manage Windows Accounts Safe
+    MinLength: '1'
+    Default: PasswordManager
+  ComponentsSubnet:
+    Type: AWS::EC2::Subnet::Id
+    Description: Subnet where the solution will be deployed. The subnet must have
+      access to the PVWA
+    MinLength: '1'
+  ComponentsVPC:
+    Type: AWS::EC2::VPC::Id
+    Description: VPC where the solution will be deployed. The VPC must contain a subnet
+      with access to the PVWA
+    MinLength: '1'
+  PVWASG:
+    Type: AWS::EC2::SecurityGroup::Id
+    Description: Security Group of the PVWA
+    MinLength: '1'
+  KeyPairsSafe:
+    Type: String
+    Description: Name of the Safe that will store all Key Pairs used by the solution.
+      If this Safe does not yet exist, it will be created automatically.
+    AllowedPattern: ^[^\\:\*<>\"\.\|\\/]*$
+    MinLength: '1'
+    MaxLength: '28'
+  KeyPairName:
+    Type: String
+    Description: Name of the Key pair
+    MaxLength: '255'
+Conditions: {}
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: General parameters
+        Parameters:
+          - LambdasBucket
+          - PvwaIP
+          - ComponentsVPC
+          - PVWASG
+          - ComponentsSubnet
+          - VaultUser
+          - VaultPassword
+          - UnixSafeName
+          - CPMNameUnixSafe
+          - WindowsSafeName
+          - CPMNameWindowsSafe
+          - KeyPairsSafe
+      - Label:
+          default: 'Optional: Create new KeyPair for the solution:'
+        Parameters:
+          - KeyPairName
+    ParameterLabels:
+      LambdasBucket:
+        default: Bucket Name
+      ComponentsSubnet:
+        default: 'Solution subnet:'
+      ComponentsVPC:
+        default: 'VPC:'
+      PvwaIP:
+        default: 'PVWA IP/Host Name:'
+      UnixSafeName:
+        default: 'Target Safe for Unix accounts:'
+      WindowsSafeName:
+        default: 'Target Safe for Windows accounts:'
+      VaultUser:
+        default: 'Vault user name:'
+      VaultPassword:
+        default: 'Vault password:'
+      CPMNameUnixSafe:
+        default: 'CPM name for managing Unix safe:'
+      CPMNameWindowsSafe:
+        default: 'CPM name for managing Windows safe:'
+      KeyPairsSafe:
+        default: 'Target Safe for the Key pairs:'
+      KeyPairName:
+        default: 'Key Pair name:'
+      PVWASG:
+        default: PVWA Security Group
+Mappings: {}
