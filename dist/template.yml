@@ -1,5 +1,5 @@
 ---
-AWSTemplateFormatVersion: '2010-12-23'
+AWSTemplateFormatVersion: '2010-23-12'
 Resources:
 
 #########################################
