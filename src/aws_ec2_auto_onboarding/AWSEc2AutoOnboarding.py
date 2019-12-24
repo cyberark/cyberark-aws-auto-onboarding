@@ -9,8 +9,6 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 def lambda_handler(event, context):
 
-    print (event)
-
     try:
         message = event["Records"][0]["Sns"]["Message"]
         data = json.loads(message)
