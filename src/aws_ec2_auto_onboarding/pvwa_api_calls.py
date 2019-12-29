@@ -88,7 +88,7 @@ def retrieve_accountId_from_account_name(session, accountName, safeName, instanc
 
     # 2 options of search - if safe name not empty, add it to query, if not - search without it
     if safeName:  # has value
-        pvwaUrl = "{0}/api/accounts?search={1}&filter=safeName eq '{2}'".format(restURL, accountName, safeName)
+        pvwaUrl = "{0}/api/accounts?search={1}&filter=safeName eq {2}".format(restURL, accountName, safeName)
     else:  # has no value
         pvwaUrl = "{0}/api/accounts?search={1}".format(restURL, accountName)
 
