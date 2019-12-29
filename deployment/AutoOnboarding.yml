@@ -8,20 +8,63 @@
       include_vars:
         file: vars/AOB-Params.yml
         name: aob_vars
-    
+
     - name: Stack Name
       set_fact:
         CFStackName: "AOB-CF"
         SSStackName: "AOB-SS"
+
+    - name: Create Elasticity Lambda Security Group
+      ec2_group:
+        name: "ElasticityLambdaSecurityGroup"
+        description: "Security group for elasticity lambda"
+        vpc_id: "{{ aob_vars.CloudFormation_parameters.ComponentsVPC }}"
+        region: "{{ aob_vars.Runtime_parameters.MainRegion }}"
+        rules_egress:
+          - proto: "tcp"
+            from_port: "443"
+            to_port: "443"
+            cidr: "0.0.0.0/0"
+            group_name: "ElasticityLambdaSecurityGroup"
+      register: elasticity_sg
+
+
+    - name: Create Trust Lambda Security Group
+      ec2_group:
+        name: "TrustMechanismSecurityGroup"
+        description: "Security group for TrustMechanism lambda"
+        vpc_id: "{{ aob_vars.CloudFormation_parameters.ComponentsVPC }}"
+        region: "{{ aob_vars.Runtime_parameters.MainRegion }}"
+      register: trust_sg
+
+    - name: Set Security Group parameters
+      set_fact:
+        sg_info:
+          ElasticitySG: "{{elasticity_sg.group_id}}"
+          TrustSG: "{{trust_sg.group_id}}"
+
+    - name: Set Vault parameters
+      set_fact:
+        vault_info:
+          VaultUser: "{{ VaultUser }}"
+          VaultPassword: "{{ VaultPassword }}"
+
+    - name: Combine parameters
+      set_fact:
+        cf_parameters: "{{ aob_vars.CloudFormation_parameters|combine(vault_info) }}"
+
+    - name: Combine parameters
+      set_fact:
+        cf_parameters_final: "{{ cf_parameters|combine(sg_info) }}"
 
     - name: Deploy AOB CloudFormation
       include_role:
         name: cf_deploy
       vars:
         cf_template_file: "{{ aob_vars.CFTemplatePath }}"
-        cf_template_parameters: "{{ aob_vars.CloudFormation_parameters }}"
+        cf_template_parameters: "{{ cf_parameters_final }}"
         runtime_parameters: "{{ aob_vars.Runtime_parameters }}"
-    
+
     - name: Deploy AOB StackSet
       include_role:
         name: ss_deploy
@@ -30,4 +73,3 @@
         ss_template_parameters:
           LambdaARN: "{{ cf_arn.ElasticityLambdaArnOutput }}"
         runtime_parameters: "{{ aob_vars.Runtime_parameters }}"
-    
