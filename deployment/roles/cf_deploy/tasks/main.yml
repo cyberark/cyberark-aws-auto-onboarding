@@ -3,17 +3,17 @@
 
 - name: Get Timestamp and Store it in a variable
   set_fact: "timestamp={{ lookup('pipe','date +%Y-%m-%d-%H-%M-%S') }}"
-  
+
 - name: Set String for CloudFormation Stack ID
   set_fact:
     cloudformation_stack_id: "{{ CFStackName }}"
-  
+
 - name: Create workspace directory on temp folder
   file:
     path: "/tmp/{{ cloudformation_stack_id }}-{{ timestamp }}"
     state: directory
   register: workspace
-  
+
 - set_fact:
     tmp_path: "{{ workspace.path }}"
 
@@ -37,7 +37,7 @@
     object: "{{ tmp_path }}/cf.json"
     src: "{{ tmp_path }}/cf-out.json"
     mode: put
-    
+
 - name: Create CloudFormation Stack
   cloudformation:
     stack_name: "{{ CFStackName }}"
