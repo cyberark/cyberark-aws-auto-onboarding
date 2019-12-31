@@ -89,7 +89,7 @@
         - name: Revoke rule from PVWA SG
           shell: |
             aws ec2 revoke-security-group-ingress --group-id {{ aob_vars.CloudFormation_parameters.PVWASG }} --protocol tcp --port 443 --source-group {{ elasticity_sg.group_id }} --region {{ aob_vars.Runtime_parameters.MainRegion }}
-          when: aob_cf is defined
+          ignore_errors: True
 
         - name: Get Default SG id of same VPC of Elasticity SG and Trust SG
           ec2_group_facts:
