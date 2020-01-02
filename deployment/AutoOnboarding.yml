@@ -73,13 +73,15 @@
             runtime_parameters: "{{ aob_vars.Runtime_parameters }}"
           register: aob_cf
 
+        - debug:
+            msg: "{{aob_cf}}"
         - name: Deploy AOB StackSet
           include_role:
             name: ss_deploy
           vars:
             ss_template_file: "{{ aob_vars.SSTemplatePath }}"
             ss_template_parameters:
-              LambdaARN: "{{ cf_arn.ElasticityLambdaArnOutput }}"
+              LambdaARN: "{{ aob_cf.ElasticityLambdaArnOutput }}"
             runtime_parameters: "{{ aob_vars.Runtime_parameters }}"
           register: aob_ss
 

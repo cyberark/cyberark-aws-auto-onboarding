@@ -14,7 +14,8 @@
 								"ec2:DescribeNetworkInterfaces",
 								"ec2:DescribeVpcs",
 								"ec2:DescribeVpcAttribute",
-								"ec2:DescribeImages"
+								"ec2:DescribeImages",
+							    "ec2:GetPasswordData"
 							],
 							"Resource": "*",
 							"Effect": "Allow"
