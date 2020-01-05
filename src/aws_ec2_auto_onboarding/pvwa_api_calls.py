@@ -85,13 +85,11 @@ def delete_account_from_vault(session, accountId, instanceId, pvwaUrl):
 def retrieve_accountId_from_account_name(session, accountName, safeName, instanceId, restURL):
     header = DEFAULT_HEADER
     header.update({"Authorization": session})
-
     # 2 options of search - if safe name not empty, add it to query, if not - search without it
     if safeName:  # has value
         pvwaUrl = "{0}/api/accounts?search={1}&filter=safeName eq {2}".format(restURL, accountName, safeName)
     else:  # has no value
         pvwaUrl = "{0}/api/accounts?search={1}".format(restURL, accountName)
-
     restResponse = pvwa_integration.call_rest_api_get(pvwaUrl, header)
     if not restResponse:
         raise Exception("Unknown Error when calling rest service - retrieve accountId")
