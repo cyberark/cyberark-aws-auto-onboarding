@@ -266,7 +266,7 @@
                     ]
                 },
 			"Runtime" : "python3.6",
-			"Timeout" : 240,
+			"Timeout" : 360,
 			"VpcConfig" : {"SecurityGroupIds" : [{"Fn::GetAtt": ["ElasticityLambdaSecurityGroup", "GroupId"]}],
 							"SubnetIds" : [{"Ref": "ComponentsSubnet"}]
 						}

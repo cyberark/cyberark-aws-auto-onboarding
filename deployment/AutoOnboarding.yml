@@ -73,15 +73,13 @@
             runtime_parameters: "{{ aob_vars.Runtime_parameters }}"
           register: aob_cf
 
-        - debug:
-            msg: "{{aob_cf}}"
         - name: Deploy AOB StackSet
           include_role:
             name: ss_deploy
           vars:
             ss_template_file: "{{ aob_vars.SSTemplatePath }}"
             ss_template_parameters:
-              LambdaARN: "{{ aob_cf.ElasticityLambdaArnOutput }}"
+              LambdaARN: "{{ cf_output.ElasticityLambdaArnOutput }}"
             runtime_parameters: "{{ aob_vars.Runtime_parameters }}"
           register: aob_ss
 
@@ -157,7 +155,9 @@
             stack_name: "{{ CFStackName }}"
             region: "{{ aob_vars.Runtime_parameters.MainRegion }}"
             state: "absent"
-          when:  aob_cf is defined
+          when:
+            - aob_cf is defined
+            - cf_output is defined
 
         - name: Rollback AOB StackSet
           cloudformation_stack_set:
