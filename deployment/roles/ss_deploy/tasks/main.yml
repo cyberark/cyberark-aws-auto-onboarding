@@ -3,17 +3,17 @@
 
 - name: Get Timestamp and Store it in a variable
   set_fact: "timestamp={{ lookup('pipe','date +%Y-%m-%d-%H-%M-%S') }}"
-  
+
 - name: Set String for CloudFormation Stack ID
   set_fact:
     stack_set_id: "{{ SSStackName }}"
-  
+
 - name: Create workspace directory on temp folder
   file:
     path: "/tmp/{{ stack_set_id }}-{{ timestamp }}"
     state: directory
   register: workspace
-  
+
 - set_fact:
     tmp_path: "{{ workspace.path }}"
 
@@ -46,12 +46,13 @@
     purge_policies: no
     managed_policy: "AdministratorAccess"
   register: role
-  
+
 - name: Create stackset stack
   cloudformation_stack_set:
     name: "{{ SSStackName }}"
     state: "present"
     accounts: "{{ runtime_parameters.Accounts }}"
+    region: "{{ runtime_parameters.MainRegion }}"
     regions: "{{ runtime_parameters.Regions }}"
     template_url: "https://s3.amazonaws.com/{{  aob_vars.CloudFormation_parameters.LambdasBucket }}{{ tmp_path }}/ss.json"
     parameters: "{{ ss_template_parameters }}"
