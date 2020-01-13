@@ -19,6 +19,7 @@ def create_account_on_vault(session, account_name, account_password, storeParame
         "disableAutoMgmt":"false"
       }}
     }}""".format(safeName, platform_id, account_name, account_password, username, address)
+    print(data)
     restResponse = pvwa_integration.call_rest_api_post(url, data, header)
     if restResponse.status_code == requests.codes.created:
         print("Account for {0} was successfully created".format(instanceId))
@@ -86,14 +87,20 @@ def retrieve_accountId_from_account_name(session, accountName, safeName, instanc
     header = DEFAULT_HEADER
     header.update({"Authorization": session})
     # 2 options of search - if safe name not empty, add it to query, if not - search without it
+
     if safeName:  # has value
         pvwaUrl = "{0}/api/accounts?search={1}&filter=safeName eq {2}".format(restURL, accountName, safeName)
     else:  # has no value
         pvwaUrl = "{0}/api/accounts?search={1}".format(restURL, accountName)
-    restResponse = pvwa_integration.call_rest_api_get(pvwaUrl, header)
-    if not restResponse:
-        raise Exception("Unknown Error when calling rest service - retrieve accountId")
-
+    try:
+        restResponse = pvwa_integration.call_rest_api_get(pvwaUrl, header)
+        print("1")
+        if not restResponse:
+            raise Exception("Unknown Error when calling rest service - retrieve accountId")
+        print(restResponse)
+        print("2")
+    except Exception as e:
+        raise Exception(e)
     if restResponse.status_code == requests.codes.ok:
         # if response received, check account is not empty {"Count": 0,"accounts": []}
         if 'value' in restResponse.json() and restResponse.json()["value"]:
@@ -103,4 +110,5 @@ def retrieve_accountId_from_account_name(session, accountName, safeName, instanc
             return False
     else:
         raise Exception("Status code {0}, received from REST service".format(restResponse.status_code))
+
 

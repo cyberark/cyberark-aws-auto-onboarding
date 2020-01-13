@@ -159,6 +159,7 @@ def release_session_on_dynamo(sessionId, sessionGuid):
         sessionsTableLockClient.locked = True
         sessionsTableLockClient.guid = sessionGuid
         sessionsTableLockClient.release(sessionId)
+        print("debug, aws_services, release session: sessionId: {0}, sessionGuid: {1}".format(sessionId, sessionGuid.guid))
     except Exception:
         return False
 
@@ -192,6 +193,7 @@ def get_available_session_from_dynamo():
 
             lockResponse = sessionsTableLockClient.acquire(randomSessionNumber, timeout)
             if lockResponse:  # no lock on connection number, return it
+                print("debug, aws_services, get session: randomSessionNumber: {0}, sessionsTableLockClient: {1}".format(randomSessionNumber, sessionsTableLockClient.guid))
                 return randomSessionNumber, sessionsTableLockClient.guid
             else:  # connection number is locked, retry in 5 seconds
                 time.sleep(5)
