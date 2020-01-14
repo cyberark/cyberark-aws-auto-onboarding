@@ -74,14 +74,14 @@ pipeline {
                 '''
             }
         }
-        stage('Scan distributables code for vulnerabilities') {
+        /*stage('Scan distributables code for vulnerabilities') {
             steps {
                 sh '''
                     source ./.testenv/bin/activate
                     bandit -r artifacts/. --format html > reports/bandit.html || true
                 '''
             }
-        }
+        }*/
         stage('Deploy AOB solution')
         {
             steps{
@@ -93,10 +93,7 @@ pipeline {
                                 accessKeyVariable: 'AWS_ACCESS_KEY_ID',
                                 secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
                             ],
-                            usernamePassword(
-                                credentialsId: 'aob-autodeployment-user',
-                                 usernameVariable: 'VAULT_USERNAME',
-                                  passwordVariable: 'VAULT_PASSWORD')
+                            usernamePassword(credentialsId: 'aob-autodeployment-user',usernameVariable: 'VAULT_USERNAME',passwordVariable: 'VAULT_PASSWORD')
                         ])
                     sh '''
                         python tests/create_parameter_file.py
