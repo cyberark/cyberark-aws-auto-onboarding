@@ -87,7 +87,16 @@ pipeline {
             steps{
                 script{
                         withCredentials([
-                            usernamePassword(credentialsId: 'aob-autodeployment-user', usernameVariable: 'VAULT_USERNAME', passwordVariable: 'VAULT_PASSWORD')
+                            [
+                                $class: 'AmazonWebServicesCredentialsBinding',
+                                credentialsId: 'AOB-DeploymentUser',
+                                accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                                secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                            ],
+                            usernamePassword(
+                                credentialsId: 'aob-autodeployment-user',
+                                 usernameVariable: 'VAULT_USERNAME',
+                                  passwordVariable: 'VAULT_PASSWORD')
                         ])
                     sh '''
                         python tests/create_parameter_file.py
