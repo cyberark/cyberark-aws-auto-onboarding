@@ -5,7 +5,7 @@ pipeline {
         }
     }
     environment {
-        AWS_REGION = sh(script: 'curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | python -c "import json,sys;obj=json.load(sys.stdin);print obj[\'region\']"', returnStdout: true).trim()
+        AWS_REGION = 'ap-northeast-1'
         shortCommit = sh(script: "git log -n 1 --pretty=format:'%h'", returnStdout: true).trim()
     }
     stages {
@@ -20,6 +20,7 @@ pipeline {
                     # Install lambda functions requirements
                     pip install -r requirements.txt --target ./src/aws_ec2_auto_onboarding/package
                     pip install -r requirements.txt --target ./src/aws_environment_setup/package
+                    pip install pyyaml
                     
                     # Install security tools
                     pip install safety bandit
@@ -89,8 +90,8 @@ pipeline {
                             usernamePassword(credentialsId: 'aob-autodeployment-user', usernameVariable: 'VAULT_USERNAME', passwordVariable: 'VAULT_PASSWORD')
                         ])
                     sh '''
-                        params=`python tests/describe_resources.py`
-                        anisble-playbook deployment/AutoOnboarding.yml -e VaultUser=${VAULT_USERNAME} VaultPassword=${VAULT_PASSWORD} $params
+                        python tests/create_parameter_file.py
+                        anisble-playbook deployment/AutoOnboarding.yml -e "VaultUser='${VAULT_USERNAME}' VaultPassword='${VAULT_PASSWORD}'"
                     '''
                 }
             }
