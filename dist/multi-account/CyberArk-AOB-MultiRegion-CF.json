@@ -265,6 +265,7 @@
                         "Arn"
                     ]
                 },
+            "ReservedConcurrentExecutions": 100,
 			"Runtime" : "python3.6",
 			"Timeout" : 360,
 			"VpcConfig" : {"SecurityGroupIds" : [{"Fn::GetAtt": ["ElasticityLambdaSecurityGroup", "GroupId"]}],

@@ -265,8 +265,9 @@
                         "Arn"
                     ]
                 },
+            "ReservedConcurrentExecutions": 100,
 			"Runtime" : "python3.6",
-			"Timeout" : 240,
+			"Timeout" : 360,
 			"VpcConfig" : {"SecurityGroupIds" : [{"Ref": "ElasticitySG"}],
 							"SubnetIds" : [{"Ref": "ComponentsSubnet"}]
 						}
