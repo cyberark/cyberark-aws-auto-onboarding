@@ -94,11 +94,12 @@ pipeline {
                                 secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
                             ],
                             usernamePassword(credentialsId: 'aob-autodeployment-user',usernameVariable: 'VAULT_USERNAME',passwordVariable: 'VAULT_PASSWORD')
-                        ])
-                    sh '''
-                        python tests/create_parameter_file.py
-                        anisble-playbook deployment/AutoOnboarding.yml -e "VaultUser='${VAULT_USERNAME}' VaultPassword='${VAULT_PASSWORD}'"
-                    '''
+                        ]){
+                        sh '''
+                            python tests/create_parameter_file.py
+                            anisble-playbook deployment/AutoOnboarding.yml -e "VaultUser='${VAULT_USERNAME}' VaultPassword='${VAULT_PASSWORD}'"
+                        '''
+                    }
                 }
             }
         }
