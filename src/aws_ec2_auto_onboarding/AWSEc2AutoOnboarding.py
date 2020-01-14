@@ -100,7 +100,7 @@ def lambda_handler(event, context):
             # AWS.<AWS Account>.<Event Region name>.<key pair name>
             keyPairValueOnSafe = "AWS.{0}.{1}.{2}".format(instanceDetails["aws_account_id"], eventRegion,
                                                           instanceDetails["key_name"])
-            keyPairAccountId = pvwa_api_calls.retrieve_accountId_from_account_name(sessionToken, keyPairValueOnSafe,
+            keyPairAccountId = pvwa_api_calls.check_if_kp_exists(sessionToken, keyPairValueOnSafe,
                                                                                    storeParametersClass.keyPairSafeName,
                                                                                    instanceId,
                                                                                    storeParametersClass.pvwaURL)
