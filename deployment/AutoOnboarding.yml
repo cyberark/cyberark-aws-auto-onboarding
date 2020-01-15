@@ -2,8 +2,18 @@
 
 - hosts: localhost
   gather_facts: no
-  tasks:
+  vars_prompt:
 
+    - name: vault_user
+      prompt: "Please enter the Vault administrator username"
+      default: "Administrator"
+      private: no
+
+    - name: vault_password
+      prompt: "Please enter the Vault Administrator password"
+      private: yes
+
+  tasks:
     - name: Include AOB Variables
       include_vars:
         file: vars/AOB-Params.yml
@@ -14,19 +24,14 @@
         CFStackName: "AOB-CF"
         SSStackName: "AOB-SS"
 
-
-    - name: vault_password
-      prompt: "Please enter the Vault Administrator password"
-      private: yes
-
-
-    - name: vault_user
-      prompt: "Please enter the Vault administrator username"
-      default: "Administrator"
-      private: no
-
     - name: Deploy solution blcok
       block:
+
+        - debug:
+           msg: "{{ vault_user }}"
+
+        - debug:
+           msg: "{{ vault_password }}"
 
         - name: Create Elasticity Lambda Security Group
           ec2_group:
