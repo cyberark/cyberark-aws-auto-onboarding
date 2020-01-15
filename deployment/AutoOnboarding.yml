@@ -14,6 +14,17 @@
         CFStackName: "AOB-CF"
         SSStackName: "AOB-SS"
 
+
+    - name: vault_password
+      prompt: "Please enter the Vault Administrator password"
+      private: yes
+
+
+    - name: vault_user
+      prompt: "Please enter the Vault administrator username"
+      default: "Administrator"
+      private: no
+
     - name: Deploy solution blcok
       block:
 
@@ -53,8 +64,8 @@
         - name: Set Vault parameters
           set_fact:
             vault_info:
-              VaultUser: "{{ VaultUser }}"
-              VaultPassword: "{{ VaultPassword }}"
+              VaultUser: "{{ vault_user }}"
+              VaultPassword: "{{ vault_password }}"
 
         - name: Combine parameters
           set_fact:
