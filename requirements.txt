@@ -13,4 +13,4 @@ requests==2.20.0
 s3transfer==0.1.13
 six==1.13.0
 urllib3==1.23
-PyYAML==5.3
+PyYAML==3.12
