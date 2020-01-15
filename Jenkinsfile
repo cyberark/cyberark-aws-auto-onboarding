@@ -20,8 +20,7 @@ pipeline {
                     # Install lambda functions requirements
                     pip install -r requirements.txt --target ./src/aws_ec2_auto_onboarding/package
                     pip install -r requirements.txt --target ./src/aws_environment_setup/package
-                    pip install yml
-                    pip install pyyaml
+                    pip install -r requirements.txt
                     
                     # Install security tools
                     pip install safety bandit
