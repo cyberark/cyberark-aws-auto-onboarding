@@ -1,4 +1,4 @@
-import pyyaml as yaml
+import yaml
 import describe_resources
 
 
