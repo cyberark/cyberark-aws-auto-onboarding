@@ -9,6 +9,7 @@ def CloudFormation_parameters_yml_generator(yml, obj):
     mod_yml['ComponentsVPC'] = obj.vpc_id
     mod_yml['PVWASG'] = obj.group_id
     mod_yml['ComponentsSubnet'] = obj.subnet_id
+    mod_yml['LambdasBucket'] = 'ref-aob-tokyo'
     return mod_yml
 
 
