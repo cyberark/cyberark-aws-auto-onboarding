@@ -707,6 +707,33 @@
                 "ElasticityLambda"
                 ]
 		},
+		"ElasticityLambdaToSNSPermissionEC1": {
+			"Type" : "AWS::Lambda::Permission",
+			"Properties" : {
+				"Action" : "lambda:InvokeFunction",
+				"FunctionName" : {
+                    "Fn::GetAtt": [
+                        "ElasticityLambda",
+                        "Arn"
+                    ]
+                },
+				"Principal" : "sns.amazonaws.com",
+				"SourceArn" : {"Fn::Join": [
+                                    "",
+                                    [
+                                        "arn:aws:sns:eu-central-1:",
+                                        {
+                                            "Ref": "AWS::AccountId"
+                                        },
+                                        ":CyberArkAOBTopic"
+                                    ]
+                                ]
+			}
+		},
+			"DependsOn": [
+                "ElasticityLambda"
+                ]
+		},
 		"ElasticityLambdaToSNSPermissionSE1": {
 			"Type" : "AWS::Lambda::Permission",
 			"Properties" : {
