@@ -27,12 +27,6 @@
     - name: Deploy solution blcok
       block:
 
-        - debug:
-           msg: "{{ vault_user }}"
-
-        - debug:
-           msg: "{{ vault_password }}"
-
         - name: Create Elasticity Lambda Security Group
           ec2_group:
             name: "ElasticityLambdaSecurityGroup"
