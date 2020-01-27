@@ -145,7 +145,7 @@ def create_instance(instanceId, instanceDetails, storeParametersClass, logName, 
 
 def get_OS_distribution_user(imageDescription):
     if "centos" in (imageDescription.lower()):
-        linuxUsername = "root"
+        linuxUsername = "centos"
     elif "ubuntu" in (imageDescription.lower()):
         linuxUsername = "ubuntu"
     elif "debian" in (imageDescription.lower()):
