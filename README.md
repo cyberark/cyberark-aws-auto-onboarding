@@ -89,16 +89,13 @@ https://github.com/cyberark/pas-on-cloud/blob/master/aws/PAS-network-environment
 1. Download cyberark-aws-auto-onboarding solution zip files and CloudFormation template from [https://github.com/cyberark/cyberark-aws-auto-onboarding/tree/master/dist](https://github.com/cyberark/cyberark-aws-auto-onboarding/tree/master/dist)
 
 2. Upload the solution to your S3 Bucket in the same region you want to deploy the solution.(* see note) 
-3. Upload the NAT-Gateway_0.1.0.json template to the bucket as well.(** see note)
 This template will be called by the main CFT as a nested template and will create the NAT GW in the VPC
-4. Open the CloudFormation, fill in all the details (see below) and launch it
-5. Upload the old/existing key pairs used to create instances in your AWS region to the Key Pair Safe in the Vault 
+3. Open the CloudFormation, fill in all the details (see below) and launch it
+4. Upload the old/existing key pairs used to create instances in your AWS region to the Key Pair Safe in the Vault 
 
 Update the account User name with  the following naming convention: AWS.[AWS Account].[Region name].[key pair name]
 
 > ***Note:** that this solution must to be installed in every AWS region. For each region, use a dedicated Vault user and make sure the Lambda VPC has a network acess to the PVWA.
-
-> ****Note:** This step is only relevant if you deploy the NAT CFT - aws _auto_onboarding_0.1.1_with_NAT.json
 
 # CloudFormation Template 
 The following table lists the parameters to provide in the CloudFormation:
@@ -117,11 +114,8 @@ The following table lists the parameters to provide in the CloudFormation:
 |CPMWindows Name | The name of the CPM that will manage the onboarded SSH Keys|
 |Target safe for the Key Pairs| The name of the Safe to which the Key Pairs created by CyberArk will be onboarded (Note: The deployment will fail if the safe already exist)|
 |Key Pair name|The name of the Key Pair, if it needs to be created by CyberArk (Note: CyberArk creates the Key Pair and stores it in the Vault. The Key Pair is never downloaded to users' endpoints.)|
-|Public NAT GW CIDR*|The IPv4 range of addresses for the NAT GW public subnet|
-|Private NAT GW CIDR*|The IPv4 range of addresses for the NAT GW private subnet|
-|Internet GW ID*|The ID of the internet GW that exist in the VPC|
 
->***Note:** These fields only exist in the Elasticity v0.1.1 - With NAT.json template 
+
 
 # Deploy Secondary Cloud Formation - StackSet
 - When the Main CloudFormation deployment ends, click on the Stack and navigate to 'Resources' section
