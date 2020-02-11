@@ -202,6 +202,30 @@ git push origin my-new-feature
 
 
 # Deleting the solution 
+
+Delete StackSet
+
+- Open CloudFormation Service in the region that you deployed the following CFs:
+- From StackSet choose that stack for CyberArk-AOB-MultiRegion-StackSet.json
+- In Actions drop down list, click on "Delete stacks from StackSet"
+- In Account numbers enter the current Account ID (Secondary Account ID)
+- In Specify regions press on "Add all regions"
+- Press on "Next"
+- in next page press on "Submit"
+- Verify that new operation is in "Running" state, in type "DELETE"
+- Wait until Operation shows "SUCCEEDED"
+- Again - From Stacks choose that stack for CyberArk-AOB-MultiRegion-StackSet.json
+- From Actions choose "Delete StackSet"
+
+Delete the CloudFormation 
+
+- Open CloudFormation Service in the region that you deployed the following CFs:
+- CyberArk-AOB-MutliRegion-CF.json
+- From Stacks choose that stack for CyberArk-AOB-MutliRegion-CF.json
+- press Delete
+- Wait until finished (you can hit the refresh button to view progress)
+
+
 There is a known issue with auto-deleting the network interface of a Lambda deployed in an existing VPC. Therefore, follow these steps when deleting the stack: 
 
 1. Wait for the following status event in the cloud formation log:
