@@ -84,9 +84,9 @@ The following table lists the parameters to provide in the CloudFormation:
 |Subnet	| The Lambda's subnet with access permissions to the PVWA|
 |Vault user name |The name of the Vault user that has permissions to create and delete accounts in target Safes. (Note: Follow the guidelines)|
 |Vaut user password|	The password for the Vault user|
-|Target safe for Unix accounts	| The name of the Safe to which the SSH Keys will be onboarded (Note: If this Safe does not exist, it will be created automatically)|
+|Target safe for Unix accounts	| The name of the Safe to which the SSH Keys will be onboarded (Note: The deployment will fail if the safe already exist)|
 |CPM name | The name of the CPM that will manage the onboarded SSH Keys|
-|Target safe for the Key Pairs| The name of the Safe to which the Key Pairs created by CyberArk will be onboarded (Note: If this Safe does not exist, it will be created automatically)|
+|Target safe for the Key Pairs| The name of the Safe to which the Key Pairs created by CyberArk will be onboarded (Note: The deployment will fail if the safe already exist)|
 |Key Pair name|The name of the Key Pair, if it needs to be created by CyberArk (Note: CyberArk creates the Key Pair and stores it in the Vault. The Key Pair is never downloaded to users' endpoints.)|
 |Public NAT GW CIDR*|The IPv4 range of addresses for the NAT GW public subnet|
 |Private NAT GW CIDR*|The IPv4 range of addresses for the NAT GW private subnet|
