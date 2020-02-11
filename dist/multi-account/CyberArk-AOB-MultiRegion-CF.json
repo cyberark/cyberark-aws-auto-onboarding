@@ -1004,14 +1004,14 @@
 		},
 		"UnixSafeName": {
 			"Type": "String",
-            "Description": "Name of the Safe that will store all the Unix accounts created by the solution. If this Safe does not yet exist, it will be created automatically.",
+            "Description": "Name of the Safe that will store all the Unix accounts created by the solution. The deployment will fail if the safe already exist.",
 			"AllowedPattern": "^[^\\\\:\\*<>\\\"\\.\\|\\\/]*$",
 			"MinLength": "1",
 			"MaxLength": "28"
 		},
 		"WindowsSafeName": {
 			"Type": "String",
-            "Description": "Name of the Safe that will store all the Windows accounts created by the solution. If this Safe does not yet exist, it will be created automatically.",
+            "Description": "Name of the Safe that will store all the Windows accounts created by the solution. The deployment will fail if the safe already exist.",
 			"AllowedPattern": "^[^\\\\:\\*<>\\\"\\.\\|\\\/]*$",
 			"MinLength": "1",
 			"MaxLength": "28"
@@ -1056,7 +1056,7 @@
         },
 		"KeyPairsSafe": {
             "Type": "String",
-            "Description": "Name of the Safe that will store all Key Pairs used by the solution. If this Safe does not yet exist, it will be created automatically.",
+            "Description": "Name of the Safe that will store all Key Pairs used by the solution. The deployment will fail if the safe already exist.",
 			"AllowedPattern": "^[^\\\\:\\*<>\\\"\\.\\|\\\/]*$",
 			"MinLength": "1",
 			"MaxLength": "28"
