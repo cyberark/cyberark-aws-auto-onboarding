@@ -12,6 +12,9 @@ This solution supports CyberArk environments that are deployed in Cloud, and Hyb
 # Features
 - Automatic onboarding and management of new AWS instances upon spin up
 - Automatic de-provision accounts for terminated AWS instances
+- Multi region support - Single solution deployment for all regions in the AWS account 
+- Near real time on boarding of new instances spinning up  
+- Deployment with Ansible
 
 
 # Prerequisites
@@ -49,14 +52,38 @@ This solution requires the following:
 |Initiate CPM account management operations|
 
 
-# Deployment
+#  Deployment using Ansible 
+Requirements for deployment:
+
+- AWS IAM User strong privileges for deploying IAM roles and policies with CloudFormation
+- Python 3.6 or higher installed
+
+Steps:
+1. Install virtual environment
+`pip install virtualenv`
+2. Clone auto-onboarding repository
+`git clone https://github.com/cyberark/cyberark-aws-auto-onboarding.git`
+3. Create a new virtual environment using Requirements.txt
+`virtualenv AOB`
+3. Activate the virtualenv
+`source AOB/bin/activate`
+4. Change directory to cyberark-aws-auto-onboarding/deployment
+`cd cyberark-aws-auto-onboarding/deployment`
+5. Install required packages using requirements.txt
+`pip install -r cyberark-aws-auto-onboarding/`
+6. edit vars/AOB-Params.yml according to the comments
+7. run the playbook and provide two parameters - VaultUser , VaultPassword
+`ansible-playbook VaultUser=<Vault Administrative user > VaultPassword=<MuchSecureVeryWow> `
+
+
+
+
+# Deployment using Cloud Formation 
 
 This solution requires NAT GW to allow Lambda access to the AWS resources  
 Reference for further information: https://docs.aws.amazon.com/lambda/latest/dg/vpc.html
-
-The following CloudFormation templates are available:
-- aws _auto_onboarding_0.1.1.json - This CFT is for use when you already have NAT GW in the VPC you plan to use for the Lambda deployment 
-- aws _auto_onboarding_0.1.1_with_NAT.json - This CFT is for use when you do not have NAT GW in the VPC you plan to use for the Lambda deployment 
+(Cyberark reference network template already contain NAT GW so please use it for POC 
+https://github.com/cyberark/pas-on-cloud/blob/master/aws/PAS-network-environment-NAT.json)
 
 
 1. Download cyberark-aws-auto-onboarding solution zip files and CloudFormation template from [https://github.com/cyberark/cyberark-aws-auto-onboarding/tree/master/dist](https://github.com/cyberark/cyberark-aws-auto-onboarding/tree/master/dist)
@@ -95,6 +122,24 @@ The following table lists the parameters to provide in the CloudFormation:
 |Internet GW ID*|The ID of the internet GW that exist in the VPC|
 
 >***Note:** These fields only exist in the Elasticity v0.1.1 - With NAT.json template 
+
+# Deploy Secondary Cloud Formation - StackSet
+- When the Main CloudFormation deployment ends, click on the Stack and navigate to 'Resources' section
+  - Search 'Elasticity' and press on 'ElasticityLambda' link
+  - Save for later the 'ARN' of the Lambda 
+- From GIT copy the content of CyberArk-AOB-MultiRegion-StackSet.json and save it locally or in S3 Bucket
+- In Cloud Formation service, in left pane Navigate to 'StackSets'
+- Press on Create StackSet
+- Select 'Tempate is ready' and the location of the file you saved before
+- Enter a name for the Stack Set
+- Enter the 'ARN' of the lambda that you saved before
+- Press 'Next'
+- In 'Configure StackSet options' press 'Next'
+- In 'Set deployment options' Enter the Account ID that the solution is deployed (the current Account ID)
+- Choose the Regions to provision
+- Press 'Next'
+- In 'Review' press 'Submit'
+
 
 # Solution Upgrade Procedure 
 1. Replace the solution files in the bucket 
