@@ -1,0 +1,15 @@
+ansible==2.9.1
+boto3==1.10.29
+botocore==1.13.29
+cffi==1.13.2
+cryptography==2.8
+docutils==0.15.2
+Jinja2==2.10.3
+jmespath==0.9.4
+MarkupSafe==1.1.1
+pycparser==2.19
+python-dateutil==2.8.0
+PyYAML==5.1.2
+s3transfer==0.2.1
+six==1.13.0
+urllib3==1.25.7

@@ -48,8 +48,32 @@ This solution requires the following:
 |Update Accounts Properties|
 |Initiate CPM account management operations|
 
+# Automatic Deployment Using Ansible
 
-# Deployment
+Requirements for deployment:
+- PAS environment already deployed - Vault, PVWA, CPM, PSM, PSMP
+- Any Vault Admin user + password 
+- AWS IAM User strong privileges for deploying IAM roles and policies with CloudFormation
+- Python 3.6 or higher installed
+
+Steps:
+1. Install virtual environment
+    `pip install virtualenv`
+2. Clone auto-onboarding repository  
+    `git clone https://github.com/cyberark/cyberark-aws-auto-onboarding.git`
+3. Create a new virtual environment using Requirements.txt  
+    `virtualenv AOB`
+3. Activate the virtualenv  
+    `source AOB/bin/activate`
+4. Change directory to cyberark-aws-auto-onboarding/deployment  
+    `cd cyberark-aws-auto-onboarding/deployment`
+5. Install required packages using requirements.txt  
+    `pip install -r cyberark-aws-auto-onboarding/`
+6. edit vars/AOB-Params.yml according to the comments
+7. run the playbook and provide two parameters - VaultUser , VaultPassword  
+    `ansible-playbook VaultUser=<Vault Administrative user > VaultPassword=<MuchSecureVeryWow> `
+
+# Manual Deployment
 
 This solution requires NAT GW to allow Lambda access to the AWS resources  
 Reference for further information: https://docs.aws.amazon.com/lambda/latest/dg/vpc.html
@@ -85,8 +109,10 @@ The following table lists the parameters to provide in the CloudFormation:
 |Vault user name |The name of the Vault user that has permissions to create and delete accounts in target Safes. (Note: Follow the guidelines)|
 |Vaut user password|	The password for the Vault user|
 |Target safe for Unix accounts	| The name of the Safe to which the SSH Keys will be onboarded (Note: If this Safe does not exist, it will be created automatically)|
-|CPM name | The name of the CPM that will manage the onboarded SSH Keys|
-|Target safe for the Key Pairs| The name of the Safe to which the Key Pairs created by CyberArk will be onboarded (Note: If this Safe does not exist, it will be created automatically)|
+|CPMUnix name | The name of the CPM that will manage the onboarded SSH Keys|
+|Target safe for Windows accounts	| The name of the Safe to which the windows accounts will be onboarded (Note: The deployment will fail if the safe already exist)|
+|CPMWindows Name | The name of the CPM that will manage the onboarded SSH Keys|
+|Target safe for the Key Pairs| The name of the Safe to which the Key Pairs created by CyberArk will be onboarded (Note: The deployment will fail if the safe already exist)|
 |Key Pair name|The name of the Key Pair, if it needs to be created by CyberArk (Note: CyberArk creates the Key Pair and stores it in the Vault. The Key Pair is never downloaded to users' endpoints.)|
 |Public NAT GW CIDR*|The IPv4 range of addresses for the NAT GW public subnet|
 |Private NAT GW CIDR*|The IPv4 range of addresses for the NAT GW private subnet|

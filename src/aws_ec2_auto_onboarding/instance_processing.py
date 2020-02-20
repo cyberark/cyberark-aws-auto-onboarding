@@ -1,6 +1,7 @@
 import pvwa_api_calls
 import aws_services
 import kp_processing
+import pvwa_integration
 import boto3
 
 UNIX_PLATFORM = "UnixSSHKeys"
@@ -31,45 +32,50 @@ def delete_instance(instanceId, session, storeParametersClass, instanceData, ins
     return
 
 
-def get_instance_password_data(instanceId):
-    # wait until password data available when Windows instance is up
-    ec2 = boto3.client('ec2')
-    print("Waiting for instance - {0} to become available: ".format(instanceId))
-    waiter = ec2.get_waiter('password_data_available')
-    waiter.wait(InstanceId=instanceId)
-    instancePasswordData = ec2.get_password_data(InstanceId=instanceId)
-    return instancePasswordData['PasswordData']
+def get_instance_password_data(instanceId,solutionAccountId,eventRegion,eventAccountId):
+	if eventAccountId == solutionAccountId:
+		try:
+			ec2Resource = boto3.client('ec2', eventRegion)
+		except Exception as e:
+			print('Error on creating boto3 session: {0}'.format(e))
+	else:
+		try:
+			sts_connection = boto3.client('sts')
+			acct_b = sts_connection.assume_role(
+				RoleArn="arn:aws:iam::{0}:role/CyberArk-AOB-AssumeRoleForElasticityLambda".format(eventAccountId),
+				RoleSessionName="cross_acct_lambda"
+			)
+			ACCESS_KEY = acct_b['Credentials']['AccessKeyId']
+			SECRET_KEY = acct_b['Credentials']['SecretAccessKey']
+			SESSION_TOKEN = acct_b['Credentials']['SessionToken']
+
+			ec2Resource = boto3.client(
+				'ec2',
+				region_name=eventRegion,
+				aws_access_key_id=ACCESS_KEY,
+				aws_secret_access_key=SECRET_KEY,
+				aws_session_token=SESSION_TOKEN,
+			)
+		except Exception as e:
+			print('Error on getting token from account: {0}'.format(eventAccountId))
+
+	try:
+		# wait until password data available when Windows instance is up
+		print("Waiting for instance - {0} to become available: ".format(instanceId))
+		waiter = ec2Resource.get_waiter('password_data_available')
+		waiter.wait(InstanceId=instanceId)
+		instancePasswordData = ec2Resource.get_password_data(InstanceId=instanceId)
+		return instancePasswordData['PasswordData']
+	except Exception as e:
+		print('Error on waiting for instance password: {0}'.format(e))
 
 
-def create_instance(instanceId, session, instanceDetails, storeParametersClass, logName):
-    # get key pair
+def create_instance(instanceId, instanceDetails, storeParametersClass, logName, solutionAccountId, eventRegion, eventAccountId, instanceAccountPassword):
 
-    # Retrieving the account id of the account where the instance keyPair is stored
-    try:
-        currentSession = boto3.session.Session()
-        awsRegionName = currentSession.region_name
-    except Exception:
-        print("AWS region name could not be retrieved")
-        raise Exception("AWS region name could not be retrieved")
-    # AWS.<AWS Account>.<Region name>.<key pair name>
-    keyPairValueOnSafe = "AWS.{0}.{1}.{2}".format(instanceDetails["aws_account_id"], awsRegionName,
-                                                  instanceDetails["key_name"])
-    keyPairAccountId = pvwa_api_calls.retrieve_accountId_from_account_name(session, keyPairValueOnSafe,
-                                                                           storeParametersClass.keyPairSafeName,
-                                                                           instanceId,
-                                                                           storeParametersClass.pvwaURL)
-    if not keyPairAccountId:
-        print("Key Pair '{0}' does not exist in safe '{1}'".format(keyPairValueOnSafe,
-                                                                   storeParametersClass.keyPairSafeName))
-        return
-    instanceAccountPassword = pvwa_api_calls.get_account_value(session, keyPairAccountId, instanceId,
-                                                               storeParametersClass.pvwaURL)
-    if instanceAccountPassword is False:
-        return
 
     if instanceDetails['platform'] == "windows":  # Windows machine return 'windows' all other return 'None'
         kp_processing.save_key_pair(instanceAccountPassword)
-        instancePasswordData = get_instance_password_data(instanceId)
+        instancePasswordData = get_instance_password_data(instanceId, solutionAccountId, eventRegion, eventAccountId)
         # decryptedPassword = convert_pem_to_password(instanceAccountPassword, instancePasswordData)
         rc, decryptedPassword = kp_processing.run_command_on_container(
             ["echo", str.strip(instancePasswordData), "|", "base64", "--decode", "|", "openssl", "rsautl", "-decrypt",
@@ -93,8 +99,19 @@ def create_instance(instanceId, session, instanceDetails, storeParametersClass, 
 
     # Check if account already exist - in case exist - just add it to DynamoDB
 
+
+    pvwaConnectionnumber, sessionGuid = aws_services.get_available_session_from_dynamo()
+    if not pvwaConnectionnumber:
+        return
+    sessionToken = pvwa_integration.logon_pvwa(storeParametersClass.vaultUsername,
+                                               storeParametersClass.vaultPassword,
+                                               storeParametersClass.pvwaURL, pvwaConnectionnumber)
+
+    if not sessionToken:
+        return
+
     searchAccountPattern = "{0},{1}".format(instanceDetails["address"], instanceUsername)
-    existingInstanceAccountId = pvwa_api_calls.retrieve_accountId_from_account_name(session, searchAccountPattern,
+    existingInstanceAccountId = pvwa_api_calls.retrieve_accountId_from_account_name(sessionToken, searchAccountPattern,
                                                                                     safeName,
                                                                                     instanceId,
                                                                                     storeParametersClass.pvwaURL)
@@ -103,30 +120,32 @@ def create_instance(instanceId, session, instanceDetails, storeParametersClass, 
         aws_services.put_instance_to_dynamo_table(instanceId, instanceDetails['address'], OnBoardStatus.OnBoarded, "None", logName)
         return
     else:
-        accountCreated, errorMessage = pvwa_api_calls.create_account_on_vault(session, AWSAccountName, instanceKey,
+        accountCreated, errorMessage = pvwa_api_calls.create_account_on_vault(sessionToken, AWSAccountName, instanceKey,
                                                                               storeParametersClass,
                                                                               platform, instanceDetails['address'],
                                                                               instanceId, instanceUsername, safeName)
 
         if accountCreated:
             # if account created, rotate the key immediately
-            instanceAccountId = pvwa_api_calls.retrieve_accountId_from_account_name(session, searchAccountPattern,
+            instanceAccountId = pvwa_api_calls.retrieve_accountId_from_account_name(sessionToken, searchAccountPattern,
                                                                                     safeName,
                                                                                     instanceId,
                                                                                     storeParametersClass.pvwaURL)
 
-            pvwa_api_calls.rotate_credentials_immediately(session, storeParametersClass.pvwaURL, instanceAccountId,
+            pvwa_api_calls.rotate_credentials_immediately(sessionToken, storeParametersClass.pvwaURL, instanceAccountId,
                                                           instanceId)
             aws_services.put_instance_to_dynamo_table(instanceId, instanceDetails['address'], OnBoardStatus.OnBoarded, "None",
                                          logName)
         else:  # on board failed, add the error to the table
             aws_services.put_instance_to_dynamo_table(instanceId, instanceDetails['address'], OnBoardStatus.OnBoarded_Failed,
                                          errorMessage, logName)
+    pvwa_integration.logoff_pvwa(storeParametersClass.pvwaURL, sessionToken)
+    aws_services.release_session_on_dynamo(pvwaConnectionnumber, sessionGuid)
 
 
 def get_OS_distribution_user(imageDescription):
     if "centos" in (imageDescription.lower()):
-        linuxUsername = "root"
+        linuxUsername = "centos"
     elif "ubuntu" in (imageDescription.lower()):
         linuxUsername = "ubuntu"
     elif "debian" in (imageDescription.lower()):
