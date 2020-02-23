@@ -1,7 +1,5 @@
 ---
 localhost:
-  hosts:
-    127.0.0.1
   vars:
     Accounts: '138339392836'
     PvwaIP: ''
