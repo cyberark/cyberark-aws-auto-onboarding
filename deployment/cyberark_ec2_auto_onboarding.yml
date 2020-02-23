@@ -17,6 +17,7 @@
     - name: Include AOB Variables
       include_vars:
         file: vars/AOB-Params.yml
+        name: aob_vars
 
     - name: Stack Name
       set_fact:
@@ -30,8 +31,8 @@
           ec2_group:
             name: "ElasticityLambdaSecurityGroup"
             description: "Security group for elasticity lambda"
-            vpc_id: "{{ CloudFormation_parameters.ComponentsVPC }}"
-            region: "{{ Runtime_parameters.MainRegion }}"
+            vpc_id: "{{ aob_vars.CloudFormation_parameters.ComponentsVPC }}"
+            region: "{{ aob_vars.Runtime_parameters.MainRegion }}"
             rules_egress:
               - proto: "tcp"
                 from_port: "443"
@@ -47,8 +48,8 @@
           ec2_group:
             name: "TrustMechanismSecurityGroup"
             description: "Security group for TrustMechanism lambda"
-            vpc_id: "{{ CloudFormation_parameters.ComponentsVPC }}"
-            region: "{{ Runtime_parameters.MainRegion }}"
+            vpc_id: "{{ aob_vars.CloudFormation_parameters.ComponentsVPC }}"
+            region: "{{ aob_vars.Runtime_parameters.MainRegion }}"
             tags:
               Name: "CyberArk AOB - Trust Lambda Security Group"
           register: trust_sg
@@ -67,7 +68,7 @@
 
         - name: Combine parameters
           set_fact:
-            cf_parameters: "{{ CloudFormation_parameters|combine(vault_info) }}"
+            cf_parameters: "{{ aob_vars.CloudFormation_parameters|combine(vault_info) }}"
 
         - name: Combine parameters
           set_fact:
@@ -77,9 +78,9 @@
           include_role:
             name: cf_deploy
           vars:
-            cf_template_file: "{{ CFTemplatePath }}"
+            cf_template_file: "{{ aob_vars.CFTemplatePath }}"
             cf_template_parameters: "{{ cf_parameters_final }}"
-            runtime_parameters: "{{ Runtime_parameters }}"
+            runtime_parameters: "{{ aob_vars.Runtime_parameters }}"
           register: aob_cf
 
         - debug:
@@ -89,10 +90,10 @@
           include_role:
             name: ss_deploy
           vars:
-            ss_template_file: "{{ SSTemplatePath }}"
+            ss_template_file: "{{ aob_vars.SSTemplatePath }}"
             ss_template_parameters:
               LambdaARN: "{{ cf_output.ElasticityLambda }}"
-            runtime_parameters: "{{ Runtime_parameters }}"
+            runtime_parameters: "{{ aob_vars.Runtime_parameters }}"
           register: aob_ss
 
       rescue:
@@ -100,21 +101,21 @@
         # get pvwa sg id
         - name: Revoke rule from PVWA SG
           shell: |
-            aws ec2 revoke-security-group-ingress --group-id {{ CloudFormation_parameters.PVWASG }} --protocol tcp --port 443 --source-group {{ elasticity_sg.group_id }} --region {{ Runtime_parameters.MainRegion }}
+            aws ec2 revoke-security-group-ingress --group-id {{ aob_vars.CloudFormation_parameters.PVWASG }} --protocol tcp --port 443 --source-group {{ elasticity_sg.group_id }} --region {{ aob_vars.Runtime_parameters.MainRegion }}
           ignore_errors: True
 
         - name: Get Default SG id of same VPC of Elasticity SG and Trust SG
           ec2_group_facts:
-            region: "{{ Runtime_parameters.MainRegion }}"
+            region: "{{ aob_vars.Runtime_parameters.MainRegion }}"
             filters:
               group_name: "default"
-              vpc-id: "{{ CloudFormation_parameters.ComponentsVPC }}"
+              vpc-id: "{{ aob_vars.CloudFormation_parameters.ComponentsVPC }}"
           register: default_sg
 
         # get netwrok interface id of Elasticity SG
         - name: Get Network Interface ID for Elasticity SG
           ec2_eni_facts:
-            region: "{{ Runtime_parameters.MainRegion }}"
+            region: "{{ aob_vars.Runtime_parameters.MainRegion }}"
             filters:
               group-id: "{{ elasticity_sg.group_id }}"
           register: elasticity_eni
@@ -123,7 +124,7 @@
         # get netwrok interface id of Trust SG
         - name: Get Network Interface ID for Trust SG
           ec2_eni_facts:
-            region: "{{ Runtime_parameters.MainRegion }}"
+            region: "{{ aob_vars.Runtime_parameters.MainRegion }}"
             filters:
               group-id: "{{ trust_sg.group_id }}"
           register: trust_eni
@@ -131,25 +132,25 @@
         # modify to defualt sg for both trust and elasticity
         - name: Modify Network Interfaces - Detach and Attach to Default SG
           shell: |
-            aws ec2 modify-network-interface-attribute --network-interface-id {{ elasticity_eni.network_interfaces[0].id }} --groups {{ default_sg.security_groups[0].group_id }} --region {{ Runtime_parameters.MainRegion }}
+            aws ec2 modify-network-interface-attribute --network-interface-id {{ elasticity_eni.network_interfaces[0].id }} --groups {{ default_sg.security_groups[0].group_id }} --region {{ aob_vars.Runtime_parameters.MainRegion }}
           when: "{{elasticity_eni.network_interfaces}}|length > 0"
 
         - name: Modify Network Interfaces - Detach and Attach to Default SG
           shell: |
-            aws ec2 modify-network-interface-attribute --network-interface-id {{ elasticity_eni.network_interfaces[1].id }} --groups {{ default_sg.security_groups[0].group_id }} --region {{ Runtime_parameters.MainRegion }}
+            aws ec2 modify-network-interface-attribute --network-interface-id {{ elasticity_eni.network_interfaces[1].id }} --groups {{ default_sg.security_groups[0].group_id }} --region {{ aob_vars.Runtime_parameters.MainRegion }}
           when: "{{elasticity_eni.network_interfaces}}|length > 1"
 
         - name: Modify Network Interfaces - Detach and Attach to Default SG
           shell: |
-            aws ec2 modify-network-interface-attribute --network-interface-id {{ trust_eni.network_interfaces[0].id }} --groups {{ default_sg.security_groups[0].group_id }} --region {{ Runtime_parameters.MainRegion }}
+            aws ec2 modify-network-interface-attribute --network-interface-id {{ trust_eni.network_interfaces[0].id }} --groups {{ default_sg.security_groups[0].group_id }} --region {{ aob_vars.Runtime_parameters.MainRegion }}
           when: "{{ trust_eni.network_interfaces }}|length > 0"
 
         # remove security groups
         - name: Remove Elasticity SG
           ec2_group:
             group_id: "{{elasticity_sg.group_id}}"
-            vpc_id: "{{ CloudFormation_parameters.ComponentsVPC }}"
-            region: "{{ Runtime_parameters.MainRegion }}"
+            vpc_id: "{{ aob_vars.CloudFormation_parameters.ComponentsVPC }}"
+            region: "{{ aob_vars.Runtime_parameters.MainRegion }}"
             state: "absent"
           when: elasticity_sg is defined
 
@@ -157,8 +158,8 @@
         - name: Remove Trust SG
           ec2_group:
             group_id: "{{trust_sg.group_id}}"
-            vpc_id: "{{ CloudFormation_parameters.ComponentsVPC }}"
-            region: "{{ Runtime_parameters.MainRegion }}"
+            vpc_id: "{{ aob_vars.CloudFormation_parameters.ComponentsVPC }}"
+            region: "{{ aob_vars.Runtime_parameters.MainRegion }}"
             state: "absent"
           when: trust_sg is defined
 
@@ -166,16 +167,16 @@
           cloudformation_stack_set:
             name: "{{ SSStackName }}"
             state: "absent"
-            region: "{{ Runtime_parameters.MainRegion }}"
-            accounts: "{{ Runtime_parameters.Accounts }}"
-            regions: "{{ Runtime_parameters.Regions }}"
+            region: "{{ aob_vars.Runtime_parameters.MainRegion }}"
+            accounts: "{{ aob_vars.Runtime_parameters.Accounts }}"
+            regions: "{{ aob_vars.Runtime_parameters.Regions }}"
           when: aob_ss is defined
           ignore_errors: True
 
         - name: Rollback AOB CloudFormation
           cloudformation:
             stack_name: "{{ CFStackName }}"
-            region: "{{ Runtime_parameters.MainRegion }}"
+            region: "{{ aob_vars.Runtime_parameters.MainRegion }}"
             state: "absent"
           when:
             - aob_cf is defined
