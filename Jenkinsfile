@@ -12,7 +12,6 @@ pipeline {
     stage('Install virtual environment') {
       steps {
         sh '''
-          if [ $(dpkg-query -W -f='${Status}' zip 2>/dev/null | grep -c "ok installed") -eq 0 ]; then sudo apt-get install -y zip;  fi
           python -m pip install --user virtualenv
           python -m virtualenv .testenv
           source ./.testenv/bin/activate
