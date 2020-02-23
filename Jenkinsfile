@@ -70,7 +70,7 @@ pipeline {
           '''
         }
       }
-      stage('Security testing') {
+      stage('Security tests') {
         steps {
           parallel {
             stage('Scan requirements file for vulnerabilities') {
