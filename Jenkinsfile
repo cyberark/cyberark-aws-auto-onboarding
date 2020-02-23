@@ -27,29 +27,27 @@ pipeline {
       }
     }
     stage('Create function zip files') {
-      steps {
-        parallel {
-          stage('Package aws_environment_setup lambda function') {
-            steps {
-              sh '''
-                cd src/aws_environment_setup
-                cd package
-                zip -r9 ${OLDPWD}/aws_environment_setup.zip .
-                cd ${OLDPWD}
-                zip -g aws_environment_setup.zip AWSEnvironmentSetup.py
-              '''
-            }
+      parallel {
+        stage('Package aws_environment_setup lambda function') {
+          steps {
+            sh '''
+              cd src/aws_environment_setup
+              cd package
+              zip -r9 ${OLDPWD}/aws_environment_setup.zip .
+              cd ${OLDPWD}
+              zip -g aws_environment_setup.zip AWSEnvironmentSetup.py
+            '''
           }
-          stage('Package aws_ec2_auto_onboarding lambda function') {
-            steps {
-              sh '''
-                cd src/aws_ec2_auto_onboarding
-                cd package
-                zip -r9 ${OLDPWD}/aws_ec2_auto_onboarding.zip .
-                cd ${OLDPWD}
-                zip -g aws_ec2_auto_onboarding.zip aws_services.py AWSEc2AutoOnboarding.py instance_processing.py kp_processing.py pvwa_api_calls.py pvwa_integration.py puttygen
-              '''
-            }
+        }
+        stage('Package aws_ec2_auto_onboarding lambda function') {
+          steps {
+            sh '''
+              cd src/aws_ec2_auto_onboarding
+              cd package
+              zip -r9 ${OLDPWD}/aws_ec2_auto_onboarding.zip .
+              cd ${OLDPWD}
+              zip -g aws_ec2_auto_onboarding.zip aws_services.py AWSEc2AutoOnboarding.py instance_processing.py kp_processing.py pvwa_api_calls.py pvwa_integration.py puttygen
+            '''
           }
         }
       }
@@ -71,23 +69,21 @@ pipeline {
         }
       }
       stage('Security tests') {
-        steps {
-          parallel {
-            stage('Scan requirements file for vulnerabilities') {
-              steps {
-                sh '''
-                  source ./.testenv/bin/activate
-                  safety check -r requirements.txt --full-report > reports/safety.txt || true
-                '''
-              }
+        parallel {
+          stage('Scan requirements file for vulnerabilities') {
+            steps {
+              sh '''
+                source ./.testenv/bin/activate
+                safety check -r requirements.txt --full-report > reports/safety.txt || true
+              '''
             }
-            stage('Scan distributables code for vulnerabilities') {
-              steps {
-                sh '''
-                  source ./.testenv/bin/activate
-                  bandit -r artifacts/. --format html > reports/bandit.html || true
-                '''
-              }
+          }
+          stage('Scan distributables code for vulnerabilities') {
+            steps {
+              sh '''
+                source ./.testenv/bin/activate
+                bandit -r artifacts/. --format html > reports/bandit.html || true
+              '''
             }
           }
         }
