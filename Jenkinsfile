@@ -106,7 +106,8 @@ pipeline {
   }
   post {
     success {
-    archiveArtifacts artifacts: 'artifacts/*.zip', fingerprint: true
-    archiveArtifacts artifacts: 'reports/*', fingerprint: true
+      archiveArtifacts artifacts: 'artifacts/*.zip', fingerprint: true
+      archiveArtifacts artifacts: 'reports/*', fingerprint: true
+    }
   }
 }
