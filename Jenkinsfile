@@ -82,8 +82,8 @@ pipeline {
         stage('Scan distributables code for vulnerabilities') {
           steps {
             sh '''
-              source ./.testenv/bin/activate
-              bandit -r artifacts/. --format html > reports/bandit.html || true
+              # source ./.testenv/bin/activate
+              # bandit -r artifacts/. --format html > reports/bandit.html || true
             '''
           }
         }
