@@ -17,6 +17,7 @@ pipeline {
           source ./.testenv/bin/activate
 
           # Install testing environment requirements
+          pip install -r tests/requirements.txt
 
           # Install lambda functions requirements
           pip install -r requirements.txt --target ./src/aws_ec2_auto_onboarding/package
