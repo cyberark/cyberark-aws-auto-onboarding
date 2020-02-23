@@ -16,6 +16,8 @@ pipeline {
           python -m virtualenv .testenv
           source ./.testenv/bin/activate
 
+          # Install testing environment requirements
+
           # Install lambda functions requirements
           pip install -r requirements.txt --target ./src/aws_ec2_auto_onboarding/package
           pip install -r requirements.txt --target ./src/aws_environment_setup/package
@@ -97,7 +99,6 @@ pipeline {
           ]) {
             sh '''
               source ./.testenv/bin/activate
-              pip install -r tests/requirements.txt
               ansible-playbook deployment/cyberark_ec2_auto_onboarding.yml -e "@tests/infra.yml" -e "VaultUser=${VAULT_USERNAME} VaultPassword=${VAULT_PASSWORD}" --vault-password-file ${vault_password_file}
             '''
           }
