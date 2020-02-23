@@ -96,7 +96,7 @@ pipeline {
             ]) {
               sh """
                 source ./.testenv/bin/activate
-                ansible-playbook deployment/cyberark_ec2_auto_onboarding.yml -e "VaultUser=${VAULT_USERNAME} VaultPassword=${VAULT_PASSWORD}"
+                ansible-playbook deployment/cyberark_ec2_auto_onboarding.yml -i tests/infrastructure.yml -e "VaultUser=${VAULT_USERNAME} VaultPassword=${VAULT_PASSWORD}"
               """
             }
           }
