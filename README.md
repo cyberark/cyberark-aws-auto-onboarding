@@ -69,9 +69,9 @@ Steps:
     `cd cyberark-aws-auto-onboarding/deployment`
 5. Install required packages using requirements.txt  
     `pip install -r cyberark-aws-auto-onboarding/`
-6. edit vars/AOB-Params.yml according to the comments
-7. run the playbook and provide two parameters - VaultUser , VaultPassword  
-    `ansible-playbook VaultUser=<Vault Administrative user > VaultPassword=<MuchSecureVeryWow> `
+6. Edit vars/AOB-Params.yml according to the comments
+7. Run the playbook and provide two parameters - VaultUser , VaultPassword  
+    `ansible-playbook cyberark_ec2_auto_onboarding.yml VaultUser=<Vault Administrative user> VaultPassword=<Secure Password> `
 
 # Manual Deployment
 

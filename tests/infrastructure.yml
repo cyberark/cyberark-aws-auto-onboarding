@@ -1,0 +1,11 @@
+---
+localhost:
+  hosts:
+    127.0.0.1
+  vars:
+    Accounts: '138339392836'
+    PvwaIP: ''
+    ComponentsVPC: 'vpc-075eadb618b1a070f'
+    PVWASG: 'vpc-075eadb618b1a070f'
+    ComponentsSubnet: 'subnet-0bb6e84a4548c51b1'
+    KeyPairName: 'pcloud-test-instances-KP'
