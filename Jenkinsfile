@@ -51,54 +51,54 @@ pipeline {
           }
         }
       }
-      stage('Copy zips') {
-        steps {
-          sh '''
-            rm -rf reports/
-            rm -rf artifacts/
-            mkdir reports
-            mkdir artifacts
-            mkdir artifacts/aws_ec2_auto_onboarding
-            mkdir artifacts/aws_environment_setup
-            cp src/aws_ec2_auto_onboarding/aws_ec2_auto_onboarding.zip artifacts/
-            cp src/aws_environment_setup/aws_environment_setup.zip artifacts/
-            cd artifacts
-            unzip aws_ec2_auto_onboarding.zip -d aws_ec2_auto_onboarding
-            unzip aws_environment_setup.zip -d aws_environment_setup
-          '''
-        }
+    }
+    stage('Copy zips') {
+      steps {
+        sh '''
+          rm -rf reports/
+          rm -rf artifacts/
+          mkdir reports
+          mkdir artifacts
+          mkdir artifacts/aws_ec2_auto_onboarding
+          mkdir artifacts/aws_environment_setup
+          cp src/aws_ec2_auto_onboarding/aws_ec2_auto_onboarding.zip artifacts/
+          cp src/aws_environment_setup/aws_environment_setup.zip artifacts/
+          cd artifacts
+          unzip aws_ec2_auto_onboarding.zip -d aws_ec2_auto_onboarding
+          unzip aws_environment_setup.zip -d aws_environment_setup
+        '''
       }
-      stage('Security tests') {
-        parallel {
-          stage('Scan requirements file for vulnerabilities') {
-            steps {
-              sh '''
-                source ./.testenv/bin/activate
-                safety check -r requirements.txt --full-report > reports/safety.txt || true
-              '''
-            }
-          }
-          stage('Scan distributables code for vulnerabilities') {
-            steps {
-              sh '''
-                source ./.testenv/bin/activate
-                bandit -r artifacts/. --format html > reports/bandit.html || true
-              '''
-            }
+    }
+    stage('Security tests') {
+      parallel {
+        stage('Scan requirements file for vulnerabilities') {
+          steps {
+            sh '''
+              source ./.testenv/bin/activate
+              safety check -r requirements.txt --full-report > reports/safety.txt || true
+            '''
           }
         }
+        stage('Scan distributables code for vulnerabilities') {
+          steps {
+            sh '''
+              source ./.testenv/bin/activate
+              bandit -r artifacts/. --format html > reports/bandit.html || true
+            '''
+          }
+        }
       }
-      stage('Deploy AOB solution') {
-        steps{
-          script{
-            withCredentials([
-              usernamePassword(credentialsId: 'aob-autodeployment-user', usernameVariable: 'VAULT_USERNAME', passwordVariable: 'VAULT_PASSWORD')
-            ]) {
-              sh '''
-                source ./.testenv/bin/activate
-                ansible-playbook deployment/cyberark_ec2_auto_onboarding.yml -i tests/infrastructure.yml -e "VaultUser=${VAULT_USERNAME} VaultPassword=${VAULT_PASSWORD}"
-              '''
-            }
+    }
+    stage('Deploy AOB solution') {
+      steps{
+        script{
+          withCredentials([
+            usernamePassword(credentialsId: 'aob-autodeployment-user', usernameVariable: 'VAULT_USERNAME', passwordVariable: 'VAULT_PASSWORD')
+          ]) {
+            sh '''
+              source ./.testenv/bin/activate
+              ansible-playbook deployment/cyberark_ec2_auto_onboarding.yml -i tests/infrastructure.yml -e "VaultUser=${VAULT_USERNAME} VaultPassword=${VAULT_PASSWORD}"
+            '''
           }
         }
       }
