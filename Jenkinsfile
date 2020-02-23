@@ -98,7 +98,7 @@ pipeline {
             sh '''
               source ./.testenv/bin/activate
               pip install -r tests/requirements.txt
-              ansible-playbook deployment/cyberark_ec2_auto_onboarding.yml -e "@tests/infra.yml" -e "VaultUser=${VAULT_USERNAME} VaultPassword=${VAULT_PASSWORD}"
+              ansible-playbook deployment/cyberark_ec2_auto_onboarding.yml -e "@tests/infra.yml VaultUser=${VAULT_USERNAME} VaultPassword=${VAULT_PASSWORD}"
             '''
           }
         }
