@@ -93,12 +93,13 @@ pipeline {
       steps{
         script{
           withCredentials([
-            usernamePassword(credentialsId: 'aob-autodeployment-user', usernameVariable: 'VAULT_USERNAME', passwordVariable: 'VAULT_PASSWORD')
+            usernamePassword(credentialsId: 'aob-autodeployment-user', usernameVariable: 'VAULT_USERNAME', passwordVariable: 'VAULT_PASSWORD')ֿ,
+            file(credentialsId: 'aobpasswordfile', variable: 'vault_password_file')
           ]) {
             sh '''
               source ./.testenv/bin/activate
               pip install -r tests/requirements.txt
-              ansible-playbook deployment/cyberark_ec2_auto_onboarding.yml -i tests/infrastructure.yml -e "VaultUser=${VAULT_USERNAME} VaultPassword=${VAULT_PASSWORD}"
+              ansible-playbook deployment/cyberark_ec2_auto_onboarding.yml -e @tests/infra.yml -e "VaultUser=${VAULT_USERNAME} VaultPassword=${VAULT_PASSWORD}" --vault-password-file ${vault_password_file}
             '''
           }
         }
