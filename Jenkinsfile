@@ -93,7 +93,7 @@ pipeline {
       steps{
         script{
           withCredentials([
-            usernamePassword(credentialsId: 'aob-autodeployment-user', usernameVariable: 'VAULT_USERNAME', passwordVariable: 'VAULT_PASSWORD')ֿ,
+            usernamePassword(credentialsId: 'aob-autodeployment-user', usernameVariable: 'VAULT_USERNAME', passwordVariable: 'VAULT_PASSWORD'),
             file(credentialsId: 'aobpasswordfile', variable: 'vault_password_file')
           ]) {
             sh '''
