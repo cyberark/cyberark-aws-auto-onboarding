@@ -51,10 +51,10 @@ This solution requires the following:
 |Update Accounts Properties|
 |Initiate CPM account management operations|
 
-
 #  Deployment using Ansible 
 Requirements for deployment:
-
+- PAS environment already deployed - Vault, PVWA, CPM, PSM, PSMP
+- Any Vault Admin user + password 
 - AWS IAM User strong privileges for deploying IAM roles and policies with CloudFormation
 - Python 3.6 or higher installed
 
@@ -71,15 +71,14 @@ Steps:
 `cd cyberark-aws-auto-onboarding/deployment`
 5. Install required packages using requirements.txt
 `pip install -r cyberark-aws-auto-onboarding/`
-6. edit vars/AOB-Params.yml according to the comments
-7. run the playbook and provide two parameters - VaultUser , VaultPassword
-`ansible-playbook VaultUser=<Vault Administrative user > VaultPassword=<MuchSecureVeryWow> `
+6. Edit vars/AOB-Params.yml according to the comments
+7. Run the playbook and provide two parameters - VaultUser , VaultPassword
+`ansible-playbook AutoOnboarding.yml VaultUser=<VaultUser> VaultPassword=<VaultPassword> `
 
 
 
 
 # Deployment using Cloud Formation 
-
 This solution requires NAT GW to allow Lambda access to the AWS resources  
 Reference for further information: https://docs.aws.amazon.com/lambda/latest/dg/vpc.html
 (Cyberark reference network template already contain NAT GW so please use it for POC 

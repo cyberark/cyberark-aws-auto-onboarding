@@ -2,15 +2,53 @@ import urllib3
 import pvwa_integration
 import aws_services
 import instance_processing
+import pvwa_api_calls
+import json
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def lambda_handler(event, context):
-    logName = context.log_stream_name if context.log_stream_name else "None"
-    instanceId, actionType = event.split(";")
+
     try:
-        instanceDetails = aws_services.get_ec2_details(instanceId, context)
+        message = event["Records"][0]["Sns"]["Message"]
+        data = json.loads(message)
+    except Exception as e:
+        print ("Error on retrieving Message Data from Event Message. Error: {0}".format(e))
+
+    try:
+        instance_arn = data["resources"][0]
+    except Exception as e:
+        print ("Error on retrieving instance_arn from Event Message. Error: {0}".format(e))
+
+    try:
+        instanceId = data["detail"]["instance-id"]
+    except Exception as e:
+        print ("Error on retrieving Instance Id from Event Message. Error: {0}".format(e))
+
+    try:
+        actionType = data["detail"]["state"]
+    except Exception as e:
+        print ("Error on retrieving Action Type from Event Message. Error: {0}".format(e))
+
+
+    try:
+        eventAccountId = data["account"]
+    except Exception as e:
+        print ("Error on retrieving Event Account Id from Event Message. Error: {0}".format(e))
+
+
+    try:
+        eventRegion = data["region"]
+    except Exception as e:
+        print ("Error on retrieving Event Region from Event Message. Error: {0}".format(e))
+
+
+    logName = context.log_stream_name if context.log_stream_name else "None"
+
+    try:
+        solutionAccountId = context.invoked_function_arn.split(':')[4]
+        instanceDetails = aws_services.get_ec2_details(instanceId, solutionAccountId, eventRegion, eventAccountId)
 
         instanceData = aws_services.get_instance_data_from_dynamo_table(instanceId)
         if actionType == 'terminated':
@@ -49,18 +87,44 @@ def lambda_handler(event, context):
         sessionToken = pvwa_integration.logon_pvwa(storeParametersClass.vaultUsername,
                                                    storeParametersClass.vaultPassword,
                                                    storeParametersClass.pvwaURL, pvwaConnectionnumber)
+
         if not sessionToken:
             return
+        disconnect = False
         if actionType == 'terminated':
             instance_processing.delete_instance(instanceId, sessionToken, storeParametersClass, instanceData, instanceDetails)
         elif actionType == 'running':
-            instance_processing.create_instance(instanceId, sessionToken, instanceDetails, storeParametersClass, logName)
+            # get key pair
+
+            # Retrieving the account id of the account where the instance keyPair is stored
+            # AWS.<AWS Account>.<Event Region name>.<key pair name>
+            keyPairValueOnSafe = "AWS.{0}.{1}.{2}".format(instanceDetails["aws_account_id"], eventRegion,
+                                                          instanceDetails["key_name"])
+            keyPairAccountId = pvwa_api_calls.check_if_kp_exists(sessionToken, keyPairValueOnSafe,
+                                                                                   storeParametersClass.keyPairSafeName,
+                                                                                   instanceId,
+                                                                                   storeParametersClass.pvwaURL)
+            if not keyPairAccountId:
+                print("Key Pair '{0}' does not exist in safe '{1}'".format(keyPairValueOnSafe,
+                                                                           storeParametersClass.keyPairSafeName))
+                return
+            instanceAccountPassword = pvwa_api_calls.get_account_value(sessionToken, keyPairAccountId, instanceId,
+                                                                       storeParametersClass.pvwaURL)
+            if instanceAccountPassword is False:
+                return
+            pvwa_integration.logoff_pvwa(storeParametersClass.pvwaURL, sessionToken)
+            aws_services.release_session_on_dynamo(pvwaConnectionnumber, sessionGuid)
+            disconnect = True
+            instance_processing.create_instance(instanceId, instanceDetails, storeParametersClass, logName, solutionAccountId, eventRegion, eventAccountId, instanceAccountPassword)
         else:
             print('Unknown instance state')
             return
 
-        pvwa_integration.logoff_pvwa(storeParametersClass.pvwaURL, sessionToken)
-        aws_services.release_session_on_dynamo(pvwaConnectionnumber, sessionGuid)
+
+        if not disconnect:
+            pvwa_integration.logoff_pvwa(storeParametersClass.pvwaURL, sessionToken)
+            aws_services.release_session_on_dynamo(pvwaConnectionnumber, sessionGuid)
+
 
     except Exception as e:
         print("Unknown error occurred:{0}".format(e))

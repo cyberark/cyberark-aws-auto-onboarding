@@ -4,7 +4,6 @@
 env/
 build/
 develop-eggs/
-dist/
 downloads/
 eggs/
 .eggs/
@@ -17,6 +16,7 @@ var/
 .installed.cfg
 *.egg
 .idea/
+__pycache__
 
 # Serverless directories
 .serverless

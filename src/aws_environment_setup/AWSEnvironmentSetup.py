@@ -151,27 +151,30 @@ def create_safe(safeName, cpmName, pvwaIP, sessionId, numberOfDaysRetention=7):
 
 def logon_pvwa(username, password, pvwaUrl):
     print('Start Logon to PVWA REST API')
-    logonUrl = 'https://{0}/PasswordVault/WebServices/auth/Cyberark/CyberArkAuthenticationService.svc/Logon'.format(pvwaUrl)
-    restLogonData = """{{
-        "username": "{0}",
-        "password": "{1}",
-        }}""".format(username, password)
-    restResponse = call_rest_api_post(logonUrl, restLogonData, DEFAULT_HEADER)
-    if not restResponse:
-        return None
-    if restResponse.status_code == requests.codes.ok:
-        jsonParsedResponse = restResponse.json()
-        print("The logon completed successfully")
-        return jsonParsedResponse['CyberArkLogonResult']
-    elif restResponse.status_code == requests.codes.not_found:
-        print("Logon to PVWA failed, error 404: page not found")
-        return None
-    elif restResponse.status_code == requests.codes.forbidden:
-        print("Logon to PVWA failed, authentication failure for user {0}".format(username))
-        return None
-    else:
-        print("Logon to PVWA failed, status code:{0}".format(restResponse.status_code))
-        return None
+    try:
+        logonUrl = 'https://{0}/PasswordVault/WebServices/auth/Cyberark/CyberArkAuthenticationService.svc/Logon'.format(pvwaUrl)
+        restLogonData = """{{
+            "username": "{0}",
+            "password": "{1}",
+            }}""".format(username, password)
+        restResponse = call_rest_api_post(logonUrl, restLogonData, DEFAULT_HEADER)
+        if not restResponse:
+            return None
+        if restResponse.status_code == requests.codes.ok:
+            jsonParsedResponse = restResponse.json()
+            print("The logon completed successfully")
+            return jsonParsedResponse['CyberArkLogonResult']
+        elif restResponse.status_code == requests.codes.not_found:
+            print("Logon to PVWA failed, error 404: page not found")
+            return None
+        elif restResponse.status_code == requests.codes.forbidden:
+            print("Logon to PVWA failed, authentication failure for user {0}".format(username))
+            return None
+        else:
+            print("Logon to PVWA failed, status code:{0}".format(restResponse.status_code))
+            return None
+    except Exception as e:
+        print(e)
 
 
 def logoff_pvwa(pvwaUrl, connectionSessionToken):
