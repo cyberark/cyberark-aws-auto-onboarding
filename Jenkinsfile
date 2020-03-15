@@ -81,6 +81,7 @@ pipeline {
             '''
           }
         }
+
         stage('Scan distributables code for vulnerabilities') {
           steps {
             sh '''
