@@ -5,15 +5,15 @@ pipeline {
     }
   }
   environment {
-    AWS_REGION = sh(script: 'curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | python -c "import json,sys;obj=json.load(sys.stdin);print obj[\'region\']"', returnStdout: true).trim()
+    AWS_REGION = sh(script: 'curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | python3 -c "import json,sys;obj=json.load(sys.stdin);print (obj[\'region\'])"', returnStdout: true).trim()
     shortCommit = sh(script: "git log -n 1 --pretty=format:'%h'", returnStdout: true).trim()
   }
   stages {
     stage('Install virtual environment') {
       steps {
         sh '''
-          python -m pip install --user virtualenv
-          python -m virtualenv .testenv
+          python3 -m pip install --user virtualenv
+          python3 -m virtualenv .testenv
           source ./.testenv/bin/activate
 
           # Install testing environment requirements
