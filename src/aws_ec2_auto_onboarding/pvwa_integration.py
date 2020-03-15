@@ -34,7 +34,7 @@ def call_rest_api_post(url, request, header):
 # performs logon to PVWA and return the session token
 def logon_pvwa(username, password, pvwaUrl, connectionSessionId):
     print('Start Logon to PVWA REST API')
-    logonUrl = '{0}/API/auth/Cyberark/Logon'.format(pvwaUrl)
+    logonUrl = '{0}/WebServices/auth/Cyberark/CyberArkAuthenticationService.svc/Logon'.format(pvwaUrl)
     restLogonData = """{{
         "username": "{0}",
         "password": "{1}",
@@ -51,7 +51,7 @@ def logon_pvwa(username, password, pvwaUrl, connectionSessionId):
     if restResponse.status_code == requests.codes.ok:
         jsonParsedResponse = restResponse.json()
         print("User authenticated")
-        return jsonParsedResponse
+        return jsonParsedResponse['CyberArkLogonResult']
     else:
         print("Authentication failed to REST API")
         raise Exception("Authentication failed to REST API")
@@ -61,7 +61,7 @@ def logoff_pvwa(pvwaUrl, connectionSessionToken):
     print('Start Logoff to PVWA REST API')
     header = DEFAULT_HEADER
     header.update({"Authorization": connectionSessionToken})
-    logoffUrl = '{0}/API/auth/Logoff'.format(pvwaUrl)
+    logoffUrl = '{0}/WebServices/auth/Cyberark/CyberArkAuthenticationService.svc/Logoff'.format(pvwaUrl)
     restLogoffData = ""
     try:
         restResponse = call_rest_api_post(logoffUrl, restLogoffData, DEFAULT_HEADER)

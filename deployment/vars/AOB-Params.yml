@@ -1,28 +1,28 @@
 ---
 # Vars for auto onboarding
 
-CFTemplatePath: "/home/ec2-user/environment/git/cyberark-aws-auto-onboarding/dist/multi-region/multi_region_main_cf_0.1.1.json" # The path of the json file which deploys the CloudFormation
-                                                                                                                                # The file is located in the git repository under dist/multi-region
-SSTemplatePath: "/home/ec2-user/environment/git/cyberark-aws-auto-onboarding/dist/multi-region/multi_region_stack_set_0.1.1.json" # The path of the json file which deploys the StackSet - 
-                                                                                                                                # The file is located in the git repository under dist/multi-region
+CFTemplatePath: "" # The path of the json file which deploys the CloudFormation
+                   # The file is located in the git repository under dist/multi-region
+SSTemplatePath: "" # The path of the json file which deploys the StackSet -
+                    # The file is located in the git repository under dist/multi-region
 Runtime_parameters:
-    MainRegion: "ap-northeast-1" # The region that the solution will be deployed in
+    MainRegion: "us-west-1" # The region that the solution will be deployed in
     DisableRollback: "true" # Determines if the CloudFormation should rollback upon failure:
                                                                                     # true - rollback is disabled
                                                                                     # false - rollback is enabled
     Accounts: ['0123456789']
-    Regions: "['eu-west-2','eu-west-1','us-east-2','us-east-1']" # List of regions in which the stack sets will be deployed
+    Regions: "['us-west-2','us-west-1','us-east-2','us-east-1']" # List of regions in which the stack sets will be deployed
 
-    
+
 CloudFormation_parameters:
-    LambdasBucket: "my-bucket" # Name of the bucket containing the solution files. The bucket must be in the same region where the solution is deployed.
+    LambdasBucket: "bucket_name_with_zip" # Name of the bucket containing the solution files. The bucket must be in the same region where the solution is deployed.
     PvwaIP: "1.1.1.1" # PVWA IP address or host name
-    ComponentsVPC: "vpc-123456789abc" # VPC where the solution will be deployed. The VPC must contain a subnet with access to the PVWA
-    PVWASG: "sg-123456789abc" # Security Group of the PVWA
-    ComponentsSubnet: "subnet-123456789abc" # Subnet where the solution will be deployed. The subnet must have access to the PVWA
-    UnixSafeName: "UxSafe2" # Name of the Safe that will store all the Unix accounts created by the solution. If this Safe does not yet exist, it will be created automatically.
+    ComponentsVPC: "vpc-01234" # VPC where the solution will be deployed. The VPC must contain a subnet with access to the PVWA
+    PVWASG: "sg-01234" # Security Group of the PVWA
+    ComponentsSubnet: "subnet-01234" # Subnet where the solution will be deployed. The subnet must have access to the PVWA
+    UnixSafeName: "UxSafeCark" # Name of the Safe that will store all the Unix accounts created by the solution. If this Safe does not yet exist, it will be created automatically.
     CPMNameUnixSafe: "PasswordManager" # Name of the CPM manager to manage Unix Accounts Safe
-    WindowsSafeName: "WinSafe2" # Name of the Safe that will store all the Windows accounts created by the solution. If this Safe does not yet exist, it will be created automatically.
+    WindowsSafeName: "WinSafeCark" # Name of the Safe that will store all the Windows accounts created by the solution. If this Safe does not yet exist, it will be created automatically.
     CPMNameWindowsSafe: "PasswordManager" # Name of the CPM manager to manage Windows Accounts Safe
     KeyPairsSafe: "KpSafe2" # Name of the Safe that will store all Key Pairs used by the solution. If this Safe does not yet exist, it will be created automatically.
-    KeyPairName: "YourKP.pem" # Name of the Key pair
+    KeyPairName: "Test-KP-From-Pipeline" # Name of the Key pair
