@@ -5,7 +5,7 @@ pipeline {
         }
     }
     environment {
-        AWS_REGION = sh(script: 'curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | python -c "import json,sys;obj=json.load(sys.stdin);print obj[\'region\']"', returnStdout: true).trim()
+        AWS_REGION = sh(script: 'curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | python3 -c "import json,sys;obj=json.load(sys.stdin);print (obj[\'region\'])"', returnStdout: true).trim()
         shortCommit = sh(script: "git log -n 1 --pretty=format:'%h'", returnStdout: true).trim()
     }
     stages {
@@ -13,8 +13,8 @@ pipeline {
             steps {
                 sh '''
                 if [ $(dpkg-query -W -f='${Status}' zip 2>/dev/null | grep -c "ok installed") -eq 0 ]; then sudo apt-get install -y zip;  fi
-                    python -m pip install --user virtualenv
-                    python -m virtualenv .testenv
+                    python3 -m pip install --user virtualenv
+                    python3 -m virtualenv .testenv
                     source ./.testenv/bin/activate
 
                     # Install lambda functions requirements
