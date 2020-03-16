@@ -1,0 +1,74 @@
+---
+# tasks file for ss_deploy
+
+- name: Get Timestamp and Store it in a variable
+  set_fact: "timestamp={{ lookup('pipe','date +%Y-%m-%d-%H-%M-%S') }}"
+
+- name: Set String for CloudFormation Stack ID
+  set_fact:
+    stack_set_id: "{{ SSStackName }}"
+
+- name: Create workspace directory on temp folder
+  file:
+    path: "/tmp/{{ stack_set_id }}-{{ timestamp }}"
+    state: directory
+  register: workspace
+
+- set_fact:
+    tmp_path: "{{ workspace.path }}"
+
+- name: Get StackSet Template from local file
+  copy:
+    src: "{{ ss_template_file }}"
+    dest: "{{ tmp_path }}/ss.json"
+
+- name: Manipulate StackSet
+  shell: "{{ manipulation_commands }}"
+  when: manipulation_commands != ""
+
+- name: Out file when manipulate StackSet is empty
+  shell: "cat {{ tmp_path }}/ss.json > {{ tmp_path }}/ss-out.json"
+  when: manipulation_commands == ""
+
+- name: Upload StackSet Template to S3
+  aws_s3:
+    region: "{{ runtime_parameters.MainRegion }}"
+    bucket: "{{  aob_vars.CloudFormation_parameters.LambdasBucket }}"
+    object: "{{ tmp_path }}/ss.json"
+    src: "{{ tmp_path }}/ss-out.json"
+    mode: put
+
+- name: AssumeRole
+  iam_role:
+    name: "AWSCloudFormationStackSetExecutionRole"
+    state: "present"
+    assume_role_policy_document: "{{ lookup('file','policy.json') }}"
+    purge_policies: no
+    managed_policy: "AdministratorAccess"
+  register: role
+
+- name: Create stackset stack
+  cloudformation_stack_set:
+    name: "{{ SSStackName }}"
+    state: "present"
+    accounts: "{{ runtime_parameters.Accounts }}"
+    region: "{{ runtime_parameters.MainRegion }}"
+    regions: "{{ runtime_parameters.Regions }}"
+    template_url: "https://s3.amazonaws.com/{{  aob_vars.CloudFormation_parameters.LambdasBucket }}{{ tmp_path }}/ss.json"
+    parameters: "{{ ss_template_parameters }}"
+    administration_role_arn: "{{ role.arn }}"
+    execution_role_name: "AWSCloudFormationStackSetExecutionRole"
+    tags:
+      ansible_automated: "True"
+  register: cf
+
+# - name: Get all stack output info
+#   cloudformation_facts:
+#     region: "{{ aws_region }}"
+#     stack_name: "{{ stack_set_id }}"
+#     all_facts: true
+#   register: ss_facts
+
+# - name: Register Output to ansible fact
+#   set_fact:
+#     ss_output: "{{ ss_facts.ansible_facts.cloudformation[stack_set_id].stack_resources }}"
