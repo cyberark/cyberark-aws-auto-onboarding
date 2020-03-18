@@ -40,7 +40,7 @@ def lambda_handler(event, context):
             requestAWSRegionName = event['ResourceProperties']['AWSRegionName']
             requestAWSAccountId = event['ResourceProperties']['AWSAccountId']
             requestS3BucketName = event['ResourceProperties']['S3Bucket']
-            requestPublicKeyName = event['ResourceProperties']['PublicKeyName']
+            requestPublicKeyName = event['ResourceProperties']['PVWAPublicKeyFileName']
 
             isPasswordSaved = save_password_to_param_store(requestPassword)
             if not isPasswordSaved:  # if password failed to be saved

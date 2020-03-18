@@ -775,14 +775,15 @@
 			"Properties" : {
 			  "Parameters" : {
 				"SafeHandlerLambdaARN": { "Fn::GetAtt": ["SafeHandlerLambda","Arn"]},
-				"PVWAIP": {"Ref": "PvwaIP"},
+				"PvwaIP": {"Ref": "PvwaIP"},
 				"UnixSafeName": {"Ref": "UnixSafeName"},
-				"WindowsSafeName": {"Ref":"WindowsSafeName"},
-				"Username": {"Ref":"VaultUser"},
-				"Password": {"Ref": "VaultPassword"},
-				"CPMUnix": {"Ref": "CPMNameUnixSafe"},
-				"CPMWindows": {"Ref": "CPMNameWindowsSafe"},
-				"KeyPairSafe": {"Ref": "KeyPairsSafe"},
+				"CPMNameUnixSafe":{"Ref": "CPMNameUnixSafe"},
+				"CPMWindowsSafeName": {"Ref": "CPMWindowsSafeName"},
+				"VaultUser": {"Ref":"VaultUser"},
+				"VaultPassword": {"Ref": "VaultPassword"},
+				"CPMNameUnixSafe": {"Ref": "CPMNameUnixSafe"},
+				"CPMNameWindowsSafe": {"Ref": "CPMNameWindowsSafe"},
+				"KeyPairsSafe": {"Ref": "KeyPairsSafe"},
 				"KeyPairName": {"Ref": "KeyPairName"},
 				"PVWAPublicKeyFileName":{"Ref": "PVWAPublicKeyFileName"}
 
