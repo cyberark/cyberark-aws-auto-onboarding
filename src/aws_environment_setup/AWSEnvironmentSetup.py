@@ -47,7 +47,7 @@ def lambda_handler(event, context):
                 return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to create Vault user's password in Parameter Store",
                                         {}, physicalResourceId)
 
-            isPublicKeySaved = save_public_key_to_param_store(S3Bucket, PublicKeyName)
+            isPublicKeySaved = save_public_key_to_param_store(requestS3BucketName, requestPublicKeyName)
             if not isPublicKeySaved:  # if password failed to be saved
                 return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to create Vault user's password in Parameter Store",
                                         {}, physicalResourceId)
