@@ -959,13 +959,14 @@
 	"Mappings": {
 
 	},
-	"Output": {
+	"Outputs": {
 		"SafeHandlerLambdaARN": {
-                    "Fn::GetAtt": [
+		       "Value": {
+		        "Fn::GetAtt": [
                         "SafeHandlerLambda",
                         "Arn"
                     ]
                 }
+	    }
 	}
-
 }
