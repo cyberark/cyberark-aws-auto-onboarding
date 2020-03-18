@@ -787,7 +787,7 @@
 				"PVWAPublicKeyFileName":{"Ref": "PVWAPublicKeyFileName"}
 
 			  },
-			  "TemplateURL" : "https://auto-on-boarding-north-california.s3-us-west-1.amazonaws.com/CyberArk-AOB-MultiRegion-CF-Nested-SafeHandler.json"
+			  "TemplateURL" : "https://auto-on-boarding-north-california.s3-us-west-1.amazonaws.com/CyberArk-AOB-MultiRegion-CF-VaultEnvCreation.json"
 			},
 			"DependsOn":[
 				"SafeHandlerLambda"
