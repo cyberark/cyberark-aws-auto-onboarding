@@ -167,6 +167,14 @@
 								"ssm:DeleteParameter"
 							],
 							"Resource": "*"
+						},
+						{
+							"Effect": "Allow",
+							"Action": [
+                                "s3:GetObject",
+                                "s3:GetObjectVersion"
+                            ],
+                            "Resource": "*"
 						}
 					]
 				}
@@ -803,6 +811,9 @@
 				},
 				"AWSAccountId": {
 					"Ref": "AWS::AccountId"
+				},
+				"PVWAPublicKeyPath":{
+					"Ref": ""
 				}
             },
             "DependsOn": [
@@ -831,7 +842,7 @@
                         "Arn"
                     ]
                 },
-			"Runtime" : "python3.6",
+			"Runtime" : "python2.7",
 			"Timeout" : 35,
 			"VpcConfig" : {"SecurityGroupIds" : [{"Fn::GetAtt": ["ElasticityLambdaSecurityGroup", "GroupId"]}],
 							"SubnetIds" : [{"Ref": "ComponentsSubnet"}]

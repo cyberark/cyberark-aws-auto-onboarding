@@ -2,6 +2,7 @@ import requests
 import urllib3
 import uuid
 import cfnresponse
+import botocore
 import time
 import boto3
 import json
@@ -38,9 +39,16 @@ def lambda_handler(event, context):
             requestKeyPairName = event['ResourceProperties']['KeyPairName']
             requestAWSRegionName = event['ResourceProperties']['AWSRegionName']
             requestAWSAccountId = event['ResourceProperties']['AWSAccountId']
+            requestS3BucketName = event['ResourceProperties']['S3Bucket']
+            requestPublicKeyName = event['ResourceProperties']['PublicKeyName']
 
             isPasswordSaved = save_password_to_param_store(requestPassword)
             if not isPasswordSaved:  # if password failed to be saved
+                return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to create Vault user's password in Parameter Store",
+                                        {}, physicalResourceId)
+
+            isPublicKeySaved = save_public_key_to_param_store(S3Bucket, PublicKeyName)
+            if not isPublicKeySaved:  # if password failed to be saved
                 return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to create Vault user's password in Parameter Store",
                                         {}, physicalResourceId)
 
@@ -283,6 +291,19 @@ def create_session_table():
 
     print("Table 'Sessions' created successfully")
     return True
+
+def save_public_key_to_param_store(S3Bucket, PublicKeyName):
+    try:
+        s3Resource = boto3.resource('s3')
+        s3Resource.Bucket(S3Bucket).download_file(PublicKeyName, 'pvwa.txt')
+        print(open('pvwa.txt').read())
+    except botocore.exceptions.ClientError as e:
+        if e.response['Error']['Code'] == "404":
+            print("The object does not exist.")
+        else:
+            raise
+    return True
+
 
 
 def save_password_to_param_store(password):
