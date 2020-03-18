@@ -44,8 +44,8 @@
 				"PVWAPublicKeyFileName":{
 					"Ref": "PVWAPublicKeyFileName"
 				},
-				"LambdasbUcket":{
-				    "Ref": "LambdasbUcket"
+				"LambdasBucket":{
+				    "Ref": "LambdasBucket"
 				}
             },
 			"CreationPolicy": {
@@ -104,7 +104,7 @@
 	        "Type": "String",
 	        "Description": "ARN of SafeHandlerLambda. An output of first CloudFormation Templates"
 	    },
-		"LambdasbUcket": {
+		"LambdasBucket": {
             "Type": "String",
             "Description": "The S3 Bucket where the PVWA PublicKey resides"
         },
@@ -178,7 +178,7 @@
                         "Parameters": [
                             "SafeHandlerLambdaARN",
     						"PvwaIP",
-    						"LambdasbUcket",
+    						"LambdasBucket",
                             "PVWAPublicKeyFileName",
     						"VaultUser",
     						"VaultPassword",
@@ -202,7 +202,7 @@
 	                "SafeHandlerLambdaARN": {
 	                    "default": "ARN of SafeHandlerLambda. An output of first CloudFormation Templates"
 	                },
-	                "LambdasbUcket": {
+	                "LambdasBucket": {
 	                    "default": "The S3 Bucket where the PVWA PublicKey resides"
 	                },
 	                "PvwaIP": {
