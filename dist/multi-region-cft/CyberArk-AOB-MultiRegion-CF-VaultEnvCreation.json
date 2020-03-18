@@ -43,6 +43,9 @@
 				},
 				"PVWAPublicKeyFileName":{
 					"Ref": "PVWAPublicKeyFileName"
+				},
+				"S3BucketName":{
+				    "Ref": "S3BucketName"
 				}
             },
 			"CreationPolicy": {
@@ -96,6 +99,10 @@
         "PVWAPublicKeyFileName": {
             "Type": "String",
             "Description": "PVWAPublicKeyFileName"
+        },
+        "S3BucketName": {
+            "Type": "String",
+            "Description": "S3BucketName"
         }
 	}
 }

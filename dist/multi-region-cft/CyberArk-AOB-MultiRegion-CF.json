@@ -784,10 +784,11 @@
 				"CPMNameWindowsSafe": {"Ref": "CPMNameWindowsSafe"},
 				"KeyPairsSafe": {"Ref": "KeyPairsSafe"},
 				"KeyPairName": {"Ref": "KeyPairName"},
-				"PVWAPublicKeyFileName":{"Ref": "PVWAPublicKeyFileName"}
+				"PVWAPublicKeyFileName":{"Ref": "PVWAPublicKeyFileName"},
+				"S3BucketName":{"Ref": "LambdasBucket"}
 
 			  },
-			  "TemplateURL" : "https://auto-on-boarding-north-california.s3-us-west-1.amazonaws.com/CyberArk-AOB-MultiRegion-CF-VaultEnvCreation.json"
+			  "TemplateURL" : "https://aob-auto-test.s3-eu-central-1.amazonaws.com/CyberArk-AOB-MultiRegion-CF-VaultEnvCreation.json"
 			},
 			"DependsOn":[
 				"SafeHandlerLambda"
