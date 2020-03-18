@@ -1,0 +1,101 @@
+{
+	"AWSTemplateFormatVersion": "2010-09-09",
+	"Resources": {
+        "CreateSafe": {
+            "Type": "AWS::CloudFormation::CustomResource",
+            "Version": "1.0",
+            "Properties": {
+                "ServiceToken": {
+                    "Ref": "SafeHandlerLambdaARN"
+                },
+				"PVWAIP": {
+					"Ref": "PvwaIP"
+				},
+				"UnixSafeName": {
+					"Ref": "UnixSafeName"
+				},
+				"WindowsSafeName": {
+					"Ref": "WindowsSafeName"
+				},
+				"Username": {
+					"Ref": "VaultUser"
+				},
+				"Password": {
+					"Ref": "VaultPassword"
+				},
+    			"CPMUnix": {
+					"Ref": "CPMNameUnixSafe"
+				},
+				"CPMWindows": {
+					"Ref": "CPMNameWindowsSafe"
+				},
+				"KeyPairSafe": {
+					"Ref": "KeyPairsSafe"
+				},
+				"KeyPairName": {
+					"Ref": "KeyPairName"
+				},
+				"AWSRegionName": {
+					"Ref": "AWS::Region"
+				},
+				"AWSAccountId": {
+					"Ref": "AWS::AccountId"
+				},
+				"PVWAPublicKeyFileName":{
+					"Ref": "PVWAPublicKeyFileName"
+				}
+            },
+			"CreationPolicy": {
+                "ResourceSignal": {
+                    "Timeout": "PT2M"
+                }
+            }
+        }
+	},
+	"Parameters": {
+        "SafeHandlerLambdaARN": {
+            "Type": "String",
+            "Description": "SafeHandlerLambdaARN"
+        },
+        "PvwaIP": {
+            "Type": "String",
+            "Description": "PvwaIP"
+        },
+        "UnixSafeName": {
+            "Type": "String",
+            "Description": "UnixSafeName"
+        },
+        "WindowsSafeName": {
+            "Type": "String",
+            "Description": "WindowsSafeName"
+        },
+        "VaultUser": {
+            "Type": "String",
+            "Description": "VaultUser"
+        },
+        "VaultPassword": {
+            "Type": "String",
+            "Description": "VaultPassword"
+        },
+        "CPMNameUnixSafe": {
+            "Type": "String",
+            "Description": "CPMNameUnixSafe"
+        },
+        "CPMNameWindowsSafe": {
+            "Type": "String",
+            "Description": "CPMNameWindowsSafe"
+        },
+        "KeyPairsSafe": {
+            "Type": "String",
+            "Description": "KeyPairsSafe"
+        },
+        "KeyPairName": {
+            "Type": "String",
+            "Description": "KeyPairName"
+        },
+        "PVWAPublicKeyFileName": {
+            "Type": "String",
+            "Description": "PVWAPublicKeyFileName"
+        }
+	}
+}

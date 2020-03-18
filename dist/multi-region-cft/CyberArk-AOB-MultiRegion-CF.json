@@ -769,64 +769,30 @@
                 "ElasticityLambda"
                 ]
 		},
-		"CreateSafe": {
-            "Type": "AWS::CloudFormation::CustomResource",
-            "Version": "1.0",
-            "Properties": {
-                "ServiceToken": {
-                    "Fn::GetAtt": [
-                        "SafeHandlerLambda",
-                        "Arn"
-                    ]
-                },
-				"PVWAIP": {
-					"Ref": "PvwaIP"
-				},
-				"UnixSafeName": {
-					"Ref": "UnixSafeName"
-				},
-				"WindowsSafeName": {
-					"Ref": "WindowsSafeName"
-				},
-				"Username": {
-					"Ref": "VaultUser"
-				},
-				"Password": {
-					"Ref": "VaultPassword"
-				},
-    			"CPMUnix": {
-					"Ref": "CPMNameUnixSafe"
-				},
-				"CPMWindows": {
-					"Ref": "CPMNameWindowsSafe"
-				},
-				"KeyPairSafe": {
-					"Ref": "KeyPairsSafe"
-				},
-				"KeyPairName": {
-					"Ref": "KeyPairName"
-				},
-				"AWSRegionName": {
-					"Ref": "AWS::Region"
-				},
-				"AWSAccountId": {
-					"Ref": "AWS::AccountId"
-				},
-				"PVWAPublicKeyPath":{
-					"Ref": ""
-				}
-            },
-            "DependsOn": [
-                "SafeHandlerLambdaRole",
-                "SafehandlingLambdaPolicy",
-                "SafeHandlerLambda"
-            ],
-			"CreationPolicy": {
-                "ResourceSignal": {
-                    "Timeout": "PT2M"
-                }
-            }
-        },
+		"AOBNestedStackForSafeHandlerLambdaExecution":
+		{
+			"Type" : "AWS::CloudFormation::Stack",
+			"Properties" : {
+			  "Parameters" : {
+				"SafeHandlerLambdaARN": { "Fn::GetAtt": ["SafeHandlerLambda","Arn"]},
+				"PVWAIP": {"Ref": "PvwaIP"},
+				"UnixSafeName": {"Ref": "UnixSafeName"},
+				"WindowsSafeName": {"Ref":"WindowsSafeName"},
+				"Username": {"Ref":"VaultUser"},
+				"Password": {"Ref": "VaultPassword"},
+				"CPMUnix": {"Ref": "CPMNameUnixSafe"},
+				"CPMWindows": {"Ref": "CPMNameWindowsSafe"},
+				"KeyPairSafe": {"Ref": "KeyPairsSafe"},
+				"KeyPairName": {"Ref": "KeyPairName"},
+				"PVWAPublicKeyFileName":{"Ref": "PVWAPublicKeyFileName"}
+
+			  },
+			  "TemplateURL" : "https://auto-on-boarding-north-california.s3-us-west-1.amazonaws.com/CyberArk-AOB-MultiRegion-CF-Nested-SafeHandler.json"
+			},
+			"DependsOn":[
+				"SafeHandlerLambda"
+				]
+		},
 		"SafeHandlerLambda": {
 		  "Type" : "AWS::Lambda::Function",
 		  "Properties" : {
@@ -1013,6 +979,11 @@
             "Description": "PVWA IP address or host name",
 			"MinLength": "1"
 		},
+		"PVWAPublicKeyFileName": {
+			"Type": "String",
+            "Description": "The name of the file in S3 Bucket that contains PVwA PublicKey.",
+			"MinLength": "1"
+		},
 		"UnixSafeName": {
 			"Type": "String",
             "Description": "Name of the Safe that will store all the Unix accounts created by the solution. The deployment will fail if the safe already exist.",
@@ -1091,6 +1062,7 @@
                     "Parameters": [
 						"LambdasBucket",
                         "PvwaIP",
+                        "PVWAPublicKeyFileName",
 						"ComponentsVPC",
 						"PVWASG",
 						"ComponentsSubnet",
@@ -1124,6 +1096,9 @@
 				},
 				"PvwaIP": {
                     "default": "PVWA IP/Host Name:"
+                },
+                "PVWAPublicKeyFileName": {
+                	"default": "PVWA PublicKey file name within s3 Bucket"
                 },
 				"UnixSafeName": {
                     "default": "Target Safe for Unix accounts:"
