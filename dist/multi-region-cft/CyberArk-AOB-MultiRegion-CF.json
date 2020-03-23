@@ -904,7 +904,7 @@
 	"Parameters": {
 		"LambdasBucket": {
             "Type": "String",
-            "Description": "Name of the bucket containing the solution files. The bucket must be in the same region where the solution is deployed."
+            "Description": "Name of the bucket containing the solution files. The bucket must be in the same region where the solution is deployed"
         },
 		"ComponentsSubnet": {
             "Type": "AWS::EC2::Subnet::Id",
@@ -942,7 +942,7 @@
             ],
             "ParameterLabels": {
                 "LambdasBucket": {
-                    "default": "Bucket Name"
+                    "default": "Bucket Name:"
                 },
 				"ComponentsSubnet": {
 					"default": "Solution subnet:"

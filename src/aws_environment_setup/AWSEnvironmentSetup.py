@@ -39,17 +39,17 @@ def lambda_handler(event, context):
             requestKeyPairName = event['ResourceProperties']['KeyPairName']
             requestAWSRegionName = event['ResourceProperties']['AWSRegionName']
             requestAWSAccountId = event['ResourceProperties']['AWSAccountId']
-            requestS3BucketName = event['ResourceProperties']['S3Bucket']
+            requestS3BucketName = event['ResourceProperties']['S3BucketName']
             requestPublicKeyName = event['ResourceProperties']['PVWAPublicKeyFileName']
 
-            isPasswordSaved = save_password_to_param_store(requestPassword)
+            isPasswordSaved = save_password_to_param_store(requestPassword, "Vault_Pass", "Vault Password")
             if not isPasswordSaved:  # if password failed to be saved
                 return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to create Vault user's password in Parameter Store",
                                         {}, physicalResourceId)
 
             isPublicKeySaved = save_public_key_to_param_store(requestS3BucketName, requestPublicKeyName)
             if not isPublicKeySaved:  # if password failed to be saved
-                return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to create Vault user's password in Parameter Store",
+                return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to create PVWA Public Key in Parameter Store",
                                         {}, physicalResourceId)
 
             pvwaSessionId = logon_pvwa(requestUsername, requestPassword, requestPvwaIp)
@@ -163,7 +163,7 @@ def logon_pvwa(username, password, pvwaUrl):
         logonUrl = 'https://{0}/PasswordVault/WebServices/auth/Cyberark/CyberArkAuthenticationService.svc/Logon'.format(pvwaUrl)
         restLogonData = """{{
             "username": "{0}",
-            "password": "{1}",
+            "password": "{1}"
             }}""".format(username, password)
         restResponse = call_rest_api_post(logonUrl, restLogonData, DEFAULT_HEADER)
         if not restResponse:
@@ -205,10 +205,9 @@ def logoff_pvwa(pvwaUrl, connectionSessionToken):
         print("Logoff failed")
         return False
 
-
 def call_rest_api_post(url, request, header):
     try:
-        restResponse = requests.post(url, data=request, timeout=30, verify=False, headers=header)
+        restResponse = requests.post(url, data=request, timeout=30, verify='/tmp/server.crt', headers=header)
     except Exception as e:
         print("Error occurred during POST request to PVWA. Exception: {0}".format(e))
         return None
@@ -217,7 +216,7 @@ def call_rest_api_post(url, request, header):
 
 def call_rest_api_get(url, header):
     try:
-        restResponse = requests.get(url, timeout=30, verify=False, headers=header)
+        restResponse = requests.get(url, timeout=30, verify='/tmp/server.crt', headers=header)
     except Exception:
         print("Error occurred on calling PVWA REST service")
         return None
@@ -272,7 +271,7 @@ def create_key_pair_in_vault(session, awsKeyName, privateKeyValue, pvwaIP, safeN
     restResponse = call_rest_api_post(url, data, header)
 
     if restResponse.status_code == requests.codes.created:
-        print("Key Pair created created successfully in safe '{0}'".format(safeName))
+        print("Key Pair created successfully in safe '{0}'".format(safeName))
         return True
     elif restResponse.status_code == requests.codes.conflict:
         print("Key Pair created already exists in safe {0}".format(safeName))
@@ -292,31 +291,29 @@ def create_session_table():
     print("Table 'Sessions' created successfully")
     return True
 
-def save_public_key_to_param_store(S3Bucket, PublicKeyName):
+def save_public_key_to_param_store(S3BucketName, PublicKeyName):
     try:
         s3Resource = boto3.resource('s3')
-        s3Resource.Bucket(S3Bucket).download_file(PublicKeyName, 'pvwa.txt')
-        print(open('pvwa.txt').read())
-    except botocore.exceptions.ClientError as e:
-        if e.response['Error']['Code'] == "404":
-            print("The object does not exist.")
-        else:
-            raise
+        s3Resource.Bucket(S3BucketName).download_file(PublicKeyName, '/tmp/server.crt')
+        save_password_to_param_store(open('/tmp/server.crt').read(),"PVWA_Public_Key","PVWA Public Key")
+    except Exception as e:
+        print("An error occurred while downloading PublicKey from S3 Bucket - {0}. Exception: {1}".format(S3BucketName, e))
+        return False
     return True
 
 
 
-def save_password_to_param_store(password):
+def save_password_to_param_store(password, parameterName, parameterDescription):
     try:
         ssmClient = boto3.client('ssm')
         ssmClient.put_parameter(
-            Name="Vault_Pass",
-            Description="Vault Password",
+            Name=parameterName,
+            Description=parameterDescription,
             Value=password,
             Type="SecureString"
         )
     except Exception as e:
-        print("Unable to create parameter 'Vault_Pass' in Parameter Store. Exception: {0}".format(e))
+        print("Unable to create parameter '{0}' in Parameter Store. Exception: {1}".format(parameterName, e))
         return False
     return True
 
@@ -328,6 +325,10 @@ def delete_password_from_param_store():
             Name='Vault_Pass'
         )
         print("Parameter 'Vault_Pass' deleted successfully from Parameter Store")
+        ssmClient.delete_parameter(
+            Name='PVWA_Public_Key'
+        )
+        print("Parameter 'PVWA_Public_Key' deleted successfully from Parameter Store")
         return True
     except Exception as e:
         if e.response["Error"]["Code"] == "ParameterNotFound":
