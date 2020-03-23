@@ -96,7 +96,7 @@ def get_params_from_param_store():
     PVWA_IP_PARAM = "PVWA_IP"
     AWS_KEYPAIR_SAFE = "KeyPair_Safe"
     VAULT_PASSWORD_PARAM_ = "Vault_Pass"
-    PVWA_PUBLIC_KEY = "PVWA_Public_key"
+    PVWA_PUBLIC_KEY = "PVWA_Public_Key"
     lambdaClient = boto3.client('lambda')
 
     lambdaRequestData = dict()

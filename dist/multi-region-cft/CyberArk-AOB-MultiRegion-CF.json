@@ -967,6 +967,14 @@
                         "Arn"
                     ]
                 }
+	    },
+	    "ElasticityLambdaARN": {
+		       "Value": {
+		        "Fn::GetAtt": [
+                        "ElasticityLambda",
+                        "Arn"
+                    ]
+                }
 	    }
 	}
 }
