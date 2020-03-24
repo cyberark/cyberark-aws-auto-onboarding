@@ -21,8 +21,29 @@ pipeline {
                     pip install -r requirements.txt --target ./src/aws_ec2_auto_onboarding/package
                     pip install -r requirements.txt --target ./src/aws_environment_setup/package
 
+                    # Install linting tools
+                    pip install cfn-lint
+                    pip install awscli
+
                     # Install security tools
                     pip install safety bandit
+                '''
+            }
+        }
+        stage('Check syntax of CloudFormation templates') {
+            steps {
+                sh '''
+                    cfn-lint ./dist/**/*.json
+                '''
+            }
+        }
+        stage('Validate CloudFormation templates') {
+            steps {
+                sh '''
+                    aws cloudformation validate-template --template-body ./dist/multi-region-cft/CyberArk-AOB-MultiRegion-CF.json
+                    aws cloudformation validate-template --template-body ./dist/multi-region-cft/CyberArk-AOB-MultiRegion-CF-Ansible.json
+                    aws cloudformation validate-template --template-body ./dist/multi-region-cft/CyberArk-AOB-MultiRegion-StackSet.json
+                    aws cloudformation validate-template --template-body ./dist/multi-region-cft/CyberArk-AOB-MultiRegion-StackSet-Ansible.json
                 '''
             }
         }
