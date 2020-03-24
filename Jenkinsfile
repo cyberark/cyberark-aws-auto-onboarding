@@ -33,6 +33,7 @@ pipeline {
         stage('Check syntax of CloudFormation templates') {
             steps {
                 sh '''
+                    source ./.testenv/bin/activate
                     cfn-lint ./dist/**/*.json
                 '''
             }
