@@ -40,7 +40,7 @@ def lambda_handler(event, context):
             requestAWSRegionName = event['ResourceProperties']['AWSRegionName']
             requestAWSAccountId = event['ResourceProperties']['AWSAccountId']
             requestS3BucketName = event['ResourceProperties']['S3BucketName']
-            requestPublicKeyName = event['ResourceProperties']['PVWAVerificationFileName']
+            requestPublicKeyName = event['ResourceProperties']['PVWAVerificationKeyFileName']
 
             isPasswordSaved = save_password_to_param_store(requestPassword, "AOB_Vault_Pass", "Vault Password")
             if not isPasswordSaved:  # if password failed to be saved
@@ -322,13 +322,13 @@ def delete_password_from_param_store():
     try:
         ssmClient = boto3.client('ssm')
         ssmClient.delete_parameter(
-            Name='Vault_Pass'
+            Name='AOB_Vault_Pass'
         )
-        print("Parameter 'Vault_Pass' deleted successfully from Parameter Store")
+        print("Parameter 'AOB_Vault_Pass' deleted successfully from Parameter Store")
         ssmClient.delete_parameter(
-            Name='PVWA_Verification_Key'
+            Name='AOB_PVWA_Verification_Key'
         )
-        print("Parameter 'PVWA_Verification_Key' deleted successfully from Parameter Store")
+        print("Parameter 'AOB_PVWA_Verification_Key' deleted successfully from Parameter Store")
         return True
     except Exception as e:
         if e.response["Error"]["Code"] == "ParameterNotFound":
