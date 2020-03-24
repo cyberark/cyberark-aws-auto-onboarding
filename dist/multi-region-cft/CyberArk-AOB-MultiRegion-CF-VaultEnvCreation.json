@@ -41,11 +41,11 @@
 				"AWSAccountId": {
 					"Ref": "AWS::AccountId"
 				},
-				"PVWAPublicKeyFileName":{
-					"Ref": "PVWAPublicKeyFileName"
+				"PVWAVerificationKeyFileName":{
+					"Ref": "PVWAVerificationKeyFileName"
 				},
 				"S3BucketName":{
-				    "Ref": "S3BucketWithPublicKey"
+				    "Ref": "S3BucketWithVerificationKey"
 				}
             },
 			"CreationPolicy": {
@@ -104,18 +104,18 @@
 	        "Type": "String",
 	        "Description": "ARN of SafeHandlerLambda. An output of first CloudFormation Templates"
 	    },
-		"S3BucketWithPublicKey": {
+		"S3BucketWithVerificationKey": {
             "Type": "String",
-            "Description": "The S3 Bucket where the PVWA PublicKey resides"
+            "Description": "The S3 Bucket where the PVWA Verification Key resides"
         },
 		"PvwaIP": {
 			"Type": "String",
             "Description": "PVWA IP address or host name",
 			"MinLength": "1"
 		},
-		"PVWAPublicKeyFileName": {
+		"PVWAVerificationKeyFileName": {
 			"Type": "String",
-            "Description": "The name of the file in S3 Bucket that contains PVwA PublicKey.",
+            "Description": "The name of the file in S3 Bucket that contains PVwA Verification Key.",
 			"MinLength": "1"
 		},
 		"UnixSafeName": {
@@ -178,8 +178,8 @@
                         "Parameters": [
                             "SafeHandlerLambdaARN",
     						"PvwaIP",
-    						"S3BucketWithPublicKey",
-                            "PVWAPublicKeyFileName",
+    						"S3BucketWithVerificationKey",
+                            "PVWAVerificationKeyFileName",
     						"VaultUser",
     						"VaultPassword",
     						"UnixSafeName",
@@ -202,14 +202,14 @@
 	                "SafeHandlerLambdaARN": {
 	                    "default": "ARN of SafeHandlerLambda. An output of first CloudFormation Templates:"
 	                },
-	                "S3BucketWithPublicKey": {
-	                    "default": "The S3 Bucket where the PVWA PublicKey resides:"
+	                "S3BucketWithVerificationKey": {
+	                    "default": "The S3 Bucket where the PVWA Verification Key resides:"
 	                },
 	                "PvwaIP": {
                         "default": "PVWA IP/Host Name:"
                     },
-                    "PVWAPublicKeyFileName": {
-                    	"default": "PVWA PublicKey file name within s3 Bucket:"
+                    "PVWAVerificationKeyFileName": {
+                    	"default": "PVWA Verification Key file name within s3 Bucket:"
                     },
     				"UnixSafeName": {
                         "default": "Target Safe for Unix accounts:"

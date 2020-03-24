@@ -40,7 +40,7 @@ def lambda_handler(event, context):
             requestAWSRegionName = event['ResourceProperties']['AWSRegionName']
             requestAWSAccountId = event['ResourceProperties']['AWSAccountId']
             requestS3BucketName = event['ResourceProperties']['S3BucketName']
-            requestPublicKeyName = event['ResourceProperties']['PVWAPublicKeyFileName']
+            requestPublicKeyName = event['ResourceProperties']['PVWAVerificationFileName']
 
             isPasswordSaved = save_password_to_param_store(requestPassword, "Vault_Pass", "Vault Password")
             if not isPasswordSaved:  # if password failed to be saved
@@ -295,7 +295,7 @@ def save_public_key_to_param_store(S3BucketName, PublicKeyName):
     try:
         s3Resource = boto3.resource('s3')
         s3Resource.Bucket(S3BucketName).download_file(PublicKeyName, '/tmp/server.crt')
-        save_password_to_param_store(open('/tmp/server.crt').read(),"PVWA_Public_Key","PVWA Public Key")
+        save_password_to_param_store(open('/tmp/server.crt').read(),"PVWA_Verification_Key","PVWA Public Key")
     except Exception as e:
         print("An error occurred while downloading PublicKey from S3 Bucket - {0}. Exception: {1}".format(S3BucketName, e))
         return False
@@ -326,9 +326,9 @@ def delete_password_from_param_store():
         )
         print("Parameter 'Vault_Pass' deleted successfully from Parameter Store")
         ssmClient.delete_parameter(
-            Name='PVWA_Public_Key'
+            Name='PVWA_Verification_Key'
         )
-        print("Parameter 'PVWA_Public_Key' deleted successfully from Parameter Store")
+        print("Parameter 'PVWA_Verification_Key' deleted successfully from Parameter Store")
         return True
     except Exception as e:
         if e.response["Error"]["Code"] == "ParameterNotFound":

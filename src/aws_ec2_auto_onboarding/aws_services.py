@@ -96,12 +96,12 @@ def get_params_from_param_store():
     PVWA_IP_PARAM = "PVWA_IP"
     AWS_KEYPAIR_SAFE = "KeyPair_Safe"
     VAULT_PASSWORD_PARAM_ = "Vault_Pass"
-    PVWA_PUBLIC_KEY = "PVWA_Public_Key"
+    PVWA_VERIFICATION_KEY = "PVWA_Verification_Key"
     lambdaClient = boto3.client('lambda')
 
     lambdaRequestData = dict()
     lambdaRequestData["Parameters"] = [UNIX_SAFE_NAME_PARAM, WINDOWS_SAFE_NAME_PARAM, VAULT_USER_PARAM, PVWA_IP_PARAM,
-                                       AWS_KEYPAIR_SAFE, VAULT_PASSWORD_PARAM_, PVWA_PUBLIC_KEY]
+                                       AWS_KEYPAIR_SAFE, VAULT_PASSWORD_PARAM_, PVWA_VERIFICATION_KEY]
     try:
         response = lambdaClient.invoke(FunctionName='TrustMechanism',
                                        InvocationType='RequestResponse',
@@ -125,12 +125,12 @@ def get_params_from_param_store():
             keyPairSafeName = ssmStoreItem['Value']
         elif ssmStoreItem['Name'] == VAULT_PASSWORD_PARAM_:
             vaultPassword = ssmStoreItem['Value']
-        elif ssmStoreItem['Name'] == PVWA_PUBLIC_KEY:
-            pvwaPublicKey = ssmStoreItem['Value']
+        elif ssmStoreItem['Name'] == PVWA_VERIFICATION_KEY:
+            pvwaVerificationKey = ssmStoreItem['Value']
         else:
             continue
     storeParametersClass = StoreParameters(unixSafeName, windowsSafeName, vaultUsername, vaultPassword, pvwaIP,
-                                           keyPairSafeName, pvwaPublicKey)
+                                           keyPairSafeName, pvwaVerificationKey)
 
     return storeParametersClass
 
@@ -240,13 +240,13 @@ class StoreParameters:
     vaultPassword = ""
     pvwaURL = "https://{0}/PasswordVault"
     keyPairSafeName = ""
-    pvwaPublicKey = ""
+    pvwaVerificationKey = ""
 
-    def __init__(self, unixSafeName, windowsSafeName, username, password, ip, keyPairSafe, pvwaPublicKey):
+    def __init__(self, unixSafeName, windowsSafeName, username, password, ip, keyPairSafe, pvwaVerificationKey):
         self.unixSafeName = unixSafeName
         self.windowsSafeName = windowsSafeName
         self.vaultUsername = username
         self.vaultPassword = password
         self.pvwaURL = self.pvwaURL.format(ip)
         self.keyPairSafeName = keyPairSafe
-        self.pvwaPublicKey = pvwaPublicKey
+        self.pvwaVerificationKey = pvwaVerificationKey
