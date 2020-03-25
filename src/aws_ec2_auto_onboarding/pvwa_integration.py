@@ -4,7 +4,7 @@ DEFAULT_HEADER = {"content-type": "application/json"}
 # RestApiCalls:
 def call_rest_api_get(url, header):
     try:
-        restResponse = requests.get(url, timeout=30, verify=False, headers=header)
+        restResponse = requests.get(url, timeout=30, verify="/tmp/server.crt", headers=header)
     except Exception as e:
         print("Error occurred on calling PVWA REST service")
         return None
@@ -13,7 +13,7 @@ def call_rest_api_get(url, header):
 
 def call_rest_api_delete(url, header):
     try:
-        response = requests.delete(url, timeout=30, verify=False, headers=header)
+        response = requests.delete(url, timeout=30, verify="/tmp/server.crt", headers=header)
     except Exception as e:
         print(e)
         return None
@@ -23,7 +23,7 @@ def call_rest_api_delete(url, header):
 def call_rest_api_post(url, request, header):
 
     try:
-        restResponse = requests.post(url, data=request, timeout=30, verify=False, headers=header, stream=True)
+        restResponse = requests.post(url, data=request, timeout=30, verify="/tmp/server.crt", headers=header, stream=True)
     except Exception:
         print("Error occurred during POST request to PVWA")
         return None

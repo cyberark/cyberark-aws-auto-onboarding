@@ -81,6 +81,10 @@ def lambda_handler(event, context):
         storeParametersClass = aws_services.get_params_from_param_store()
         if not storeParametersClass:
             return
+        # Save PVWA Verification key in /tmp folder
+        crt = open("/tmp/server.crt","w+")
+        crt.write(storeParametersClass.pvwaVerificationKey)
+        crt.close()
         pvwaConnectionnumber, sessionGuid = aws_services.get_available_session_from_dynamo()
         if not pvwaConnectionnumber:
             return
