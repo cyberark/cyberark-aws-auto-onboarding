@@ -47,11 +47,6 @@
         "S3BucketName": {
           "Ref": "S3BucketWithVerificationKey"
         }
-      },
-      "CreationPolicy": {
-        "ResourceSignal": {
-          "Timeout": "PT2M"
-        }
       }
     },
     "ParameterPVWA": {

@@ -379,10 +379,7 @@
             ]
           ]
         }
-      },
-      "DependsOn": [
-        "ElasticityLambda"
-      ]
+      }
     },
     "ElasticityLambdaToSNSPermissionUE1": {
       "Type": "AWS::Lambda::Permission",
@@ -407,10 +404,7 @@
             ]
           ]
         }
-      },
-      "DependsOn": [
-        "ElasticityLambda"
-      ]
+      }
     },
     "ElasticityLambdaToSNSPermissionUW1": {
       "Type": "AWS::Lambda::Permission",
@@ -435,10 +429,7 @@
             ]
           ]
         }
-      },
-      "DependsOn": [
-        "ElasticityLambda"
-      ]
+      }
     },
     "ElasticityLambdaToSNSPermissionUW2": {
       "Type": "AWS::Lambda::Permission",
@@ -463,10 +454,7 @@
             ]
           ]
         }
-      },
-      "DependsOn": [
-        "ElasticityLambda"
-      ]
+      }
     },
     "ElasticityLambdaToSNSPermissionAE1": {
       "Type": "AWS::Lambda::Permission",
@@ -491,10 +479,7 @@
             ]
           ]
         }
-      },
-      "DependsOn": [
-        "ElasticityLambda"
-      ]
+      }
     },
     "ElasticityLambdaToSNSPermissionAS1": {
       "Type": "AWS::Lambda::Permission",
@@ -519,10 +504,7 @@
             ]
           ]
         }
-      },
-      "DependsOn": [
-        "ElasticityLambda"
-      ]
+      }
     },
     "ElasticityLambdaToSNSPermissionAN1": {
       "Type": "AWS::Lambda::Permission",
@@ -547,10 +529,7 @@
             ]
           ]
         }
-      },
-      "DependsOn": [
-        "ElasticityLambda"
-      ]
+      }
     },
     "ElasticityLambdaToSNSPermissionAN2": {
       "Type": "AWS::Lambda::Permission",
@@ -575,10 +554,7 @@
             ]
           ]
         }
-      },
-      "DependsOn": [
-        "ElasticityLambda"
-      ]
+      }
     },
     "ElasticityLambdaToSNSPermissionAN3": {
       "Type": "AWS::Lambda::Permission",
@@ -603,10 +579,7 @@
             ]
           ]
         }
-      },
-      "DependsOn": [
-        "ElasticityLambda"
-      ]
+      }
     },
     "ElasticityLambdaToSNSPermissionASE1": {
       "Type": "AWS::Lambda::Permission",
@@ -631,10 +604,7 @@
             ]
           ]
         }
-      },
-      "DependsOn": [
-        "ElasticityLambda"
-      ]
+      }
     },
     "ElasticityLambdaToSNSPermissionASE2": {
       "Type": "AWS::Lambda::Permission",
@@ -659,10 +629,7 @@
             ]
           ]
         }
-      },
-      "DependsOn": [
-        "ElasticityLambda"
-      ]
+      }
     },
     "ElasticityLambdaToSNSPermissionCC1": {
       "Type": "AWS::Lambda::Permission",
@@ -687,10 +654,7 @@
             ]
           ]
         }
-      },
-      "DependsOn": [
-        "ElasticityLambda"
-      ]
+      }
     },
     "ElasticityLambdaToSNSPermissionEW1": {
       "Type": "AWS::Lambda::Permission",
@@ -715,10 +679,7 @@
             ]
           ]
         }
-      },
-      "DependsOn": [
-        "ElasticityLambda"
-      ]
+      }
     },
     "ElasticityLambdaToSNSPermissionEW2": {
       "Type": "AWS::Lambda::Permission",
@@ -743,10 +704,7 @@
             ]
           ]
         }
-      },
-      "DependsOn": [
-        "ElasticityLambda"
-      ]
+      }
     },
     "ElasticityLambdaToSNSPermissionEW3": {
       "Type": "AWS::Lambda::Permission",
@@ -771,10 +729,7 @@
             ]
           ]
         }
-      },
-      "DependsOn": [
-        "ElasticityLambda"
-      ]
+      }
     },
     "ElasticityLambdaToSNSPermissionEN1": {
       "Type": "AWS::Lambda::Permission",
@@ -799,10 +754,7 @@
             ]
           ]
         }
-      },
-      "DependsOn": [
-        "ElasticityLambda"
-      ]
+      }
     },
     "ElasticityLambdaToSNSPermissionEC1": {
       "Type": "AWS::Lambda::Permission",
@@ -827,10 +779,7 @@
             ]
           ]
         }
-      },
-      "DependsOn": [
-        "ElasticityLambda"
-      ]
+      }
     },
     "ElasticityLambdaToSNSPermissionSE1": {
       "Type": "AWS::Lambda::Permission",
@@ -855,10 +804,7 @@
             ]
           ]
         }
-      },
-      "DependsOn": [
-        "ElasticityLambda"
-      ]
+      }
     },
     "SafeHandlerLambda": {
       "Type": "AWS::Lambda::Function",
@@ -896,7 +842,6 @@
         }
       },
       "DependsOn": [
-        "SafeHandlerLambdaRole",
         "SafehandlingLambdaPolicy"
       ]
     },
@@ -915,8 +860,8 @@
         "GroupId": {
           "Ref": "PVWASG"
         },
-        "FromPort": "443",
-        "ToPort": "443",
+        "FromPort": 443,
+        "ToPort": 443,
         "IpProtocol": "tcp",
         "SourceSecurityGroupId": {
           "Fn::GetAtt": [
@@ -942,8 +887,8 @@
           "Ref": "ElasticityLambdaSecurityGroup"
         },
         "IpProtocol": "tcp",
-        "FromPort": "443",
-        "ToPort": "443",
+        "FromPort": 443,
+        "ToPort": 443,
         "CidrIp": "0.0.0.0/0"
       }
     },
@@ -1032,18 +977,15 @@
     },
     "ComponentsSubnet": {
       "Type": "AWS::EC2::Subnet::Id",
-      "Description": "Subnet where the solution will be deployed. The subnet must have access to the PVWA",
-      "MinLength": "1"
+      "Description": "Subnet where the solution will be deployed. The subnet must have access to the PVWA"
     },
     "ComponentsVPC": {
       "Type": "AWS::EC2::VPC::Id",
-      "Description": "VPC where the solution will be deployed. The VPC must contain a subnet with access to the PVWA",
-      "MinLength": "1"
+      "Description": "VPC where the solution will be deployed. The VPC must contain a subnet with access to the PVWA"
     },
     "PVWASG": {
       "Type": "AWS::EC2::SecurityGroup::Id",
-      "Description": "Security Group of the PVWA",
-      "MinLength": "1"
+      "Description": "Security Group of the PVWA"
     }
   },
   "Conditions": {},
@@ -1078,7 +1020,6 @@
       }
     }
   },
-  "Mappings": {},
   "Outputs": {
     "SafeHandlerLambdaARN": {
       "Value": {
