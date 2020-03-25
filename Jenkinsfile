@@ -41,10 +41,10 @@ pipeline {
         stage('Validate CloudFormation templates') {
             steps {
                 sh '''
-                    aws cloudformation validate-template --template-body ./dist/multi-region-cft/CyberArk-AOB-MultiRegion-CF.json
-                    aws cloudformation validate-template --template-body ./dist/multi-region-cft/CyberArk-AOB-MultiRegion-CF-Ansible.json
-                    aws cloudformation validate-template --template-body ./dist/multi-region-cft/CyberArk-AOB-MultiRegion-StackSet.json
-                    aws cloudformation validate-template --template-body ./dist/multi-region-cft/CyberArk-AOB-MultiRegion-StackSet-Ansible.json
+                    aws cloudformation validate-template --template-body ./dist/multi-region-cft/CyberArk-AOB-MultiRegion-CF.json --region ${AWS_REGION}
+                    aws cloudformation validate-template --template-body ./dist/multi-region-cft/CyberArk-AOB-MultiRegion-CF-Ansible.json --region ${AWS_REGION}
+                    aws cloudformation validate-template --template-body ./dist/multi-region-cft/CyberArk-AOB-MultiRegion-StackSet.json --region ${AWS_REGION}
+                    aws cloudformation validate-template --template-body ./dist/multi-region-cft/CyberArk-AOB-MultiRegion-StackSet-Ansible.json --region ${AWS_REGION}
                 '''
             }
         }
