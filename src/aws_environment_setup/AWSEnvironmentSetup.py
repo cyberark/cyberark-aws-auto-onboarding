@@ -40,15 +40,15 @@ def lambda_handler(event, context):
             requestAWSRegionName = event['ResourceProperties']['AWSRegionName']
             requestAWSAccountId = event['ResourceProperties']['AWSAccountId']
             requestS3BucketName = event['ResourceProperties']['S3BucketName']
-            requestPublicKeyName = event['ResourceProperties']['PVWAVerificationKeyFileName']
+            requestVerificationKeyName = event['ResourceProperties']['PVWAVerificationKeyFileName']
 
             isPasswordSaved = save_password_to_param_store(requestPassword, "AOB_Vault_Pass", "Vault Password")
             if not isPasswordSaved:  # if password failed to be saved
                 return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to create Vault user's password in Parameter Store",
                                         {}, physicalResourceId)
 
-            isPublicKeySaved = save_public_key_to_param_store(requestS3BucketName, requestPublicKeyName)
-            if not isPublicKeySaved:  # if password failed to be saved
+            isVerificationKeySaved = save_verification_key_to_param_store(requestS3BucketName, requestVerificationKeyName)
+            if not isVerificationKeySaved:  # if password failed to be saved
                 return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to create PVWA Verification Key in Parameter Store",
                                         {}, physicalResourceId)
 
@@ -291,13 +291,13 @@ def create_session_table():
     print("Table 'Sessions' created successfully")
     return True
 
-def save_public_key_to_param_store(S3BucketName, PublicKeyName):
+def save_verification_key_to_param_store(S3BucketName, VerificationKeyName):
     try:
         s3Resource = boto3.resource('s3')
-        s3Resource.Bucket(S3BucketName).download_file(PublicKeyName, '/tmp/server.crt')
-        save_password_to_param_store(open('/tmp/server.crt').read(),"AOB_PVWA_Verification_Key","PVWA Public Key")
+        s3Resource.Bucket(S3BucketName).download_file(VerificationKeyName, '/tmp/server.crt')
+        save_password_to_param_store(open('/tmp/server.crt').read(),"AOB_PVWA_Verification_Key","PVWA Verification Key")
     except Exception as e:
-        print("An error occurred while downloading PublicKey from S3 Bucket - {0}. Exception: {1}".format(S3BucketName, e))
+        print("An error occurred while downloading Verification Key from S3 Bucket - {0}. Exception: {1}".format(S3BucketName, e))
         return False
     return True
 
