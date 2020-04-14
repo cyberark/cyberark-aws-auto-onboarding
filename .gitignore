@@ -17,6 +17,7 @@ var/
 *.egg
 .idea/
 __pycache__
+dist/lambdas/*.zip
 
 # Serverless directories
 .serverless
