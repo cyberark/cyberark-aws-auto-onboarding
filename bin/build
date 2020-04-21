@@ -1,0 +1,20 @@
+#!/bin/bash
+
+BINDIR=$(dirname $(readlink -f $0))
+ROOTDIR=$(dirname $BINDIR)
+
+. $BINDIR/utils
+
+log_info "Building source builder docker image."
+docker build -t aws_onboarding_lambda_builder $BINDIR/docker
+log_done "Finished building docker image"
+
+log_info "Packaging lambdas code in dist/lambdas"
+docker run  --rm \
+            --mount type=bind,source=$ROOTDIR/src,target=/tmp/src \
+            --mount type=bind,source=$ROOTDIR/requirements.txt,target=/tmp/requirements.txt \
+            --mount type=bind,source=$ROOTDIR/dist/lambdas,target=/tmp/output \
+            -e ENVIRONMENT_LAMBDA_ZIP="aws_environment_setup_0.1.1.zip" \
+            -e ONBOARDING_LAMBDA_ZIP="aws_ec2_auto_onboarding_0.1.1.zip" \
+            aws_onboarding_lambda_builder
+log_done "Finished packaging lambdas code"

@@ -1,0 +1,14 @@
+#!/bin/bash
+
+BINDIR=$(dirname $(readlink -f $0))
+ROOTDIR=$(dirname $BINDIR)
+
+. $BINDIR/utils
+
+log_info "Syncing templates"
+read_env "Templates Bucket name" TEMPLATES_BUCKET_NAME
+aws s3 sync $ROOTDIR/dist/multi-region-cft s3://$TEMPLATES_BUCKET_NAME
+
+log_info "Syncing code"
+read_env "Sources Bucket name" BUCKET_NAME
+aws s3 sync $ROOTDIR/dist/lambdas s3://$BUCKET_NAME

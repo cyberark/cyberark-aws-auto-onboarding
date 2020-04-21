@@ -1,0 +1,66 @@
+#!/bin/bash
+
+BINDIR=$(dirname $(readlink -f $0))
+ROOTDIR=$(dirname $BINDIR)
+
+. $BINDIR/utils
+
+read -p "Do you want to remove a stack [y/N]: " -n 1 -r
+echo ""
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+
+  read_env "Enter stack name" STACK_NAME
+  aws cloudformation delete-stack \
+      --stack-name $STACK_NAME
+  log_done "$STACK_NAME is being removed."
+fi
+
+read -p "Do you want to remove a stack-set [y/N]: " -n 1 -r
+echo ""
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+  read_env "Stack Set name" STACK_SET_NAME
+  read_env "Account ID" ACCOUNT_ID
+  read_env "Deployed Region" REGION
+
+  operation_id=$(aws cloudformation delete-stack-instances \
+      --stack-set-name $STACK_SET_NAME \
+      --accounts "[\"$ACCOUNT_ID\"]" \
+      --regions "[\"$REGION\"]" \
+      --no-retain-stacks | grep -oP '(?<="OperationId": ")[^"]*')
+
+  if [ -z "$operation_id" ]; then
+    log_err "Failed to delete stack instances, missing operation ID. Aborting..."
+    exit 1
+  fi
+
+  # Wait for the operation to ends.
+  check_operation_status () {
+    aws cloudformation describe-stack-set-operation \
+      --stack-set-name $STACK_SET_NAME \
+      --operation-id $operation_id | grep -oP '(?<="Status": ")[^"]*'
+  }
+
+i=1
+sp="/-\|"
+while : ; do
+    operation_status=$(check_operation_status)
+    case $operation_status in
+      "SUCCEEDED")
+        break
+        ;;
+      "FAILED" | "STOPPED")
+        log_err "Failed to delete the stackset instances: $operation_status\nPlease troubleshoot and delete manually."
+        exit 1
+        ;;
+      *)
+        spinner=$(printf "\b${sp:i%${#sp}:1}")
+        i=$(($i+1))
+        printf " $spinner $operation_status\r" 
+        ;;
+    esac
+  done
+
+  aws cloudformation delete-stack-set \
+    --stack-set-name $STACK_SET_NAME
+  log_done "$STACK_SET_NAME is being removed."
+fi

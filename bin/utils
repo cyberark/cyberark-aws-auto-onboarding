@@ -1,0 +1,98 @@
+log_info () {
+    local NO_FORMAT="\033[0m"
+    local C_GOLD1="\033[38;5;220m"
+    echo -e "${C_GOLD1}[INFO]${NO_FORMAT} $1"
+}
+
+log_warn () {
+    local NO_FORMAT="\033[0m"
+    C_ORANGERED1="\033[38;5;202m"
+    echo -e "${C_ORANGERED1}[WARN]${NO_FORMAT} $1"
+}
+
+log_err () {
+    local NO_FORMAT="\033[0m"
+    C_RED1="\033[38;5;196m"
+    echo -e "${C_RED1}[ERROR]${NO_FORMAT} $1"
+}
+
+log_done () {
+    local NO_FORMAT="\033[0m"
+    local C_GREEN3="\033[38;5;34m"
+    echo -e "${C_GREEN3}[DONE]${NO_FORMAT} $1"
+}
+
+bold () {
+  NO_FORMAT="\033[0m"
+  F_BOLD="\033[1m"
+  echo -e "${F_BOLD}$1${NO_FORMAT}"
+
+}
+
+get_dir() {
+  echo $(dirname $(readlink -f $0))
+}
+
+# read_f "FILE" "VAR_NAME"
+read_f() {
+  awk -F= -v key="$2" '$1==key {print $2}' $1
+}
+
+# write_f "FILE" "VAR_NAME" "VALUE"
+write_f() {
+  local read_value=$(read_f "$1" "$2")
+  if [ -z "$read_value" ]; then
+    echo "$2=$3" >> $1
+  else
+    awk -F= -v key="$2" -v value="$3" '$1==key {$2=value}1' OFS== $1 > $1.tmp
+    mv $1.tmp $1
+  fi
+}
+
+# get_env "VAR_NAME"
+get_env() {
+  local envfile="$(get_dir)/.env"
+  if [ ! -e "$envfile" ] ; then
+    touch $envfile
+  fi
+ 
+  read_f "$envfile" "$1"
+}
+
+# set_env "VAR_NAME" "VALUE"
+set_env() {
+  local envfile="$(get_dir)/.env"
+  if [ ! -e "$envfile" ] ; then
+    touch $envfile
+  fi
+
+  write_f "$envfile" "$1" "$2"
+}
+
+# read_env "SCREEN_TEXT" "VAR_NAME"
+read_env () {
+  local tmp_var
+  local last_val=$(get_env "$2")
+  read -p "$1 [$last_val]:" tmp_var
+
+  if [ -z "$tmp_var" ] ; then
+    printf -v "$2" '%s' "$last_val"
+  else
+    set_env "$2" "$tmp_var"
+    printf -v "$2" '%s' "$tmp_var"
+  fi
+}
+
+# sread_env "SCREEN_TEXT" "SECRET_NAME"
+sread_env () {
+  local tmp_var
+  local last_val=$(get_env "$2")
+  read -s -p "$1 [*****]:" tmp_var
+  echo ""
+  if [ -z "$tmp_var" ] ; then
+    printf -v "$2" '%s' "$last_val"
+  else
+    set_env "$2" "$tmp_var"
+    printf -v "$2" '%s' "$tmp_var"
+  fi
+}

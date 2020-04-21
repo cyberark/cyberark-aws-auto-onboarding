@@ -1,0 +1,85 @@
+#!/bin/bash
+
+BINDIR=$(dirname $(readlink -f $0))
+ROOTDIR=$(dirname $BINDIR)
+
+. $BINDIR/utils
+
+echo "To generate the parameters file required to deploy the lambda, fill in the following parameters."
+
+FILENAME="parameters.json"
+FILE="$BINDIR/$FILENAME"
+if test -f "$FILE"; then
+    log_warn "$FILENAME already exists. It will be overwritten!"
+fi
+
+read_env "Bucket Name: " "BUCKET_NAME"
+read_env "PVWA URL" PVWA_URL
+log_info "Run the following command to list VPCs: `bold 'aws ec2 describe-vpcs --output text'`"
+read_env "VPC ID" VPC_ID
+log_info "Run the following command to list SECURITY GROUPS: `bold 'aws ec2 describe-security-groups --output text'`" 
+read_env "PVWA SG" PVWA_SG
+log_info "Run the following command to list SUBNETs: `bold 'aws ec2 describe-subnets --output text'`" 
+read_env "SUBNET ID" SUBNET_ID
+read_env "Vault Username" VAULT_USERNAME
+sread_env "Vault Password (hidden)" VAULT_PASSWORD
+read_env "Unix Safe" UNIX_SAFE
+read_env "Windows Safe" WINDOWS_SAFE
+read_env "CPM Name" CPM_NAME
+read_env "Target Safe for keypairs" KEYPAIR_SAFE
+
+echo "Generating $FILENAME"
+echo "[
+  {
+    \"ParameterKey\": \"LambdasBucket\",
+    \"ParameterValue\": \"$BUCKET_NAME\"
+  },
+  {
+    \"ParameterKey\": \"PvwaIP\",
+    \"ParameterValue\": \"$PVWA_URL\"
+  },
+  {
+    \"ParameterKey\": \"ComponentsVPC\",
+    \"ParameterValue\": \"$VPC_ID\"
+  },
+  {
+    \"ParameterKey\": \"ComponentsSubnet\",
+    \"ParameterValue\": \"$SUBNET_ID\"
+  },
+  {
+    \"ParameterKey\": \"PVWASG\",
+    \"ParameterValue\": \"$PVWA_SG\"
+  },
+  {
+    \"ParameterKey\": \"UnixSafeName\",
+    \"ParameterValue\": \"$UNIX_SAFE\"
+  },
+  {
+    \"ParameterKey\": \"WindowsSafeName\",
+    \"ParameterValue\": \"$WINDOWS_SAFE\"
+  },
+  {
+    \"ParameterKey\": \"VaultUser\",
+    \"ParameterValue\": \"$VAULT_USERNAME\"
+  },
+  {
+    \"ParameterKey\": \"VaultPassword\",
+    \"ParameterValue\": \"$VAULT_PASSWORD\"
+  },
+  {
+    \"ParameterKey\": \"CPMNameUnixSafe\",
+    \"ParameterValue\": \"$CPM_NAME\"
+  },
+  {
+    \"ParameterKey\": \"CPMNameWindowsSafe\",
+    \"ParameterValue\": \"$CPM_NAME\"
+  },
+  {
+    \"ParameterKey\": \"KeyPairsSafe\",
+    \"ParameterValue\": \"$KEYPAIR_SAFE\"
+  },
+  {
+    \"ParameterKey\": \"KeyPairName\",
+    \"ParameterValue\": \"\"
+  }
+]" > $FILE

@@ -1,0 +1,86 @@
+#!/bin/bash
+
+BINDIR=$(dirname $(readlink -f $0))
+ROOTDIR=$(dirname $BINDIR)
+
+. $BINDIR/utils
+
+FILENAME="parameters.json"
+FILE="$BINDIR/$FILENAME"
+if test ! -f "$FILE"; then
+    log_err "$FILENAME not found. Please run ./configure"
+    exit 1
+fi
+
+parameters=$(<$BINDIR/$FILENAME)
+
+read_env "Enter Stack S3 template URL" STACK_S3_TEMPLATE_URL
+read_env "Enter stack name" STACK_NAME
+
+log_info "Creating $STACK_NAME"
+aws cloudformation create-stack \
+    --stack-name $STACK_NAME \
+    --template-url $STACK_S3_TEMPLATE_URL \
+    --parameters "$parameters" \
+    --capabilities CAPABILITY_NAMED_IAM
+
+check_stack_status () {
+  aws cloudformation describe-stacks --stack-name $STACK_NAME | grep -oP '(?<="StackStatus": ")[^"]*'
+}
+
+i=1
+sp="/-\|"
+while : ; do
+  stack_status=$(check_stack_status)
+  #log_info "$stack_status"
+  case $stack_status in
+    "CREATE_COMPLETE")
+      break
+      ;;
+    "ROLLBACK_IN_PROGRESS" | "ROLLBACK_COMPLETE")
+      log_err "Failed to create the stack: $stack_status\nPlease troubleshoot and delete manually."
+      exit 1
+      ;;
+    "DELETE_IN_PROGRESS")
+      log_err "A stack named $STACK_NAME is already being removed. Please wait until deletion and re-run this script."
+      exit 1
+      ;;
+    *)
+      spinner=$(printf "\b${sp:i%${#sp}:1}")
+      i=$(($i+1))
+      printf " $spinner $stack_status\r" 
+      ;;
+  esac
+done
+
+elasticity_lambda_arn=$(aws resourcegroupstaggingapi get-resources --tag-filters "Key=aws:cloudformation:stack-name,Values=$STACK_NAME,Key=aws:cloudformation:logical-id,Values=ElasticityLambda" --resource-type-filters "lambda" | grep -oP '(?<="ResourceARN": ")[^"]*')
+
+if [ -z $elasticity_lambda_arn ]; then
+  log_err "Can't find the Elasticity lambda ARN. Aborting..."
+  exit 1
+fi
+
+administration_role_arn=$(aws iam get-role --role-name AWSCloudFormationStackSetAdministrationRole | grep -oP '(?<="Arn": ")[^"]*')
+
+if [ -z $administration_role_arn ]; then
+  log_err "Can't find the AWSCloudFormationStackSetAdministration role. Please create it! Aborting..."
+  exit 1
+fi
+
+set_env "STACK_SET_NAME" "${STACK_NAME}-StackSet"
+read_env "Stack Set name" STACK_SET_NAME
+read_env "Stack Set S3 template URL" STACK_SET_S3_TEMPLATE_URL
+log_info "Creating $STACK_SET_NAME"
+aws cloudformation create-stack-set \
+    --stack-set-name $STACK_SET_NAME \
+    --template-url $STACK_SET_S3_TEMPLATE_URL \
+    --parameters "ParameterKey=LambdaARN,ParameterValue=$elasticity_lambda_arn" \
+    --administration-role-arn $administration_role_arn
+
+read_env "Account ID" ACCOUNT_ID
+read_env "Deployed Region" REGION
+aws cloudformation create-stack-instances \
+    --stack-set-name $STACK_SET_NAME \
+    --accounts "[\"$ACCOUNT_ID\"]" \
+    --regions "[\"$REGION\"]" \
+    --operation-preferences FailureToleranceCount=0,MaxConcurrentCount=1
