@@ -326,7 +326,7 @@
           "S3Bucket": {
             "Ref": "LambdasBucket"
           },
-          "S3Key": "aws_ec2_auto_onboarding_0.1.1.zip"
+          "S3Key": "aws_ec2_auto_onboarding.zip"
         },
         "Description": "Main Auto Onboarding Lambda",
         "Handler": "AWSEc2AutoOnboarding.lambda_handler",
@@ -813,7 +813,7 @@
           "S3Bucket": {
             "Ref": "LambdasBucket"
           },
-          "S3Key": "aws_environment_setup_0.1.1.zip"
+          "S3Key": "aws_environment_setup.zip"
         },
         "Description": "Environment initial setup Lambda",
         "Handler": "AWSEnvironmentSetup.lambda_handler",
