@@ -102,6 +102,16 @@ pipeline {
                 '''
             }
         }
+        stage('Upload artifacts to S3 Bucket') {
+            steps {
+                sh '''
+                    pwd
+                    cd artifacts
+                    pwd
+                    aws s3 cp aws_environment_setup.zip s3://
+                '''
+            }
+        }
         //  stage('Deploy AOB solution')
         // {
         //     steps{
