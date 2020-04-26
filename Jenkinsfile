@@ -108,7 +108,8 @@ pipeline {
                     pwd
                     cd artifacts
                     pwd
-                    aws s3 cp aws_environment_setup.zip s3://
+                    aws s3 cp aws_environment_setup.zip s3://aob-auto-test
+                    aws s3 cp aws_ec2_auto_onboarding.zip s3://aob-auto-test
                 '''
             }
         }
