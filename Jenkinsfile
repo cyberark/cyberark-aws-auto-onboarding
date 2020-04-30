@@ -113,6 +113,13 @@ pipeline {
                 '''
             }
         }
+        stage('Get tests') {
+            steps{
+                sh '''
+
+                '''
+            }
+        }
         stage('Deploy AOB solution')
         {
             steps{
