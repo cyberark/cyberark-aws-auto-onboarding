@@ -114,6 +114,7 @@ pipeline {
         //     }
         // }
         stage('Get tests') {
+            steps{
              script{
                         withCredentials([
                             usernamePassword(credentialsId: 'aob-deploy-user', usernameVariable: 'VAULT_USERNAME', passwordVariable: 'VAULT_PASSWORD')
@@ -126,6 +127,7 @@ pipeline {
                         echo | ls
                     '''
                 }
+            }
         }
         stage('Deploy AOB solution')
         {
