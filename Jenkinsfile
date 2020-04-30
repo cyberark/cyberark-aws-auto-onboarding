@@ -114,11 +114,16 @@ pipeline {
             }
         }
         stage('Get tests') {
-            steps{
-                sh '''
-
-                '''
-            }
+             script{
+                        withCredentials([
+                            usernamePassword(credentialsId: 'aob-deploy-user', usernameVariable: 'VAULT_USERNAME', passwordVariable: 'VAULT_PASSWORD')
+                        ])
+                    sh '''
+                        git clone git@github.com:cyberark/cyberark-aws-auto-onboarding-tests.git
+                        cd cyberark-aws-auto-onboarding-tests
+                        echo | ls
+                    '''
+                }
         }
         stage('Deploy AOB solution')
         {
