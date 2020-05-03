@@ -117,10 +117,11 @@ pipeline {
             steps{
              script{
                         withCredentials([
-                            usernamePassword(credentialsId: 'aob-deploy-user', usernameVariable: 'VAULT_USERNAME', passwordVariable: 'VAULT_PASSWORD')
+                            usernamePassword(credentialsId: 'aob-deploy-user', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')
                         ])
                     sh '''
                         pwd
+                        git config --global credential.helper '/bin/bash credential-helper.sh'
                         git clone git@github.com:cyberark/cyberark-aws-auto-onboarding-tests.git
                         cd cyberark-aws-auto-onboarding-tests
                         pwd
