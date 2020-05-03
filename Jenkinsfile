@@ -117,7 +117,7 @@ pipeline {
             steps{
              script{
                     withCredentials([
-                        sshUserPrivateKey(credentialsId: 'aob_deployer', keyFileVariable: 'gitkey')
+                        sshUserPrivateKey(credentialsId: 'aob_tester', keyFileVariable: 'gitkey')
                     ]){
                         sh '''
                             pwd
