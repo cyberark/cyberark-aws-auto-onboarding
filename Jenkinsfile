@@ -124,6 +124,9 @@ pipeline {
                         git config --global credential.helper '/bin/bash credential-helper.sh'
                         git clone git@github.com:cyberark/cyberark-aws-auto-onboarding-tests.git
                         cd cyberark-aws-auto-onboarding-tests
+                        pwd
+                        echo | ls
+                    '''
                 }
             }
         }
