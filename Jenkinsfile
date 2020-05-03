@@ -116,17 +116,17 @@ pipeline {
         stage('Get tests') {
             steps{
              script{
-                        withCredentials([
-                            usernamePassword(credentialsId: 'aob_deployer', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')
-                        ])
-                    sh '''
-                        pwd
-                        git config --global credential.helper '/bin/bash credential-helper.sh'
-                        git clone git@github.com:cyberark/cyberark-aws-auto-onboarding-tests.git
-                        cd cyberark-aws-auto-onboarding-tests
-                        pwd
-                        echo | ls
-                    '''
+                    withCredentials([
+                        sshUserPrivateKey(credentialsId: 'aob_deployer', keyFileVariable: 'gitkey')
+                    ]){
+                        sh '''
+                            pwd
+                            git clone git@github.com:cyberark/cyberark-aws-auto-onboarding-tests.git
+                            cd cyberark-aws-auto-onboarding-tests
+                            pwd
+                            echo | ls
+                        '''
+                    }
                 }
             }
         }
