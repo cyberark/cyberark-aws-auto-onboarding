@@ -132,9 +132,6 @@ pipeline {
                 script{
                     git credentialsId: 'jenkins-github-access-token', url: 'https://github.com/cyberark/cyberark-aws-auto-onboarding-tests.git'
                     dir ('cyberark-aws-auto-onboarding-tests') {
-                        sh '''
-                            git clone 'https://github.com/cyberark/cyberark-aws-auto-onboarding-tests.git'
-                        '''
                     }
 
                 }
@@ -145,6 +142,7 @@ pipeline {
             steps{
                 sh '''
                     source ./.testenv/bin/activate
+                    cd tests/
                     ansible-playbook aob_environment_setup.yml -e "{rollback: False}" -v
                 '''
             }
