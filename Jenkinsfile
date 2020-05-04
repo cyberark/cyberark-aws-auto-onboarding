@@ -133,7 +133,9 @@ pipeline {
                     source ./.testenv/bin/activate
                     pwd
                     ls
-                    ansible-playbook tests/aob_enviornment_setup.yml -vvv
+                    cd tests/
+                    ls
+                    ansible-playbook aob_enviornment_setup.yml -vvv
                 '''
             }
         }
