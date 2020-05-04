@@ -120,7 +120,8 @@ pipeline {
                     git credentialsId: 'jenkins-github-access-token', url: 'https://github.com/cyberark/cyberark-aws-auto-onboarding.git'
                     dir ('cyberark-aws-auto-onboarding') {
                         sh '''
-                            cd dist/
+                            pwd
+                            ls
                         '''
                     }
 
@@ -132,6 +133,10 @@ pipeline {
                 script{
                     git credentialsId: 'jenkins-github-access-token', url: 'https://github.com/cyberark/cyberark-aws-auto-onboarding-tests.git'
                     dir ('cyberark-aws-auto-onboarding-tests') {
+                        sh '''
+                            pwd
+                            ls
+                        '''
                     }
 
                 }
