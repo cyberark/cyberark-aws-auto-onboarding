@@ -130,7 +130,7 @@ pipeline {
                 sh '''
                     source ./.testenv/bin/activate
                     cd tests/
-                    ansible-playbook aob_environment_setup.yml -vvv
+                    ansible-playbook aob_environment_setup.yml '{rollback: False}' -vvv
                 '''
             }
         }
