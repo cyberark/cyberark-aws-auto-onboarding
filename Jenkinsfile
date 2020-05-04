@@ -118,7 +118,7 @@ pipeline {
              script{
                     sh '''
                         pwd
-                        git clone git@github.com:cyberark/cyberark-aws-auto-onboarding-tests.git
+                        git clone https://github.com/cyberark/cyberark-aws-auto-onboarding-tests.git
                         cd cyberark-aws-auto-onboarding-tests
                         pwd
                         echo | ls
