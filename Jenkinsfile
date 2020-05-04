@@ -114,7 +114,20 @@ pipeline {
         //         '''
         //     }
         // }
-        stage('Get tests') {
+        stage('Git clone AOB') {
+            steps{
+                script{
+                    git credentialsId: 'jenkins-github-access-token', url: 'https://github.com/cyberark/cyberark-aws-auto-onboarding.git'
+                    dir ('cyberark-aws-auto-onboarding') {
+                        sh '''
+                            cd dist/
+                        '''
+                    }
+
+                }
+            }
+        }
+        stage('Git clone AOB tests') {
             steps{
                 script{
                     git credentialsId: 'jenkins-github-access-token', url: 'https://github.com/cyberark/cyberark-aws-auto-onboarding-tests.git'
