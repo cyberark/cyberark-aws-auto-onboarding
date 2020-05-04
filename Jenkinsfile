@@ -128,14 +128,9 @@ pipeline {
         {
             steps{
                 sh '''
-                    pwd
-                    ls
                     source ./.testenv/bin/activate
-                    pwd
-                    ls
                     cd tests/
-                    ls
-                    ansible-playbook aob_enviornment_setup.yml -vvv
+                    ansible-playbook aob_environment_setup.yml -vvv
                 '''
             }
         }
