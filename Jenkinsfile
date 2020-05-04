@@ -118,7 +118,9 @@ pipeline {
                 script{
                     git credentialsId: 'jenkins-github-access-token', url: 'https://github.com/cyberark/cyberark-aws-auto-onboarding-tests.git'
                     dir ('cyberark-aws-auto-onboarding-tests') {
-                        pwd
+                        sh '''
+                            pwd
+                        '''
                     }
 
                 }
@@ -127,15 +129,10 @@ pipeline {
         stage('Deploy AOB solution')
         {
             steps{
-                script{
-                        withCredentials([
-                            usernamePassword(credentialsId: 'aob-autodeployment-user', usernameVariable: 'VAULT_USERNAME', passwordVariable: 'VAULT_PASSWORD')
-                        ])
-                    sh '''
-                        cd cyberark-aws-auto-onboarding-tests
-                        ansible-playbook aob_enviornment_setup.yml -vvv
-                    '''
-                }
+                sh '''
+                    cd cyberark-aws-auto-onboarding-tests
+                    ansible-playbook aob_enviornment_setup.yml -vvv
+                '''
             }
         }
     }
