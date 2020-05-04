@@ -118,13 +118,6 @@ pipeline {
                 script{
                     git credentialsId: 'jenkins-github-access-token', url: 'https://github.com/cyberark/cyberark-aws-auto-onboarding-tests.git'
                     dir ('cyberark-aws-auto-onboarding-tests') {
-                        sh '''
-                            pwd
-                            cd ..
-                            ls
-                            cd ..
-                            ls
-                        '''
                     }
 
                 }
@@ -137,8 +130,7 @@ pipeline {
                     pwd
                     source ./.testenv/bin/activate
                     pwd
-                    cd ..
-                    cyberark-aws-auto-onboarding-tests/tests
+                    cd ../tests
                     ansible-playbook aob_enviornment_setup.yml -vvv
                 '''
             }
