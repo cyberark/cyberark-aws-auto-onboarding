@@ -9,27 +9,27 @@ pipeline {
         shortCommit = sh(script: "git log -n 1 --pretty=format:'%h'", returnStdout: true).trim()
     }
     stages {
-        // stage('Install virtual environment') {
-        //     steps {
-        //         sh '''
-        //         if [ $(dpkg-query -W -f='${Status}' zip 2>/dev/null | grep -c "ok installed") -eq 0 ]; then sudo apt-get install -y zip;  fi
-        //             python3 -m pip install --user virtualenv
-        //             python3 -m virtualenv .testenv
-        //             source ./.testenv/bin/activate
+        stage('Install virtual environment') {
+            steps {
+                sh '''
+                if [ $(dpkg-query -W -f='${Status}' zip 2>/dev/null | grep -c "ok installed") -eq 0 ]; then sudo apt-get install -y zip;  fi
+                    python3 -m pip install --user virtualenv
+                    python3 -m virtualenv .testenv
+                    source ./.testenv/bin/activate
 
-        //             # Install lambda functions requirements
-        //             pip install -r requirements.txt --target ./src/aws_ec2_auto_onboarding/package
-        //             pip install -r requirements.txt --target ./src/aws_environment_setup/package
+                    # Install lambda functions requirements
+                    pip install -r requirements.txt --target ./src/aws_ec2_auto_onboarding/package
+                    pip install -r requirements.txt --target ./src/aws_environment_setup/package
 
-        //             # Install linting tools
-        //             pip install cfn-lint
-        //             pip install awscli
+                    # Install linting tools
+                    pip install cfn-lint
+                    pip install awscli
 
-        //             # Install security tools
-        //             pip install safety bandit
-        //         '''
-        //     }
-        // }
+                    # Install security tools
+                    pip install safety bandit
+                '''
+            }
+        }
         // stage('Check syntax of CloudFormation templates') {
         //     steps {
         //         sh '''
@@ -120,6 +120,7 @@ pipeline {
                     dir ('cyberark-aws-auto-onboarding-tests') {
                         sh '''
                             pwd
+                            ls
                         '''
                     }
 
