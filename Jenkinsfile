@@ -120,6 +120,9 @@ pipeline {
                     dir ('cyberark-aws-auto-onboarding-tests') {
                         sh '''
                             pwd
+                            cd ..
+                            ls
+                            cd ..
                             ls
                         '''
                     }
@@ -131,7 +134,11 @@ pipeline {
         {
             steps{
                 sh '''
-                    cd cyberark-aws-auto-onboarding-tests/tests
+                    pwd
+                    source ./.testenv/bin/activate
+                    pwd
+                    cd ..
+                    cyberark-aws-auto-onboarding-tests/tests
                     ansible-playbook aob_enviornment_setup.yml -vvv
                 '''
             }
