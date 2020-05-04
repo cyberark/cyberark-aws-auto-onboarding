@@ -24,6 +24,7 @@ pipeline {
                     # Install linting tools
                     pip install cfn-lint
                     pip install awscli
+                    pip install ansible
 
                     # Install security tools
                     pip install safety bandit
