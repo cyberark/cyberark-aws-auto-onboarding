@@ -30,23 +30,23 @@ pipeline {
                 '''
             }
         }
-        // stage('Check syntax of CloudFormation templates') {
-        //     steps {
-        //         sh '''
-        //             source ./.testenv/bin/activate
-        //             cfn-lint ./dist/**/*.json
-        //         '''
-        //     }
-        // }
-        // stage('Validate CloudFormation templates') {
-        //     steps {
-        //         sh '''
-        //             aws cloudformation validate-template --template-body file://dist/multi-region-cft/CyberArk-AOB-MultiRegion-CF.json --region ${AWS_REGION}
-        //             aws cloudformation validate-template --template-body file://dist/multi-region-cft/CyberArk-AOB-MultiRegion-CF-VaultEnvCreation.json --region ${AWS_REGION}
-        //             aws cloudformation validate-template --template-body file://dist/multi-region-cft/CyberArk-AOB-MultiRegion-StackSet.json --region ${AWS_REGION}
-        //         '''
-        //     }
-        // }
+        stage('Check syntax of CloudFormation templates') {
+            steps {
+                sh '''
+                    source ./.testenv/bin/activate
+                    cfn-lint ./dist/**/*.json
+                '''
+            }
+        }
+        stage('Validate CloudFormation templates') {
+            steps {
+                sh '''
+                    aws cloudformation validate-template --template-body file://dist/multi-region-cft/CyberArk-AOB-MultiRegion-CF.json --region ${AWS_REGION}
+                    aws cloudformation validate-template --template-body file://dist/multi-region-cft/CyberArk-AOB-MultiRegion-CF-VaultEnvCreation.json --region ${AWS_REGION}
+                    aws cloudformation validate-template --template-body file://dist/multi-region-cft/CyberArk-AOB-MultiRegion-StackSet.json --region ${AWS_REGION}
+                '''
+            }
+        }
         // stage('Package aws_environment_setup lambda function') {
         //     steps {
         //         sh '''
@@ -131,7 +131,7 @@ pipeline {
         {
             steps{
                 sh '''
-                    cd cyberark-aws-auto-onboarding-tests
+                    cd cyberark-aws-auto-onboarding-tests/tests
                     ansible-playbook aob_enviornment_setup.yml -vvv
                 '''
             }
