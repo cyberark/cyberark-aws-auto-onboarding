@@ -148,11 +148,11 @@ pipeline {
         //     }
         // }
     }
-    post {
-        success {
-            archiveArtifacts artifacts: 'artifacts/*.zip', fingerprint: true
-            archiveArtifacts artifacts: 'reports/*', fingerprint: true
-        }
-    }
+    // post {
+    //     success {
+    //         archiveArtifacts artifacts: 'artifacts/*.zip', fingerprint: true
+    //         archiveArtifacts artifacts: 'reports/*', fingerprint: true
+    //     }
+    // }
 }
 // anisble-playbook deployment/AutoOnboarding.yml -e VaultUser=${VAULT_USERNAME} VaultPassword=${VAULT_PASSWORD} Accounts='138339392836' PvwaIP='' ComponentsVPC='vpc-075eadb618b1a070f' PVWASG='vpc-075eadb618b1a070f' ComponentsSubnet='subnet-0bb6e84a4548c51b1' KeyPairName='pcloud-test-instances-KP'
