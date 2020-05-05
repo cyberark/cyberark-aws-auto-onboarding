@@ -120,7 +120,7 @@ pipeline {
                     git credentialsId: 'jenkins-github-access-token', url: 'https://github.com/cyberark/cyberark-aws-auto-onboarding.git'
                     dir ('cyberark-aws-auto-onboarding') {
                         sh '''
-                            git clone https://github.com/cyberark/cyberark-aws-auto-onboarding.git
+                            git clone --single-branch --branch develop https://github.com/cyberark/cyberark-aws-auto-onboarding.git
                         '''
                     }
 
