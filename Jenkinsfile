@@ -133,7 +133,6 @@ pipeline {
                     git credentialsId: 'jenkins-github-access-token', url: 'https://github.com/cyberark/cyberark-aws-auto-onboarding-tests.git'
                     dir ('cyberark-aws-auto-onboarding-tests') {
                     }
-
                 }
             }
         }
