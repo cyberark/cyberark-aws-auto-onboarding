@@ -137,16 +137,16 @@ pipeline {
                 }
             }
         }
-        // stage('Deploy AOB solution')
-        // {
-        //     steps{
-        //         sh '''
-        //             source ./.testenv/bin/activate
-        //             cd tests/
-        //             ansible-playbook aob_environment_setup.yml -e "{rollback: False}" -vvv
-        //         '''
-        //     }
-        // }
+        stage('Deploy AOB solution')
+        {
+            steps{
+                sh '''
+                    source ./.testenv/bin/activate
+                    cd tests/
+                    ansible-playbook aob_environment_setup.yml -e "{rollback: False}" -vvv
+                '''
+            }
+        }
     }
     // post {
     //     success {
