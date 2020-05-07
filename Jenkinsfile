@@ -152,6 +152,14 @@ pipeline {
                 '''
             }
         }
+        stage('Copy PVWA server certificate to jenkins slave')
+        {
+            steps{
+                sh '''
+                    sudo aws s3 cp s3://aob-auto-test/server.crt /etc/ssl/certs/server.crt
+                '''
+            }
+        }
         stage('Run Tests')
         {
             steps{
