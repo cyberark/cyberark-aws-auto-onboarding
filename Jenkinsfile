@@ -157,8 +157,7 @@ pipeline {
             steps{
                 sh '''
                     source ./.testenv/bin/activate
-                    pwd
-                    ls
+                    cd tests/e2e-tests/
                     python3 main.py
                 '''
             }
