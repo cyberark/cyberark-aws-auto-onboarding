@@ -148,7 +148,18 @@ pipeline {
                 sh '''
                     source ./.testenv/bin/activate
                     cd tests/
-                    ansible-playbook aob_environment_setup.yml -e "{rollback: False, deploy_main_cf: False, deploy_vaultenv: False, deploy_stackset: True}" -vvv
+                    ansible-playbook aob_environment_setup.yml -e "{rollback: False, deploy_main_cf: False, deploy_vaultenv: False, deploy_stackset: False}" -vvv
+                '''
+            }
+        }
+        stage('Run Tests')
+        {
+            steps{
+                sh '''
+                    source ./.testenv/bin/activate
+                    pwd
+                    ls
+                    python3 main.py
                 '''
             }
         }
