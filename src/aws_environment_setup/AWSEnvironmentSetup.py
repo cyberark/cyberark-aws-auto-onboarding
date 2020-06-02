@@ -12,7 +12,6 @@ import pvwa_api_calls
 import sys
 from dynamo_lock import LockerClient
 
-sys.path.append('../')
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 DEFAULT_HEADER = {"content-type": "application/json"}
