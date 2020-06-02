@@ -1,10 +1,24 @@
 import requests
+import aws_services
 
 DEFAULT_HEADER = {"content-type": "application/json"}
 # RestApiCalls:
+def check_certificate():
+    try:
+        parameters = aws_services.get_params_from_param_store()
+        if mode == 'Prod':
+            certificate = "/tmp/server.crt"
+        else:
+            certificate = False
+    except Exception as e:
+        print("Error on retrieving AOB_mode parameter :{0}".format(e))
+        raise Exception("Error occurred while retrieving AOB_mode parameter")
+    return certificate
+
 def call_rest_api_get(url, header):
     try:
-        restResponse = requests.get(url, timeout=30, verify="/tmp/server.crt", headers=header)
+        certificate = check_certificate()
+        restResponse = requests.get(url, timeout=30, verify=certificate, headers=header)
     except Exception as e:
         print("Error occurred on calling PVWA REST service")
         return None
@@ -13,7 +27,8 @@ def call_rest_api_get(url, header):
 
 def call_rest_api_delete(url, header):
     try:
-        response = requests.delete(url, timeout=30, verify="/tmp/server.crt", headers=header)
+        certificate = check_certificate()
+        response = requests.delete(url, timeout=30, verify=certificate, headers=header)
     except Exception as e:
         print(e)
         return None
@@ -21,9 +36,9 @@ def call_rest_api_delete(url, header):
 
 
 def call_rest_api_post(url, request, header):
-
     try:
-        restResponse = requests.post(url, data=request, timeout=30, verify="/tmp/server.crt", headers=header, stream=True)
+        certificate = check_certificate()
+        restResponse = requests.post(url, data=request, timeout=30, verify=certificate, headers=header, stream=True)
     except Exception:
         print("Error occurred during POST request to PVWA")
         return None

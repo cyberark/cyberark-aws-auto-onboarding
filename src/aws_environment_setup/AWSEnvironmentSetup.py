@@ -6,8 +6,13 @@ import botocore
 import time
 import boto3
 import json
+import pvwa_integration
+import aws_services
+import pvwa_api_calls
+import sys
 from dynamo_lock import LockerClient
 
+sys.path.append('../')
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 DEFAULT_HEADER = {"content-type": "application/json"}
@@ -69,7 +74,7 @@ def lambda_handler(event, context):
                 isAOBModeSaved = save_password_to_param_store(AOB_mode,'AOB_mode',
                                                                 'Dictates wether the solution will work in POC(no SSL) or Production(with SSL) mode')
 
-            pvwaSessionId = logon_pvwa(requestUsername, requestPassword, requestPvwaIp)
+            pvwaSessionId = aws_services.logon_pvwa(requestUsername, requestPassword, requestPvwaIp,"1")
             if not pvwaSessionId:
                 return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to connect to PVWA, see detailed error in logs",
                                         {}, physicalResourceId)
@@ -132,7 +137,7 @@ def lambda_handler(event, context):
     finally:
         if 'pvwaSessionId' in locals():  # pvwaSessionId has been declared
             if pvwaSessionId:  # Logging off the session in case of successful logon
-                logoff_pvwa(requestPvwaIp, pvwaSessionId)
+                pvwa_integration.logoff_pvwa(requestPvwaIp, pvwaSessionId)
 
 
 # Creating a safe, if a failure occur, retry 3 time, wait 10 sec. between retries
@@ -154,7 +159,7 @@ def create_safe(safeName, cpmName, pvwaIP, sessionId, numberOfDaysRetention=7):
     """.format(safeName, cpmName, numberOfDaysRetention)
 
     for i in range(0, 3):
-        createSafeRestResponse = call_rest_api_post(createSafeUrl, data, header)
+        createSafeRestResponse = pvwa_api_calls.call_rest_api_post(createSafeUrl, data, header)
 
         if createSafeRestResponse.status_code == requests.codes.conflict:
             print("The Safe '{0}' already exists".format(safeName))
@@ -172,73 +177,6 @@ def create_safe(safeName, cpmName, pvwaIP, sessionId, numberOfDaysRetention=7):
                       .format(createSafeRestResponse.status_code))
                 return False
         time.sleep(10)
-
-
-def logon_pvwa(username, password, pvwaUrl):
-    print('Start Logon to PVWA REST API')
-    try:
-        logonUrl = 'https://{0}/PasswordVault/WebServices/auth/Cyberark/CyberArkAuthenticationService.svc/Logon'.format(pvwaUrl)
-        restLogonData = """{{
-            "username": "{0}",
-            "password": "{1}"
-            }}""".format(username, password)
-        restResponse = call_rest_api_post(logonUrl, restLogonData, DEFAULT_HEADER)
-        if not restResponse:
-            return None
-        if restResponse.status_code == requests.codes.ok:
-            jsonParsedResponse = restResponse.json()
-            print("The logon completed successfully")
-            return jsonParsedResponse['CyberArkLogonResult']
-        elif restResponse.status_code == requests.codes.not_found:
-            print("Logon to PVWA failed, error 404: page not found")
-            return None
-        elif restResponse.status_code == requests.codes.forbidden:
-            print("Logon to PVWA failed, authentication failure for user {0}".format(username))
-            return None
-        else:
-            print("Logon to PVWA failed, status code:{0}".format(restResponse.status_code))
-            return None
-    except Exception as e:
-        print(e)
-
-
-def logoff_pvwa(pvwaUrl, connectionSessionToken):
-    print('Start Logoff to PVWA REST API')
-    header = DEFAULT_HEADER
-    header.update({"Authorization": connectionSessionToken})
-    logoffUrl = 'https://{0}/PasswordVault/WebServices/auth/Cyberark/CyberArkAuthenticationService.svc/Logoff'.format(pvwaUrl)
-    restLogoffData = ""
-    try:
-        restResponse = call_rest_api_post(logoffUrl, restLogoffData, DEFAULT_HEADER)
-    except Exception:
-        # if couldn't logoff, nothing to do, return
-        return
-
-    if(restResponse.status_code == requests.codes.ok):
-        jsonParsedResponse = restResponse.json()
-        print("session logged off successfully")
-        return True
-    else:
-        print("Logoff failed")
-        return False
-
-def call_rest_api_post(url, request, header):
-    #if else on POC_MODE and call the functions based on the value.
-    try:
-        if
-        restResponse = requests.post(url, data=request, timeout=30, verify='/tmp/server.crt', headers=header)
-    except Exception as e:
-        print("Error occurred during POST request to PVWA. Exception: {0}".format(e))
-        return None
-    return restResponse
-
-def call_rest_api_get(url, header):
-    try:
-        restResponse = requests.get(url, timeout=30, verify='/tmp/server.crt', headers=header)
-    except Exception:
-        print("Error occurred on calling PVWA REST service")
-        return None
-    return restResponse
 
 
 # Search if Key pair exist, if not - create it, return the pem key, False for error
@@ -286,7 +224,7 @@ def create_key_pair_in_vault(session, awsKeyName, privateKeyValue, pvwaIP, safeN
         "disableAutoMgmtReason":"Unmanaged account"
       }}
     }}""".format(safeName, "UnixSSHKeys", trimmedPEMKey, uniqueUsername)
-    restResponse = call_rest_api_post(url, data, header)
+    restResponse = pvwa_api_calls.call_rest_api_post(url, data, header)
 
     if restResponse.status_code == requests.codes.created:
         print("Key Pair created successfully in safe '{0}'".format(safeName))
