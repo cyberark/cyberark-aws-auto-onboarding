@@ -4,7 +4,7 @@ import aws_services
 import instance_processing
 import pvwa_api_calls
 import json
-import sys
+
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 

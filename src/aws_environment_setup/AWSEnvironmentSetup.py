@@ -9,7 +9,6 @@ import json
 import pvwa_integration
 import aws_services
 import pvwa_api_calls
-import sys
 from dynamo_lock import LockerClient
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
