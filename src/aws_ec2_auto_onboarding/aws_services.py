@@ -97,11 +97,12 @@ def get_params_from_param_store():
     AWS_KEYPAIR_SAFE = "AOB_KeyPair_Safe"
     VAULT_PASSWORD_PARAM_ = "AOB_Vault_Pass"
     PVWA_VERIFICATION_KEY = "AOB_PVWA_Verification_Key"
+    AOB_MODE="AOB_mode"
     lambdaClient = boto3.client('lambda')
 
     lambdaRequestData = dict()
     lambdaRequestData["Parameters"] = [UNIX_SAFE_NAME_PARAM, WINDOWS_SAFE_NAME_PARAM, VAULT_USER_PARAM, PVWA_IP_PARAM,
-                                       AWS_KEYPAIR_SAFE, VAULT_PASSWORD_PARAM_, PVWA_VERIFICATION_KEY]
+                                       AWS_KEYPAIR_SAFE, VAULT_PASSWORD_PARAM_, PVWA_VERIFICATION_KEY, AOB_MODE]
     try:
         response = lambdaClient.invoke(FunctionName='TrustMechanism',
                                        InvocationType='RequestResponse',
@@ -127,10 +128,14 @@ def get_params_from_param_store():
             vaultPassword = ssmStoreItem['Value']
         elif ssmStoreItem['Name'] == PVWA_VERIFICATION_KEY:
             pvwaVerificationKey = ssmStoreItem['Value']
+        elif ssmStoreItem['Name'] == AOB_MODE:
+            AOB_mode = ssmStoreItem['Value']
+            if AOB_mode == 'POC'
+                pvwaVerificationKey = ''
         else:
             continue
     storeParametersClass = StoreParameters(unixSafeName, windowsSafeName, vaultUsername, vaultPassword, pvwaIP,
-                                           keyPairSafeName, pvwaVerificationKey)
+                                           keyPairSafeName, pvwaVerificationKey, AOB_mode)
 
     return storeParametersClass
 
@@ -241,8 +246,9 @@ class StoreParameters:
     pvwaURL = "https://{0}/PasswordVault"
     keyPairSafeName = ""
     pvwaVerificationKey = ""
+    AOB_mode = ""
 
-    def __init__(self, unixSafeName, windowsSafeName, username, password, ip, keyPairSafe, pvwaVerificationKey):
+    def __init__(self, unixSafeName, windowsSafeName, username, password, ip, keyPairSafe, pvwaVerificationKey, AOB_mode):
         self.unixSafeName = unixSafeName
         self.windowsSafeName = windowsSafeName
         self.vaultUsername = username
@@ -250,3 +256,4 @@ class StoreParameters:
         self.pvwaURL = self.pvwaURL.format(ip)
         self.keyPairSafeName = keyPairSafe
         self.pvwaVerificationKey = pvwaVerificationKey
+        self.AOB_mode = AOB_mode

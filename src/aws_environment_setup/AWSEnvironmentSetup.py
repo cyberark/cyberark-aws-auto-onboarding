@@ -41,16 +41,33 @@ def lambda_handler(event, context):
             requestAWSAccountId = event['ResourceProperties']['AWSAccountId']
             requestS3BucketName = event['ResourceProperties']['S3BucketName']
             requestVerificationKeyName = event['ResourceProperties']['PVWAVerificationKeyFileName']
-
+            
+            
+                
             isPasswordSaved = save_password_to_param_store(requestPassword, "AOB_Vault_Pass", "Vault Password")
             if not isPasswordSaved:  # if password failed to be saved
                 return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to create Vault user's password in Parameter Store",
                                         {}, physicalResourceId)
-
-            isVerificationKeySaved = save_verification_key_to_param_store(requestS3BucketName, requestVerificationKeyName)
-            if not isVerificationKeySaved:  # if password failed to be saved
-                return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to create PVWA Verification Key in Parameter Store",
-                                        {}, physicalResourceId)
+                
+            if requestS3BucketName != '' and requestVerificationKeyName != '':
+                AOB_mode = 'Prod'
+                isAOBModeSaved = save_password_to_param_store(AOB_mode,'AOB_mode',
+                                                                'Dictates wether the solution will work in POC(no SSL) or Production(with SSL) mode')
+                if not isAOBModeSaved:  # if password failed to be saved
+                    return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to create AOB_mode parameter in Parameter Store",
+                                            {}, physicalResourceId)                                    
+                isVerificationKeySaved = save_verification_key_to_param_store(requestS3BucketName, requestVerificationKeyName)
+                if not isVerificationKeySaved:  # if password failed to be saved
+                    return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to create PVWA Verification Key in Parameter Store",
+                                            {}, physicalResourceId)
+            elif requestS3BucketName == '' and requestVerificationKeyName != '':
+                raise Exception('Verification Key cannot be empty if S3 Bucket is provided')    
+            elif requestS3BucketName != '' and requestVerificationKeyName == '':
+                raise Exception('S3 Bucket cannot be empty if Verification Key')
+            else:
+                AOB_mode = 'POC'
+                isAOBModeSaved = save_password_to_param_store(AOB_mode,'AOB_mode',
+                                                                'Dictates wether the solution will work in POC(no SSL) or Production(with SSL) mode')
 
             pvwaSessionId = logon_pvwa(requestUsername, requestPassword, requestPvwaIp)
             if not pvwaSessionId:
@@ -206,13 +223,14 @@ def logoff_pvwa(pvwaUrl, connectionSessionToken):
         return False
 
 def call_rest_api_post(url, request, header):
+    #if else on POC_MODE and call the functions based on the value.
     try:
+        if
         restResponse = requests.post(url, data=request, timeout=30, verify='/tmp/server.crt', headers=header)
     except Exception as e:
         print("Error occurred during POST request to PVWA. Exception: {0}".format(e))
         return None
     return restResponse
-
 
 def call_rest_api_get(url, header):
     try:
@@ -303,13 +321,13 @@ def save_verification_key_to_param_store(S3BucketName, VerificationKeyName):
 
 
 
-def save_password_to_param_store(password, parameterName, parameterDescription):
+def save_password_to_param_store(value, parameterName, parameterDescription):
     try:
         ssmClient = boto3.client('ssm')
         ssmClient.put_parameter(
             Name=parameterName,
             Description=parameterDescription,
-            Value=password,
+            Value=value,
             Type="SecureString"
         )
     except Exception as e:
