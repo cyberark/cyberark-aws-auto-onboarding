@@ -53,6 +53,7 @@ pipeline {
                  sh '''
                      cp -R src/shared_libraries/* src/aws_environment_setup
                      cd src/aws_environment_setup
+                     ls src/aws_environment_setup
                      cd package
                      zip -r9 ${OLDPWD}/aws_environment_setup.zip .
                      cd $OLDPWD
@@ -65,6 +66,7 @@ pipeline {
                  sh '''
                      cp -R src/shared_libraries/* src/aws_ec2_auto_onboarding
                      cd src/aws_ec2_auto_onboarding
+                     ls src/aws_ec2_auto_onboarding
                      cd package
                      zip -r9 ${OLDPWD}/aws_ec2_auto_onboarding.zip .
                      cd $OLDPWD

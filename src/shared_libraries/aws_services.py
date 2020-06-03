@@ -130,7 +130,7 @@ def get_params_from_param_store():
             pvwaVerificationKey = ssmStoreItem['Value']
         elif ssmStoreItem['Name'] == AOB_MODE:
             AOB_mode = ssmStoreItem['Value']
-            if AOB_mode == 'POC'
+            if AOB_mode == 'POC':
                 pvwaVerificationKey = ''
         else:
             continue
