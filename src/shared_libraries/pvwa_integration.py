@@ -6,7 +6,7 @@ DEFAULT_HEADER = {"content-type": "application/json"}
 def check_certificate():
     try:
         parameters = aws_services.get_params_from_param_store()
-        if mode == 'Prod':
+        if AOB_mode == 'Production':
             certificate = "/tmp/server.crt"
         else:
             certificate = False

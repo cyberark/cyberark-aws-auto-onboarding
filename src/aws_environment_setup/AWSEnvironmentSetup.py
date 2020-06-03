@@ -44,33 +44,29 @@ def lambda_handler(event, context):
             requestAWSAccountId = event['ResourceProperties']['AWSAccountId']
             requestS3BucketName = event['ResourceProperties']['S3BucketName']
             requestVerificationKeyName = event['ResourceProperties']['PVWAVerificationKeyFileName']
-            
+            AOB_mode = event['ResourceProperties']['Environment']
             
                 
             isPasswordSaved = save_password_to_param_store(requestPassword, "AOB_Vault_Pass", "Vault Password")
             if not isPasswordSaved:  # if password failed to be saved
                 return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to create Vault user's password in Parameter Store",
                                         {}, physicalResourceId)
-                
-            if requestS3BucketName != '' and requestVerificationKeyName != '':
-                AOB_mode = 'Prod'
+            
+            if requestS3BucketName == '' and requestVerificationKeyName != '':
+                raise Exception('Verification Key cannot be empty if S3 Bucket is provided')    
+            elif requestS3BucketName != '' and requestVerificationKeyName == '':
+                raise Exception('S3 Bucket cannot be empty if Verification Key is provided')
+            else:
                 isAOBModeSaved = save_password_to_param_store(AOB_mode,'AOB_mode',
                                                                 'Dictates wether the solution will work in POC(no SSL) or Production(with SSL) mode')
                 if not isAOBModeSaved:  # if password failed to be saved
                     return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to create AOB_mode parameter in Parameter Store",
                                             {}, physicalResourceId)                                    
-                isVerificationKeySaved = save_verification_key_to_param_store(requestS3BucketName, requestVerificationKeyName)
-                if not isVerificationKeySaved:  # if password failed to be saved
-                    return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to create PVWA Verification Key in Parameter Store",
-                                            {}, physicalResourceId)
-            elif requestS3BucketName == '' and requestVerificationKeyName != '':
-                raise Exception('Verification Key cannot be empty if S3 Bucket is provided')    
-            elif requestS3BucketName != '' and requestVerificationKeyName == '':
-                raise Exception('S3 Bucket cannot be empty if Verification Key')
-            else:
-                AOB_mode = 'POC'
-                isAOBModeSaved = save_password_to_param_store(AOB_mode,'AOB_mode',
-                                                                'Dictates wether the solution will work in POC(no SSL) or Production(with SSL) mode')
+                if AOB_mode == 'Production':
+                    isVerificationKeySaved = save_verification_key_to_param_store(requestS3BucketName, requestVerificationKeyName)
+                    if not isVerificationKeySaved:  # if password failed to be saved
+                        return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to create PVWA Verification Key in Parameter Store",
+                                                {}, physicalResourceId)
 
             pvwaSessionId = aws_services.logon_pvwa(requestUsername, requestPassword, requestPvwaIp,"1")
             if not pvwaSessionId:
@@ -283,6 +279,10 @@ def delete_password_from_param_store():
             Name='AOB_PVWA_Verification_Key'
         )
         print("Parameter 'AOB_PVWA_Verification_Key' deleted successfully from Parameter Store")
+        ssmClient.delete_parameter(
+            Name='AOB_mode'
+        )
+        print("Parameter 'AOB_mode' deleted successfully from Parameter Store")
         return True
     except Exception as e:
         if e.response["Error"]["Code"] == "ParameterNotFound":
