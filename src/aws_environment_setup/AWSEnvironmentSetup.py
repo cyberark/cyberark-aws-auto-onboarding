@@ -68,7 +68,7 @@ def lambda_handler(event, context):
                         return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to create PVWA Verification Key in Parameter Store",
                                                 {}, physicalResourceId)
 
-            pvwaSessionId = aws_services.logon_pvwa(requestUsername, requestPassword, requestPvwaIp,"1")
+            pvwaSessionId = pvwa_integration.logon_pvwa(requestUsername, requestPassword, requestPvwaIp,"1")
             if not pvwaSessionId:
                 return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to connect to PVWA, see detailed error in logs",
                                         {}, physicalResourceId)
