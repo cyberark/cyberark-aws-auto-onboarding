@@ -14,7 +14,6 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 DEFAULT_HEADER = {"content-type": "application/json"}
 IS_SAFE_HANDLER = True
-pvwa_integration_class = None
 
 def lambda_handler(event, context):
 
@@ -75,14 +74,14 @@ def lambda_handler(event, context):
                 return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to connect to PVWA, see detailed error in logs",
                                         {}, physicalResourceId)
 
-            isSafeCreated = create_safe(requestUnixSafeName, requestUnixCPMName, requestPvwaIp, pvwaSessionId, 1)
+            isSafeCreated = create_safe(pvwa_integration_class, requestUnixSafeName, requestUnixCPMName, requestPvwaIp, pvwaSessionId, 1)
 
             if not isSafeCreated:
                 return cfnresponse.send(event, context, cfnresponse.FAILED,
                                         "Failed to create the Safe '{0}', see detailed error in logs".format(requestUnixSafeName),
                                         {}, physicalResourceId)
 
-            isSafeCreated = create_safe(requestWindowsSafeName, requestWindowsCPMName, requestPvwaIp, pvwaSessionId, 1)
+            isSafeCreated = create_safe(pvwa_integration_class, requestWindowsSafeName, requestWindowsCPMName, requestPvwaIp, pvwaSessionId, 1)
 
             if not isSafeCreated:
                 return cfnresponse.send(event, context, cfnresponse.FAILED,
@@ -96,7 +95,7 @@ def lambda_handler(event, context):
                                         {}, physicalResourceId)
 
             #  Creating KeyPair Safe
-            isSafeCreated = create_safe(requestKeyPairSafe, "", requestPvwaIp, pvwaSessionId)
+            isSafeCreated = create_safe(pvwa_integration_class, requestKeyPairSafe, "", requestPvwaIp, pvwaSessionId)
             if not isSafeCreated:
                 return cfnresponse.send(event, context, cfnresponse.FAILED,
                                         "Failed to create the Key Pairs safe: {0}, see detailed error in logs".format(requestKeyPairSafe),
@@ -117,7 +116,7 @@ def lambda_handler(event, context):
                     return cfnresponse.send(event, context, cfnresponse.FAILED, "Key Pair '{0}' already exists in AWS".format(requestKeyPairName),
                                             {}, physicalResourceId)
                 # Create the key pair account on KeyPairs vault
-                isAwsAccountCreated = create_key_pair_in_vault(pvwaSessionId, requestKeyPairName, awsKeypair, requestPvwaIp,
+                isAwsAccountCreated = create_key_pair_in_vault(pvwa_integration_class, pvwaSessionId, requestKeyPairName, awsKeypair, requestPvwaIp,
                                                               requestKeyPairSafe, requestAWSAccountId, requestAWSRegionName)
                 if not isAwsAccountCreated:
                     return cfnresponse.send(event, context, cfnresponse.FAILED,
@@ -137,7 +136,7 @@ def lambda_handler(event, context):
 
 
 # Creating a safe, if a failure occur, retry 3 time, wait 10 sec. between retries
-def create_safe(safeName, cpmName, pvwaIP, sessionId, numberOfDaysRetention=7):
+def create_safe(pvwa_integration_class, safeName, cpmName, pvwaIP, sessionId, numberOfDaysRetention=7):
     header = DEFAULT_HEADER
     header.update({"Authorization": sessionId})
     createSafeUrl = "https://{0}/PasswordVault/WebServices/PIMServices.svc/Safes".format(pvwaIP)
@@ -197,7 +196,7 @@ def create_new_key_pair_on_AWS(keyPairName):
     return keyPairResponse["KeyMaterial"]
 
 
-def create_key_pair_in_vault(session, awsKeyName, privateKeyValue, pvwaIP, safeName, awsAccountId, awsRegionName):
+def create_key_pair_in_vault(pvwa_integration_class, session, awsKeyName, privateKeyValue, pvwaIP, safeName, awsAccountId, awsRegionName):
     header = DEFAULT_HEADER
     header.update({"Authorization": session})
 
