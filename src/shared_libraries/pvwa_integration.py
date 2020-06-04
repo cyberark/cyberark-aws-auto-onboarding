@@ -5,6 +5,8 @@ DEFAULT_HEADER = {"content-type": "application/json"}
 # RestApiCalls:
 class pvwa_integration:
     def __init__(self, is_safe_handler=False,safe_handler_environment=None):
+        self.is_safe_handler = is_safe_handler
+        self.safe_handler_environment = safe_handler_environment
         try:
             if not self.is_safe_handler:
                 parameters = aws_services.get_params_from_param_store()
@@ -15,7 +17,7 @@ class pvwa_integration:
                     self.certificate = False
                     print ("POC Environment Detected")
             else:
-                if safe_handler_environment == "Production":
+                if self.safe_handler_environment == "Production":
                     self.certificate = "/tmp/server.crt"
                 else:
                     self.certificate = False
