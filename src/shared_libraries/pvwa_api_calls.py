@@ -1,6 +1,8 @@
 import requests
-import pvwa_integration
+from pvwa_integration import pvwa_integration
+
 DEFAULT_HEADER = {"content-type": "application/json"}
+pvwa_integration_class = pvwa_integration()
 
 
 def create_account_on_vault(session, account_name, account_password, storeParametersClass, platform_id, address,
@@ -19,7 +21,7 @@ def create_account_on_vault(session, account_name, account_password, storeParame
         "disableAutoMgmt":"false"
       }}
     }}""".format(safeName, platform_id, account_name, account_password, username, address)
-    restResponse = pvwa_integration.call_rest_api_post(url, data, header)
+    restResponse = pvwa_integration_class.call_rest_api_post(url, data, header)
     if restResponse.status_code == requests.codes.created:
         print("Account for {0} was successfully created".format(instanceId))
         return True, ""
@@ -34,7 +36,7 @@ def rotate_credentials_immediately(session, pvwaUrl, accountId, instanceId):
     header.update({"Authorization": session})
     url = "{0}/API/Accounts/{1}/Change".format(pvwaUrl, accountId)
     data = ""
-    restResponse = pvwa_integration.call_rest_api_post(url, data, header)
+    restResponse = pvwa_integration_class.call_rest_api_post(url, data, header)
     if restResponse.status_code == requests.codes.ok:
         print("Call for immediate key change for {0} performed successfully".format(instanceId))
         return True
@@ -48,7 +50,7 @@ def get_account_value(session, account, instanceId, restURL):
     header.update({"Authorization": session})
     pvwaUrl = "{0}/api/Accounts/{1}/Password/Retrieve".format(restURL, account)
     restLogonData = """{ "reason":"AWS Auto On-Boarding Solution" }"""
-    restResponse = pvwa_integration.call_rest_api_post(pvwaUrl, restLogonData, header)
+    restResponse = pvwa_integration_class.call_rest_api_post(pvwaUrl, restLogonData, header)
     if restResponse.status_code == requests.codes.ok:
         return restResponse.text
     elif restResponse.status_code == requests.codes.not_found:
@@ -64,7 +66,7 @@ def delete_account_from_vault(session, accountId, instanceId, pvwaUrl):
     header = DEFAULT_HEADER
     header.update({"Authorization": session})
     restUrl = "{0}/WebServices/PIMServices.svc/Accounts/{1}".format(pvwaUrl, accountId)
-    restResponse = pvwa_integration.call_rest_api_delete(restUrl, header)
+    restResponse = pvwa_integration_class.call_rest_api_delete(restUrl, header)
 
     if restResponse.status_code != requests.codes.ok:
         if restResponse.status_code != requests.codes.not_found:
@@ -92,7 +94,7 @@ def check_if_kp_exists(session, accountName, safeName, instanceId, restURL):
     else:  # has no value
         pvwaUrl = "{0}/api/accounts?search={1}".format(restURL, accountName)
     try:
-        restResponse = pvwa_integration.call_rest_api_get(pvwaUrl, header)
+        restResponse = pvwa_integration_class.call_rest_api_get(pvwaUrl, header)
         if not restResponse:
             raise Exception("Unknown Error when calling rest service - retrieve accountId")
     except Exception as e:
@@ -117,7 +119,7 @@ def retrieve_accountId_from_account_name(session, accountName, safeName, instanc
     else:  # has no value
         pvwaUrl = "{0}/api/accounts?search={1}".format(restURL, accountName)
     try:
-        restResponse = pvwa_integration.call_rest_api_get(pvwaUrl, header)
+        restResponse = pvwa_integration_class.call_rest_api_get(pvwaUrl, header)
         if not restResponse:
             raise Exception("Unknown Error when calling rest service - retrieve accountId")
     except Exception as e:

@@ -6,11 +6,12 @@ import botocore
 import time
 import boto3
 import json
-import pvwa_integration
+from pvwa_integration import pvwa_integration
 import aws_services
-import pvwa_api_calls
 from dynamo_lock import LockerClient
 
+IS_SAFE_HANDLER = True
+pvwa_integration_class = pvwa_integration(True)
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 DEFAULT_HEADER = {"content-type": "application/json"}
@@ -58,7 +59,7 @@ def lambda_handler(event, context):
                 raise Exception('S3 Bucket cannot be empty if Verification Key is provided')
             else:
                 isAOBModeSaved = save_password_to_param_store(AOB_mode,'AOB_mode',
-                                                                'Dictates wether the solution will work in POC(no SSL) or Production(with SSL) mode')
+                                                                'Dictates if the solution will work in POC(no SSL) or Production(with SSL) mode')
                 if not isAOBModeSaved:  # if password failed to be saved
                     return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to create AOB_mode parameter in Parameter Store",
                                             {}, physicalResourceId)                                    
@@ -68,7 +69,7 @@ def lambda_handler(event, context):
                         return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to create PVWA Verification Key in Parameter Store",
                                                 {}, physicalResourceId)
 
-            pvwaSessionId = pvwa_integration.logon_pvwa(requestUsername, requestPassword, requestPvwaIp,"1")
+            pvwaSessionId = pvwa_integration_class.logon_pvwa(requestUsername, requestPassword, requestPvwaIp,"1")
             if not pvwaSessionId:
                 return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to connect to PVWA, see detailed error in logs",
                                         {}, physicalResourceId)
@@ -131,7 +132,7 @@ def lambda_handler(event, context):
     finally:
         if 'pvwaSessionId' in locals():  # pvwaSessionId has been declared
             if pvwaSessionId:  # Logging off the session in case of successful logon
-                pvwa_integration.logoff_pvwa(requestPvwaIp, pvwaSessionId)
+                pvwa_integration_class.logoff_pvwa(requestPvwaIp, pvwaSessionId)
 
 
 # Creating a safe, if a failure occur, retry 3 time, wait 10 sec. between retries
@@ -153,7 +154,7 @@ def create_safe(safeName, cpmName, pvwaIP, sessionId, numberOfDaysRetention=7):
     """.format(safeName, cpmName, numberOfDaysRetention)
 
     for i in range(0, 3):
-        createSafeRestResponse = pvwa_api_calls.call_rest_api_post(createSafeUrl, data, header)
+        createSafeRestResponse = pvwa_integration_class.call_rest_api_post(createSafeUrl, data, header)
 
         if createSafeRestResponse.status_code == requests.codes.conflict:
             print("The Safe '{0}' already exists".format(safeName))
@@ -218,7 +219,7 @@ def create_key_pair_in_vault(session, awsKeyName, privateKeyValue, pvwaIP, safeN
         "disableAutoMgmtReason":"Unmanaged account"
       }}
     }}""".format(safeName, "UnixSSHKeys", trimmedPEMKey, uniqueUsername)
-    restResponse = pvwa_api_calls.call_rest_api_post(url, data, header)
+    restResponse = pvwa_integration_class.call_rest_api_post(url, data, header)
 
     if restResponse.status_code == requests.codes.created:
         print("Key Pair created successfully in safe '{0}'".format(safeName))

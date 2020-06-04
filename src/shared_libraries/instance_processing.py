@@ -1,13 +1,13 @@
 import pvwa_api_calls
 import aws_services
 import kp_processing
-import pvwa_integration
+from pvwa_integration import pvwa_integration
 import boto3
 
 UNIX_PLATFORM = "UnixSSHKeys"
 WINDOWS_PLATFORM = "WinServerLocal"
 ADMINISTRATOR = "Administrator"
-
+pvwa_integration_class = pvwa_integration()
 
 def delete_instance(instanceId, session, storeParametersClass, instanceData, instanceDetails):
     instanceIpAddress = instanceData["Address"]["S"]
@@ -103,7 +103,7 @@ def create_instance(instanceId, instanceDetails, storeParametersClass, logName, 
     pvwaConnectionnumber, sessionGuid = aws_services.get_available_session_from_dynamo()
     if not pvwaConnectionnumber:
         return
-    sessionToken = pvwa_integration.logon_pvwa(storeParametersClass.vaultUsername,
+    sessionToken = pvwa_integration_class.logon_pvwa(storeParametersClass.vaultUsername,
                                                storeParametersClass.vaultPassword,
                                                storeParametersClass.pvwaURL, pvwaConnectionnumber)
 
@@ -139,7 +139,7 @@ def create_instance(instanceId, instanceDetails, storeParametersClass, logName, 
         else:  # on board failed, add the error to the table
             aws_services.put_instance_to_dynamo_table(instanceId, instanceDetails['address'], OnBoardStatus.OnBoarded_Failed,
                                          errorMessage, logName)
-    pvwa_integration.logoff_pvwa(storeParametersClass.pvwaURL, sessionToken)
+    pvwa_integration_class.logoff_pvwa(storeParametersClass.pvwaURL, sessionToken)
     aws_services.release_session_on_dynamo(pvwaConnectionnumber, sessionGuid)
 
 

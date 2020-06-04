@@ -1,11 +1,12 @@
 import urllib3
-import pvwa_integration
+from pvwa_integration import pvwa_integration
 import aws_services
 import instance_processing
 import pvwa_api_calls
 import json
 
-
+IS_SAFE_HANDLER = False
+pvwa_integration_class = pvwa_integration(IS_SAFE_HANDLER)
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
@@ -90,7 +91,7 @@ def lambda_handler(event, context):
         pvwaConnectionnumber, sessionGuid = aws_services.get_available_session_from_dynamo()
         if not pvwaConnectionnumber:
             return
-        sessionToken = pvwa_integration.logon_pvwa(storeParametersClass.vaultUsername,
+        sessionToken = pvwa_integration_class.logon_pvwa(storeParametersClass.vaultUsername,
                                                    storeParametersClass.vaultPassword,
                                                    storeParametersClass.pvwaURL, pvwaConnectionnumber)
 
@@ -118,7 +119,7 @@ def lambda_handler(event, context):
                                                                        storeParametersClass.pvwaURL)
             if instanceAccountPassword is False:
                 return
-            pvwa_integration.logoff_pvwa(storeParametersClass.pvwaURL, sessionToken)
+            pvwa_integration_class.logoff_pvwa(storeParametersClass.pvwaURL, sessionToken)
             aws_services.release_session_on_dynamo(pvwaConnectionnumber, sessionGuid)
             disconnect = True
             instance_processing.create_instance(instanceId, instanceDetails, storeParametersClass, logName, solutionAccountId, eventRegion, eventAccountId, instanceAccountPassword)
@@ -128,7 +129,7 @@ def lambda_handler(event, context):
 
 
         if not disconnect:
-            pvwa_integration.logoff_pvwa(storeParametersClass.pvwaURL, sessionToken)
+            pvwa_integration_class.logoff_pvwa(storeParametersClass.pvwaURL, sessionToken)
             aws_services.release_session_on_dynamo(pvwaConnectionnumber, sessionGuid)
 
 
