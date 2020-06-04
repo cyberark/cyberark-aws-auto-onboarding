@@ -9,8 +9,8 @@ class pvwa_integration:
         try:
             if not is_safe_handler:
                 parameters = aws_services.get_params_from_param_store()
-            if parameters.AOB_mode == 'Production':
-                certificate = "/tmp/server.crt"
+                if parameters.AOB_mode == 'Production':
+                    certificate = "/tmp/server.crt"
             else:
                 certificate = False
         except Exception as e:
