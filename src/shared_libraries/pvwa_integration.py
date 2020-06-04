@@ -38,7 +38,6 @@ class pvwa_integration:
         
         def call_rest_api_post(url, request, header):
             try:
-                    certificate= False
                 restResponse = requests.post(url, data=request, timeout=30, verify=certificate, headers=header, stream=True)
             except Exception:
                 print("Error occurred during POST request to PVWA")
