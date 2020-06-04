@@ -10,12 +10,11 @@ from pvwa_integration import pvwa_integration
 import aws_services
 from dynamo_lock import LockerClient
 
-IS_SAFE_HANDLER = True
-pvwa_integration_class = pvwa_integration(True)
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 DEFAULT_HEADER = {"content-type": "application/json"}
-
+IS_SAFE_HANDLER = True
+pvwa_integration_class = None
 def lambda_handler(event, context):
 
     try:
@@ -52,7 +51,6 @@ def lambda_handler(event, context):
             if not isPasswordSaved:  # if password failed to be saved
                 return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to create Vault user's password in Parameter Store",
                                         {}, physicalResourceId)
-            
             if requestS3BucketName == '' and requestVerificationKeyName != '':
                 raise Exception('Verification Key cannot be empty if S3 Bucket is provided')    
             elif requestS3BucketName != '' and requestVerificationKeyName == '':
@@ -68,7 +66,8 @@ def lambda_handler(event, context):
                     if not isVerificationKeySaved:  # if password failed to be saved
                         return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to create PVWA Verification Key in Parameter Store",
                                                 {}, physicalResourceId)
-
+            
+            pvwa_integration_class = pvwa_integration(IS_SAFE_HANDLER, AOB_mode)
             pvwaSessionId = pvwa_integration_class.logon_pvwa(requestUsername, requestPassword, requestPvwaIp,"1")
             if not pvwaSessionId:
                 return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to connect to PVWA, see detailed error in logs",

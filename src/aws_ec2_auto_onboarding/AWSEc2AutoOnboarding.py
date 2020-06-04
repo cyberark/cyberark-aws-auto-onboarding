@@ -5,8 +5,8 @@ import instance_processing
 import pvwa_api_calls
 import json
 
-IS_SAFE_HANDLER = False
-pvwa_integration_class = pvwa_integration(IS_SAFE_HANDLER)
+
+pvwa_integration_class = pvwa_integration()
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
