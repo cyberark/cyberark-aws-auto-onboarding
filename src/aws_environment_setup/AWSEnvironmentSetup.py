@@ -15,6 +15,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 DEFAULT_HEADER = {"content-type": "application/json"}
 IS_SAFE_HANDLER = True
 pvwa_integration_class = None
+
 def lambda_handler(event, context):
 
     try:
@@ -68,7 +69,8 @@ def lambda_handler(event, context):
                                                 {}, physicalResourceId)
             
             pvwa_integration_class = pvwa_integration(IS_SAFE_HANDLER, AOB_mode)
-            pvwaSessionId = pvwa_integration_class.logon_pvwa(requestUsername, requestPassword, requestPvwaIp,"1")
+            pvwa_url = 'https://{0}/PasswordVault'.format(requestPvwaIp)
+            pvwaSessionId = pvwa_integration_class.logon_pvwa(requestUsername, requestPassword, pvwa_url,"1")
             if not pvwaSessionId:
                 return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to connect to PVWA, see detailed error in logs",
                                         {}, physicalResourceId)

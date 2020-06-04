@@ -18,8 +18,10 @@ class pvwa_integration:
                     print ("POC Environment Detected")
             else:
                 if self.safe_handler_environment == "Production":
+                    print ("Production Environment Detected")
                     self.certificate = "/tmp/server.crt"
                 else:
+                    print ("POC Environment Detected")
                     self.certificate = False
         except Exception as e:
             print("Error on retrieving AOB_mode parameter :{0}".format(e))
@@ -75,8 +77,8 @@ class pvwa_integration:
             }}""".format(self.username, self.password, self.connectionSessionId)
         try:
             restResponse = self.call_rest_api_post(logonUrl, restLogonData, DEFAULT_HEADER)
-        except Exception:
-            raise Exception("Error occurred on Logon to PVWA: " + restResponse)
+        except Exception as e:
+            raise Exception("Error occurred on Logon to PVWA: " + e)
     
         if not restResponse:
             print("Connection to PVWA reached timeout")
