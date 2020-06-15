@@ -1,5 +1,6 @@
 import requests
 import aws_services
+from log_mechanisem import log_mechanisem
 
 DEFAULT_HEADER = {"content-type": "application/json"}
 # RestApiCalls:
@@ -7,33 +8,30 @@ class pvwa_integration:
     def __init__(self, is_safe_handler=False,safe_handler_environment=None):
         self.is_safe_handler = is_safe_handler
         self.safe_handler_environment = safe_handler_environment
+        self.logger = log_mechanisem()
         try:
-            if not self.is_safe_handler:
-                parameters = aws_services.get_params_from_param_store()
-                if parameters.AOB_mode == 'Production':
-                    print ("Production Environment Detected")
-                    self.certificate = "/tmp/server.crt"
-                else:
-                    self.certificate = False
-                    print ("POC Environment Detected")
+            self.logger.info_log_entry('Getting parameters from parameter store')
+            parameters = aws_services.get_params_from_param_store()
+            if parameters.AOB_mode == 'Production':
+                self.logger.info_log_entry(parameters.AOB_mode + ' Environment Detected')
+                self.certificate = "/tmp/server.crt"
             else:
-                if self.safe_handler_environment == "Production":
-                    print ("Production Environment Detected")
-                    self.certificate = "/tmp/server.crt"
-                else:
-                    print ("POC Environment Detected")
-                    self.certificate = False
+                self.certificate = False
+                if parameters.debugMode == 'True':
+                    self.debugMode = 'True'
+                    self.logger.info_log_entry(parameters.AOB_mode + ' Environment Detected')
         except Exception as e:
-            print("Error on retrieving AOB_mode parameter :{0}".format(e))
+            self.logger.error_log_entry('Failed to retrieve AOB_mode parameter:\n' + e)
             raise Exception("Error occurred while retrieving AOB_mode parameter")
     
     def call_rest_api_get(self, url, header):
         self.url = url
         self.header = header
         try:
+            self.logger.info_log_entry('Invoking get request \nurl:\n' + url + ' \nheader:\n' + header)
             restResponse = requests.get(self.url, timeout=30, verify=self.certificate, headers=self.header)
         except Exception as e:
-            print("Error occurred on calling PVWA REST service")
+            self.logger.error_log_entry("An error occurred on calling PVWA REST service:\n" + e)
             return None
         return restResponse
     
@@ -42,9 +40,10 @@ class pvwa_integration:
         self.url = url
         self.header = header
         try:
+            self.logger.info_log_entry('Invoking delete request \nurl:\n' + url + ' \nheader:\n' + header)
             response = requests.delete(self.url, timeout=30, verify=self.certificate, headers=self.header)
         except Exception as e:
-            print(e)
+            self.logger.error_log_entry('Failed to Invoke delete request : \n' + e)
             return None
         return response
     
@@ -54,9 +53,10 @@ class pvwa_integration:
         self.request = request
         self.header = header
         try:
+            self.logger.info_log_entry('Invoking post request \nurl:\n' + url + ' \nrequest:\n' + request + ' \nheader:\n' + header)
             restResponse = requests.post(self.url, data=self.request, timeout=30, verify=self.certificate, headers=self.header, stream=True)
         except Exception as e:
-            print("Error occurred during POST request to PVWA" + e)
+            self.logger.error_log_entry("Error occurred during POST request to PVWA:\n" + e)
             return None
         return restResponse
     
@@ -68,7 +68,7 @@ class pvwa_integration:
         self.password = password
         self.pvwaUrl = pvwaUrl
         self.connectionSessionId = connectionSessionId
-        print('Start Logon to PVWA REST API')
+        self.logger.info_log_entry('Logging on to PVWA')
         logonUrl = '{0}/WebServices/auth/Cyberark/CyberArkAuthenticationService.svc/Logon'.format(self.pvwaUrl)
         restLogonData = """{{
             "username": "{0}",
@@ -81,21 +81,21 @@ class pvwa_integration:
             raise Exception("Error occurred on Logon to PVWA: " + e)
     
         if not restResponse:
-            print("Connection to PVWA reached timeout")
+            self.logger.error_log_entry("Connection to PVWA reached timeout")
             raise Exception("Connection to PVWA reached timeout")
         if restResponse.status_code == requests.codes.ok:
             jsonParsedResponse = restResponse.json()
-            print("User authenticated")
+            self.logger.info_log_entry("User authenticated")
             return jsonParsedResponse['CyberArkLogonResult']
         else:
-            print("Authentication failed to REST API")
-            raise Exception("Authentication failed to REST API")
+            self.logger.error_log_entry("Authentication failed with response:\n" + restResponse)
+            raise Exception("PVWA authentication failed")
     
     
     def logoff_pvwa(self, pvwaUrl, connectionSessionToken):
         self.pvwaUrl = pvwaUrl
         self.connectionSessionToken = connectionSessionToken
-        print('Start Logoff to PVWA REST API')
+        self.logger.info_log_entry('Logging off from PVWA')
         header = DEFAULT_HEADER
         header.update({"Authorization": self.connectionSessionToken})
         logoffUrl = '{0}/WebServices/auth/Cyberark/CyberArkAuthenticationService.svc/Logoff'.format(self.pvwaUrl)
@@ -103,13 +103,12 @@ class pvwa_integration:
         try:
             restResponse = self.call_rest_api_post(logoffUrl, restLogoffData, header)
         except Exception:
-            # if couldn't logoff, nothing to do, return
             return
     
         if(restResponse.status_code == requests.codes.ok):
             jsonParsedResponse = restResponse.json()
-            print("session logged off successfully")
+            self.logger.info_log_entry("session logged off successfully")
             return True
         else:
-            print("Logoff failed")
+            self.logger.error_log_entry("Logoff failed")
             return False

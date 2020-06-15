@@ -19,6 +19,7 @@ Resources:
       PVWAVerificationKeyFileName: !Ref PVWAVerificationKeyFileName
       S3BucketName: !Ref S3BucketWithVerificationKey
       Environment: !Ref Environment
+    DependsOn: !Ref ParameterAWSKeyPairSafe
   ParameterPVWA:
     Type: 'AWS::SSM::Parameter'
     Properties:
@@ -26,6 +27,13 @@ Resources:
       Description: The IP of the PVWA
       Type: String
       Value: !Ref PvwaIP
+  ParameterDebugMode:
+    Type: 'AWS::SSM::Parameter'
+    Properties:
+      Name: AOB_Debug_Mode
+      Description: The IP of the PVWA
+      Type: String
+      Value: 'False'
   ParameterUnixAccountsSafe:
     Type: 'AWS::SSM::Parameter'
     Properties:
@@ -147,15 +155,15 @@ Metadata:
           - KeyPairName
     ParameterLabels:
       Environment:
-        default: Environment Type
+        default: 'Environment Type:'
       SafeHandlerLambdaARN:
         default: 'ARN of SafeHandlerLambda. An output of first CloudFormation Templates:'
       S3BucketWithVerificationKey:
-        default: Verificaion Key Bucket
+        default: 'Verificaion Key Bucket:'
       PvwaIP:
         default: 'PVWA IP/Host Name:'
       PVWAVerificationKeyFileName:
-        default: Verification Key File Name
+        default: 'Verification Key File Name:'
       UnixSafeName:
         default: 'Target Safe for Unix accounts:'
       WindowsSafeName:

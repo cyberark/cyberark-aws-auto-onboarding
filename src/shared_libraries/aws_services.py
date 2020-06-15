@@ -2,13 +2,14 @@ import boto3
 import json
 import time
 import random
+from log_mechanisem import log_mechanisem
 from dynamo_lock import LockerClient
 
+logger = log_mechanisem()
 
 # return ec2 instance relevant data:
 # keyPair_name, instance_address, platform
 def get_ec2_details(instanceId, solutionAccountId, eventRegion, eventAccountId):
-
     if eventAccountId == solutionAccountId:
         try:
             ec2Resource = boto3.resource('ec2', eventRegion)
@@ -98,11 +99,12 @@ def get_params_from_param_store():
     VAULT_PASSWORD_PARAM_ = "AOB_Vault_Pass"
     PVWA_VERIFICATION_KEY = "AOB_PVWA_Verification_Key"
     AOB_MODE="AOB_mode"
+    AOB_DEBUG_MODE = "AOB_Debug_Mode"
     lambdaClient = boto3.client('lambda')
 
     lambdaRequestData = dict()
     lambdaRequestData["Parameters"] = [UNIX_SAFE_NAME_PARAM, WINDOWS_SAFE_NAME_PARAM, VAULT_USER_PARAM, PVWA_IP_PARAM,
-                                       AWS_KEYPAIR_SAFE, VAULT_PASSWORD_PARAM_, PVWA_VERIFICATION_KEY, AOB_MODE]
+                                       AWS_KEYPAIR_SAFE, VAULT_PASSWORD_PARAM_, PVWA_VERIFICATION_KEY, AOB_MODE, AOB_DEBUG_MODE]
     try:
         response = lambdaClient.invoke(FunctionName='TrustMechanism',
                                        InvocationType='RequestResponse',
@@ -128,6 +130,8 @@ def get_params_from_param_store():
             vaultPassword = ssmStoreItem['Value']
         elif ssmStoreItem['Name'] == PVWA_VERIFICATION_KEY:
             pvwaVerificationKey = ssmStoreItem['Value']
+        elif ssmStoreItem['Name'] == AOB_DEBUG_MODE:
+            debugMode = ssmStoreItem['Value']
         elif ssmStoreItem['Name'] == AOB_MODE:
             AOB_mode = ssmStoreItem['Value']
             if AOB_mode == 'POC':
@@ -135,7 +139,7 @@ def get_params_from_param_store():
         else:
             continue
     storeParametersClass = StoreParameters(unixSafeName, windowsSafeName, vaultUsername, vaultPassword, pvwaIP,
-                                           keyPairSafeName, pvwaVerificationKey, AOB_mode)
+                                           keyPairSafeName, pvwaVerificationKey, AOB_mode, debugMode)
 
     return storeParametersClass
 
@@ -248,7 +252,7 @@ class StoreParameters:
     pvwaVerificationKey = ""
     AOB_mode = ""
 
-    def __init__(self, unixSafeName, windowsSafeName, username, password, ip, keyPairSafe, pvwaVerificationKey, AOB_mode):
+    def __init__(self, unixSafeName, windowsSafeName, username, password, ip, keyPairSafe, pvwaVerificationKey, mode, debug):
         self.unixSafeName = unixSafeName
         self.windowsSafeName = windowsSafeName
         self.vaultUsername = username
@@ -256,4 +260,5 @@ class StoreParameters:
         self.pvwaURL = self.pvwaURL.format(ip)
         self.keyPairSafeName = keyPairSafe
         self.pvwaVerificationKey = pvwaVerificationKey
-        self.AOB_mode = AOB_mode
+        self.AOB_mode = mode
+        self.debugMode = debug

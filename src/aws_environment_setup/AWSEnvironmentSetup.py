@@ -9,11 +9,13 @@ import json
 from pvwa_integration import pvwa_integration
 import aws_services
 from dynamo_lock import LockerClient
+from log_mechanisem import log_mechanisem
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 DEFAULT_HEADER = {"content-type": "application/json"}
 IS_SAFE_HANDLER = True
+logger = log_mechanisem()
 
 def lambda_handler(event, context):
 
@@ -47,7 +49,7 @@ def lambda_handler(event, context):
             AOB_mode = event['ResourceProperties']['Environment']
             
                 
-            isPasswordSaved = save_password_to_param_store(requestPassword, "AOB_Vault_Pass", "Vault Password")
+            isPasswordSaved = add_param_to_parameter_store(requestPassword, "AOB_Vault_Pass", "Vault Password")
             if not isPasswordSaved:  # if password failed to be saved
                 return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to create Vault user's password in Parameter Store",
                                         {}, physicalResourceId)
@@ -56,7 +58,7 @@ def lambda_handler(event, context):
             elif requestS3BucketName != '' and requestVerificationKeyName == '':
                 raise Exception('S3 Bucket cannot be empty if Verification Key is provided')
             else:
-                isAOBModeSaved = save_password_to_param_store(AOB_mode,'AOB_mode',
+                isAOBModeSaved = add_param_to_parameter_store(AOB_mode,'AOB_mode',
                                                                 'Dictates if the solution will work in POC(no SSL) or Production(with SSL) mode')
                 if not isAOBModeSaved:  # if password failed to be saved
                     return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to create AOB_mode parameter in Parameter Store",
@@ -103,7 +105,7 @@ def lambda_handler(event, context):
 
             #  key pair is optional parameter
             if not requestKeyPairName:
-                print("Key Pair name parameter is empty, the solution will not create a new Key Pair")
+                logger.info_log_entry("Key Pair name parameter is empty, the solution will not create a new Key Pair")
                 return cfnresponse.send(event, context, cfnresponse.SUCCESS, None, {}, physicalResourceId)
             else:
                 awsKeypair = create_new_key_pair_on_AWS(requestKeyPairName)
@@ -126,7 +128,7 @@ def lambda_handler(event, context):
                 return cfnresponse.send(event, context, cfnresponse.SUCCESS, None, {}, physicalResourceId)
 
     except Exception as e:
-        print("Exception occurred:{0}:".format(e))
+        logger.error_log_entry("Exception occurred:{0}:".format(e))
         return cfnresponse.send(event, context, cfnresponse.FAILED, "Exception occurred: {0}".format(e), {})
 
     finally:
@@ -157,18 +159,18 @@ def create_safe(pvwa_integration_class, safeName, cpmName, pvwaIP, sessionId, nu
         createSafeRestResponse = pvwa_integration_class.call_rest_api_post(createSafeUrl, data, header)
 
         if createSafeRestResponse.status_code == requests.codes.conflict:
-            print("The Safe '{0}' already exists".format(safeName))
+            logger.info_log_entry("The Safe '{0}' already exists".format(safeName))
             return True
         elif createSafeRestResponse.status_code == requests.codes.bad_request:
-            print("Failed to create safe '{0}', error 400: bad request".format(safeName))
+            logger.error_log_entry("Failed to create safe '{0}', error 400: bad request".format(safeName))
             return False
         elif createSafeRestResponse.status_code == requests.codes.created:  # safe created
-            print("The Safe '{0}' was successfully created".format(safeName))
+            logger.info_log_entry("The Safe '{0}' was successfully created".format(safeName))
             return True
         else:  # Error creating safe, retry for 3 times, with 10 seconds between retries
-            print("Error creating safe, status code:{0}, will retry in 10 seconds".format(createSafeRestResponse.status_code))
+            logger.error_log_entry("Error creating safe, status code:{0}, will retry in 10 seconds".format(createSafeRestResponse.status_code))
             if i == 3:
-                print("Failed to create safe after several retries, status code:{0}"
+                logger.error_log_entry("Failed to create safe after several retries, status code:{0}"
                       .format(createSafeRestResponse.status_code))
                 return False
         time.sleep(10)
@@ -180,17 +182,17 @@ def create_new_key_pair_on_AWS(keyPairName):
 
     # throws exception if key not found, if exception is InvalidKeyPair.Duplicate return True
     try:
-
+        logger.info_log_entry('Creating key pair')
         keyPairResponse = ec2Client.create_key_pair(
             KeyName=keyPairName,
             DryRun=False
         )
     except Exception as e:
         if e.response["Error"]["Code"] == "InvalidKeyPair.Duplicate":
-            print("Key Pair '{0}' already exists".format(keyPairName))
+            logger.error_log_entry("Key Pair '{0}' already exists".format(keyPairName))
             return True
         else:
-            print("Creating new Key Pair failed. error code: {0}".format(e.response["Error"]["Code"]))
+            logger.error_log_entry("Creating new key pair failed. error code:\n {0}".format(e.response["Error"]["Code"]))
             return False
 
     return keyPairResponse["KeyMaterial"]
@@ -205,7 +207,7 @@ def create_key_pair_in_vault(pvwa_integration_class, session, awsKeyName, privat
 
     # AWS.<AWS Account>.<Region name>.<key pair name>
     uniqueUsername = "AWS.{0}.{1}.{2}".format(awsAccountId, awsRegionName, awsKeyName)
-    print("Creating account with username:{0}".format(uniqueUsername))
+    logger.info_log_entry("Creating account with username:{0}".format(uniqueUsername))
 
     url = "https://{0}/PasswordVault/WebServices/PIMServices.svc/Account".format(pvwaIP)
     data = """{{
@@ -222,17 +224,18 @@ def create_key_pair_in_vault(pvwa_integration_class, session, awsKeyName, privat
     restResponse = pvwa_integration_class.call_rest_api_post(url, data, header)
 
     if restResponse.status_code == requests.codes.created:
-        print("Key Pair created successfully in safe '{0}'".format(safeName))
+        logger.info_log_entry("Key Pair created successfully in safe '{0}'".format(safeName))
         return True
     elif restResponse.status_code == requests.codes.conflict:
-        print("Key Pair created already exists in safe {0}".format(safeName))
+        logger.info_log_entry("Key Pair created already exists in safe {0}".format(safeName))
         return True
     else:
-        print("Failed to create Key Pair in safe '{0}', status code:{1}".format(safeName, restResponse.status_code))
+        logger.error_log_entry("Failed to create Key Pair in safe '{0}', status code:{1}".format(safeName, restResponse.status_code))
         return False
 
 def create_session_table():
     try:
+        logger.info_log_entry('Locking Dynamo Table')
         sessionsTableLock = LockerClient('Sessions')
         sessionsTableLock.create_lock_table()
     except Exception as e:
@@ -244,18 +247,20 @@ def create_session_table():
 
 def save_verification_key_to_param_store(S3BucketName, VerificationKeyName):
     try:
+        logger.info_log_entry('Downloading verification key from s3')
         s3Resource = boto3.resource('s3')
         s3Resource.Bucket(S3BucketName).download_file(VerificationKeyName, '/tmp/server.crt')
-        save_password_to_param_store(open('/tmp/server.crt').read(),"AOB_PVWA_Verification_Key","PVWA Verification Key")
+        add_param_to_parameter_store(open('/tmp/server.crt').read(),"AOB_PVWA_Verification_Key","PVWA Verification Key")
     except Exception as e:
-        print("An error occurred while downloading Verification Key from S3 Bucket - {0}. Exception: {1}".format(S3BucketName, e))
+        logger.error_log_entry("An error occurred while downloading Verification Key from S3 Bucket - {0}. Exception: {1}".format(S3BucketName, e))
         return False
     return True
 
 
 
-def save_password_to_param_store(value, parameterName, parameterDescription):
+def add_param_to_parameter_store(value, parameterName, parameterDescription):
     try:
+        logger.info_log_entry('Adding parameter ' + parameterName + ' to parameter store')
         ssmClient = boto3.client('ssm')
         ssmClient.put_parameter(
             Name=parameterName,
@@ -264,13 +269,14 @@ def save_password_to_param_store(value, parameterName, parameterDescription):
             Type="SecureString"
         )
     except Exception as e:
-        print("Unable to create parameter '{0}' in Parameter Store. Exception: {1}".format(parameterName, e))
+        logger.error_log_entry("Unable to create parameter '{0}' in Parameter Store. Exception: {1}".format(parameterName, e))
         return False
     return True
 
 
 def delete_password_from_param_store():
     try:
+        logger.info_log_entry('Deleting parameters from parameter store')
         ssmClient = boto3.client('ssm')
         ssmClient.delete_parameter(
             Name='AOB_Vault_Pass'
@@ -289,16 +295,17 @@ def delete_password_from_param_store():
         if e.response["Error"]["Code"] == "ParameterNotFound":
             return True
         else:
-            print("Failed to delete parameter 'Vault_Pass' from Parameter Store. Error code: {0}".format(e.response["Error"]["Code"]))
+            logger.error_log_entry("Failed to delete parameter 'Vault_Pass' from Parameter Store. Error code: {0}".format(e.response["Error"]["Code"]))
             return False
 
 
 def delete_sessions_table():
     try:
+        logger.info_log_entry('Deleting Dynamo session table')
         dynamodb = boto3.resource('dynamodb')
         sessionsTable = dynamodb.Table('Sessions')
         sessionsTable.delete()
         return
     except Exception:
-        print("Failed to delete 'Sessions' table from DynamoDB")
+        logger.error_log_entry("Failed to delete 'Sessions' table from DynamoDB")
         return
