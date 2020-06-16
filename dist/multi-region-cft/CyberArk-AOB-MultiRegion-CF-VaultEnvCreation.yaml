@@ -31,9 +31,9 @@ Resources:
     Type: 'AWS::SSM::Parameter'
     Properties:
       Name: AOB_Debug_Mode
-      Description: The IP of the PVWA
+      Description: Enables debug mode for more detailed errors
       Type: String
-      Value: 'False'
+      Value: !Ref EnableDebugMode
   ParameterUnixAccountsSafe:
     Type: 'AWS::SSM::Parameter'
     Properties:
@@ -131,6 +131,13 @@ Parameters:
     AllowedValues:
       - POC
       - Production
+  EnableDebugMode:
+    Type: String
+    Description: Enable detailed error output.
+    Default: Production
+    AllowedValues:
+      - 'False'
+      - 'True'
 Metadata:
   'AWS::CloudFormation::Interface':
     ParameterGroups:
@@ -149,6 +156,7 @@ Metadata:
           - WindowsSafeName
           - CPMNameWindowsSafe
           - KeyPairsSafe
+          - EnableDebugMode
       - Label:
           default: 'Optional: Create new KeyPair for the solution:'
         Parameters:
@@ -180,6 +188,8 @@ Metadata:
         default: 'Target Safe for the Key pairs:'
       KeyPairName:
         default: 'Key Pair name:'
+      EnableDebugMode:
+        default: 'Enable Debug Mode:'
 Rules:
   CheckVerificationParameters:
     Assertions:

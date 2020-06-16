@@ -1,7 +1,11 @@
 import subprocess
+from log_mechanisem import log_mechanisem
+
+logger = log_mechanisem()
 
 
 def save_key_pair(pemKey):
+    logger.info_log_entry('Saving key pair to file')
     # Save pem to file
     savePemToFileCommand = 'echo {0} > /tmp/pemValue.pem'.format(pemKey)
     subprocess.call([savePemToFileCommand], shell=True)
@@ -9,6 +13,7 @@ def save_key_pair(pemKey):
 
 
 def convert_pem_to_ppk(pemKey):
+    logger.info_log_entry('Converting key pair from pem to ppk')
     #  convert pem file, get ppk value
     #  Uses Puttygen sent to the lambda
     save_key_pair(pemKey=pemKey)
@@ -19,9 +24,9 @@ def convert_pem_to_ppk(pemKey):
     conversionResult = subprocess.call(["/tmp/puttygen /tmp/pemValue.pem -O private -o /tmp/ppkValue.ppk"], shell=True)
     if conversionResult == 0:
         ppkKey = subprocess.check_output("cat /tmp/ppkValue.ppk", shell=True).decode("utf-8")
-        print("Pem key successfully converted")
+        logger.info_log_entry("Pem key successfully converted")
     else:
-        print("Failed to convert pem key to ppk")
+        logger.error_log_entry("Failed to convert pem key to ppk")
         return False
 
     return ppkKey

@@ -18,13 +18,13 @@ IS_SAFE_HANDLER = True
 logger = log_mechanisem()
 
 def lambda_handler(event, context):
-
     try:
         physicalResourceId = str(uuid.uuid4())
         if 'PhysicalResourceId' in event:
             physicalResourceId = event['PhysicalResourceId']
         # only deleting the vault_pass from parameter store
         if event['RequestType'] == 'Delete':
+            logger.info_log_entry('Delete request received')
             if not delete_password_from_param_store():
                 return cfnresponse.send(event, context, cfnresponse.FAILED,
                                         "Failed to delete 'Vault_Pass' from parameter store, see detailed error in logs", {}, physicalResourceId)
@@ -32,7 +32,7 @@ def lambda_handler(event, context):
             return cfnresponse.send(event, context, cfnresponse.SUCCESS, None, {}, physicalResourceId)
 
         if event['RequestType'] == 'Create':
-
+            logger.info_log_entry('Create request received')
             requestUnixCPMName = event['ResourceProperties']['CPMUnix']
             requestWindowsCPMName = event['ResourceProperties']['CPMWindows']
             requestUsername = event['ResourceProperties']['Username']

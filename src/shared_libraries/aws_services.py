@@ -10,13 +10,15 @@ logger = log_mechanisem()
 # return ec2 instance relevant data:
 # keyPair_name, instance_address, platform
 def get_ec2_details(instanceId, solutionAccountId, eventRegion, eventAccountId):
+    logger.info_log_entry('Gathering details about EC2 - ' + instanceId )
     if eventAccountId == solutionAccountId:
         try:
             ec2Resource = boto3.resource('ec2', eventRegion)
         except Exception as e:
-            print('Error on creating boto3 session: {0}'.format(e))
+            logger.error_log_entry('Error on creating boto3 session: {0}'.format(e))
     else:
         try:
+            logger.info_log_entry('Assuming Role')
             sts_connection = boto3.client('sts')
             acct_b = sts_connection.assume_role(
                 RoleArn="arn:aws:iam::{0}:role/CyberArk-AOB-AssumeRoleForElasticityLambda".format(eventAccountId),
@@ -36,15 +38,16 @@ def get_ec2_details(instanceId, solutionAccountId, eventRegion, eventAccountId):
                 aws_session_token=SESSION_TOKEN,
             )
         except Exception as e:
-            print('Error on getting token from account: {0}'.format(eventAccountId))
+            logger.error_log_entry('Error on getting token from account: {0}'.format(eventAccountId))
 
 
     try:
         instanceResource = ec2Resource.Instance(instanceId)
         instanceImage = ec2Resource.Image(instanceResource.image_id)
+        logger.info_log_entry('Image Detected: ' + instanceImage)
         imageDescription = instanceImage.description
     except Exception as e:
-        print('Error on getting instance details: {0}'.format(e))
+        logger.error_log_entry('Error on getting instance details: {0}'.format(e))
         raise e
 
     #  We take the instance address in the order of: public dns -> public ip -> private ip ##
@@ -70,18 +73,19 @@ def get_ec2_details(instanceId, solutionAccountId, eventRegion, eventAccountId):
 # Check on DynamoDB if instance exists
 # Return False when not found, or row data from table
 def get_instance_data_from_dynamo_table(instanceId):
-    print('check with DynamoDB if instance {0} exists'.format(instanceId))
+    logger.info_log_entry('check with DynamoDB if instance {0} exists'.format(instanceId))
     dynamoResource = boto3.client('dynamodb')
 
     try:
         dynamoResponse = dynamoResource.get_item(TableName='Instances', Key={"InstanceId": {"S": instanceId}})
     except Exception:
-        print("Error occurred when trying to call dynamoDB")
+        logger.error_log_entry("Error occurred when trying to call dynamoDB")
         return False
     # DynamoDB "Item" response: {'Address': {'S': 'xxx.xxx.xxx.xxx'}, 'InstanceId': {'S': 'i-xxxxxyyyyzzz'},
     #               'Status': {'S': 'on-boarded'}, 'Error': {'S': 'Some Error'}}
     if 'Item' in dynamoResponse:
         if dynamoResponse["Item"]["InstanceId"]["S"] == instanceId:
+            logger.info_log_entry(instanceId + ' exists in DynamoDB')
             return dynamoResponse["Item"]
         else:
             return False
@@ -91,6 +95,7 @@ def get_instance_data_from_dynamo_table(instanceId):
 
 def get_params_from_param_store():
     # Parameters that will be retrieved from parameter store
+    logger.info_log_entry('Getting parameters from parameter store')
     UNIX_SAFE_NAME_PARAM = "AOB_Unix_Safe_Name"
     WINDOWS_SAFE_NAME_PARAM = "AOB_Windows_Safe_Name"
     VAULT_USER_PARAM = "AOB_Vault_User"
@@ -110,7 +115,7 @@ def get_params_from_param_store():
                                        InvocationType='RequestResponse',
                                        Payload=json.dumps(lambdaRequestData))
     except Exception as e:
-        print("Error on retrieving store parameters:{0}".format(e))
+        logger.error_log_entry("Error on retrieving store parameters:{0}".format(e))
         raise Exception("Error occurred while retrieving store parameters")
 
     jsonParsedResponse = json.load(response['Payload'])
@@ -140,11 +145,11 @@ def get_params_from_param_store():
             continue
     storeParametersClass = StoreParameters(unixSafeName, windowsSafeName, vaultUsername, vaultPassword, pvwaIP,
                                            keyPairSafeName, pvwaVerificationKey, AOB_mode, debugMode)
-
     return storeParametersClass
 
 
 def put_instance_to_dynamo_table(instanceId, IPAddress, onBoardStatus, onBoardError="None", logName="None"):
+    logger.info_log_entry('Adding ' + instanceId + ' to DynamoDB')
     dynamodbResource = boto3.resource('dynamodb')
     instancesTable = dynamodbResource.Table("Instances")
     try:
@@ -158,26 +163,29 @@ def put_instance_to_dynamo_table(instanceId, IPAddress, onBoardStatus, onBoardEr
             }
         )
     except Exception:
-        print('Exception occurred on add item to dynamodb')
+        logger.error_log_entry('Exception occurred on add item to dynamodb')
         return None
 
-    print('Item {0} added successfully to DB'.format(instanceId))
+    logger.info_log_entry('Item {0} added successfully to DB'.format(instanceId))
     return
 
 
 def release_session_on_dynamo(sessionId, sessionGuid):
+    logger.info_log_entry('Releasing session lock from DynamoDB')
     try:
         sessionsTableLockClient = LockerClient('Sessions')
         sessionsTableLockClient.locked = True
         sessionsTableLockClient.guid = sessionGuid
         sessionsTableLockClient.release(sessionId)
-    except Exception:
+    except Exception as e:
+        logger.error_log_entry('Failed to release session lock from DynamoDB:\n' + e)
         return False
 
     return True
 
 
 def remove_instance_from_dynamo_table(instanceId):
+    logger.info_log_entry('Removing ' + instanceId +' from DynamoDB')
     dynamodbResource = boto3.resource('dynamodb')
     instancesTable = dynamodbResource.Table("Instances")
     try:
@@ -186,15 +194,16 @@ def remove_instance_from_dynamo_table(instanceId):
                 'InstanceId': instanceId
             }
         )
-    except Exception:
-        print('Exception occurred on deleting item on dynamodb')
+    except Exception as e:
+        logger.error_log_entry('Exception occurred on deleting ' + instanceId + 'on dynamodb:\n' + e)
         return None
 
-    print('Item {0} successfully deleted from DB'.format(instanceId))
+    logger.info_log_entry('Item {0} successfully deleted from DB'.format(instanceId))
     return
 
 
 def get_available_session_from_dynamo():
+    logger.info_log_entry("Getting available Session from DynamoDB")
     sessionsTableLockClient = LockerClient('Sessions')
     timeout = 20000  # Setting the timeout to 20 seconds on a row lock
     randomSessionNumber = str(random.randint(1, 100))  # A number between 1 and 100
@@ -204,19 +213,21 @@ def get_available_session_from_dynamo():
 
             lockResponse = sessionsTableLockClient.acquire(randomSessionNumber, timeout)
             if lockResponse:  # no lock on connection number, return it
+                logger.info_log_entry("Successfully retrieved session from DynamoDB")
                 return randomSessionNumber, sessionsTableLockClient.guid
             else:  # connection number is locked, retry in 5 seconds
                 time.sleep(5)
                 continue
         #  if reached here, 20 retries with 5 seconds between retry - ended
-        print("No available connection after many retries")
+        logger.info_log_entry("Connection limit has been reached")
         return False, ""
     except Exception as e:
-        print("Exception on get_available_session_from_dynamo:{0}".foramt(e))
+        print("Failed to retrieve session from DynamoDB:{0}".foramt(e))
         raise Exception("Exception on get_available_session_from_dynamo:{0}".foramt(e))
 
 
 def update_instances_table_status(instanceId, status, error="None"):
+    logger.info_log_entry('Updating DynamoDB with ' + instanceId + ' onboarding status. \nStatus: ' + status )
     dynamodbResource = boto3.resource('dynamodb')
     instancesTable = dynamodbResource.Table("Instances")
     try:
@@ -236,9 +247,9 @@ def update_instances_table_status(instanceId, status, error="None"):
             }
         )
     except Exception:
-        print('Exception occurred on updating session on dynamoDB')
+        logger.error_log_entry('Exception occurred on updating session on dynamoDB')
         return None
-    print("Instance data updated successfully")
+    logger.info_log_entry("Instance data updated successfully")
     return
 
 

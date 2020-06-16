@@ -3,13 +3,16 @@ import aws_services
 import kp_processing
 from pvwa_integration import pvwa_integration
 import boto3
+from log_mechanisem import log_mechanisem
 
 UNIX_PLATFORM = "UnixSSHKeys"
 WINDOWS_PLATFORM = "WinServerLocal"
 ADMINISTRATOR = "Administrator"
 pvwa_integration_class = pvwa_integration()
+logger = log_mechanisem()
 
 def delete_instance(instanceId, session, storeParametersClass, instanceData, instanceDetails):
+    logger.info_log_entry('Removing ' + instanceId + ' From AOB')
     instanceIpAddress = instanceData["Address"]["S"]
     if instanceDetails['platform'] == "windows":
         safeName = storeParametersClass.windowsSafeName
@@ -23,7 +26,7 @@ def delete_instance(instanceId, session, storeParametersClass, instanceData, ins
                                                                             safeName, instanceId,
                                                                             storeParametersClass.pvwaURL)
     if not instanceAccountId:
-        print("Instance AccountId not found on safe")
+        logger.info_log_entry(instanceId + " was does not exist in safe")
         return
 
     pvwa_api_calls.delete_account_from_vault(session, instanceAccountId, instanceId, storeParametersClass.pvwaURL)
@@ -33,13 +36,15 @@ def delete_instance(instanceId, session, storeParametersClass, instanceData, ins
 
 
 def get_instance_password_data(instanceId,solutionAccountId,eventRegion,eventAccountId):
+    logger.info_log_entry('Getting ' + instanceId + ' password')
 	if eventAccountId == solutionAccountId:
 		try:
 			ec2Resource = boto3.client('ec2', eventRegion)
 		except Exception as e:
-			print('Error on creating boto3 session: {0}'.format(e))
+			logger.error_log_entry('Error on creating boto3 session: {0}'.format(e))
 	else:
 		try:
+		    logger.info_log_entry('Assuming role')
 			sts_connection = boto3.client('sts')
 			acct_b = sts_connection.assume_role(
 				RoleArn="arn:aws:iam::{0}:role/CyberArk-AOB-AssumeRoleForElasticityLambda".format(eventAccountId),
@@ -57,23 +62,24 @@ def get_instance_password_data(instanceId,solutionAccountId,eventRegion,eventAcc
 				aws_session_token=SESSION_TOKEN,
 			)
 		except Exception as e:
-			print('Error on getting token from account: {0}'.format(eventAccountId))
+			logger.error_log_entry('Error on getting token from account: {0}'.format(eventAccountId))
 
 	try:
 		# wait until password data available when Windows instance is up
-		print("Waiting for instance - {0} to become available: ".format(instanceId))
+		logger.info_log_entry("Waiting for instance - {0} to become available: ".format(instanceId))
 		waiter = ec2Resource.get_waiter('password_data_available')
 		waiter.wait(InstanceId=instanceId)
 		instancePasswordData = ec2Resource.get_password_data(InstanceId=instanceId)
 		return instancePasswordData['PasswordData']
 	except Exception as e:
-		print('Error on waiting for instance password: {0}'.format(e))
+		logger.error_log_entry('Error on waiting for instance password: {0}'.format(e))
 
 
 def create_instance(instanceId, instanceDetails, storeParametersClass, logName, solutionAccountId, eventRegion, eventAccountId, instanceAccountPassword):
-
-
+    
+    logger.info_log_entry('Adding ' + instanceId + ' to AOB')
     if instanceDetails['platform'] == "windows":  # Windows machine return 'windows' all other return 'None'
+        logger.info_log_entry('Windows platform detected')
         kp_processing.save_key_pair(instanceAccountPassword)
         instancePasswordData = get_instance_password_data(instanceId, solutionAccountId, eventRegion, eventAccountId)
         # decryptedPassword = convert_pem_to_password(instanceAccountPassword, instancePasswordData)
@@ -116,7 +122,7 @@ def create_instance(instanceId, instanceDetails, storeParametersClass, logName, 
                                                                                     instanceId,
                                                                                     storeParametersClass.pvwaURL)
     if existingInstanceAccountId:  # account already exist and managed on vault, no need to create it again
-        print("Account already exists in vault")
+        logger.info_log_entry("Account already exists in vault")
         aws_services.put_instance_to_dynamo_table(instanceId, instanceDetails['address'], OnBoardStatus.OnBoarded, "None", logName)
         return
     else:
