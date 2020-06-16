@@ -19,7 +19,7 @@ Resources:
       PVWAVerificationKeyFileName: !Ref PVWAVerificationKeyFileName
       S3BucketName: !Ref S3BucketWithVerificationKey
       Environment: !Ref Environment
-    DependsOn: !Ref ParameterAWSKeyPairSafe
+    DependsOn: ParameterAWSKeyPairSafe
   ParameterPVWA:
     Type: 'AWS::SSM::Parameter'
     Properties:
@@ -27,13 +27,13 @@ Resources:
       Description: The IP of the PVWA
       Type: String
       Value: !Ref PvwaIP
-  ParameterDebugMode:
+  ParameterDebugLevel:
     Type: 'AWS::SSM::Parameter'
     Properties:
-      Name: AOB_Debug_Mode
-      Description: Enables debug mode for more detailed errors
+      Name: AOB_Debug_Level
+      Description: Choose the verbosity of output.
       Type: String
-      Value: !Ref EnableDebugMode
+      Value: !Ref EnableDebugLevel
   ParameterUnixAccountsSafe:
     Type: 'AWS::SSM::Parameter'
     Properties:
@@ -131,13 +131,14 @@ Parameters:
     AllowedValues:
       - POC
       - Production
-  EnableDebugMode:
+  EnableDebugLevel:
     Type: String
-    Description: Enable detailed error output.
-    Default: Production
+    Description: Choose the verbosity of output.
+    Default: Info
     AllowedValues:
-      - 'False'
-      - 'True'
+      - Info
+      - Debug
+      - Trace
 Metadata:
   'AWS::CloudFormation::Interface':
     ParameterGroups:
@@ -156,7 +157,7 @@ Metadata:
           - WindowsSafeName
           - CPMNameWindowsSafe
           - KeyPairsSafe
-          - EnableDebugMode
+          - EnableDebugLevel
       - Label:
           default: 'Optional: Create new KeyPair for the solution:'
         Parameters:
@@ -188,8 +189,8 @@ Metadata:
         default: 'Target Safe for the Key pairs:'
       KeyPairName:
         default: 'Key Pair name:'
-      EnableDebugMode:
-        default: 'Enable Debug Mode:'
+      EnableDebugLevel:
+        default: 'Error Verbosity Level:'
 Rules:
   CheckVerificationParameters:
     Assertions:

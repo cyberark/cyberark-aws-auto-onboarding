@@ -1,55 +1,50 @@
+import json
 import urllib3
 from pvwa_integration import pvwa_integration
 import aws_services
 import instance_processing
 import pvwa_api_calls
-import json
 from log_mechanisem import log_mechanisem
 
 
+DEBUG_LEVEL_DEBUG = 'debug' # Outputs all information
 logger = log_mechanisem()
 pvwa_integration_class = pvwa_integration()
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def lambda_handler(event, context):
+    logger.trace(event, context, caller_name='lambda_handler')
     logger.info_log_entry('Parsing event')
     try:
         message = event["Records"][0]["Sns"]["Message"]
         data = json.loads(message)
     except Exception as e:
-        logger.error_log_entry("Error on retrieving Message Data from Event Message. Error: {0}".format(e))
-
-    try:
-        instance_arn = data["resources"][0]
-    except Exception as e:
-        logger.error_log_entry("Error on retrieving instance_arn from Event Message. Error: {0}".format(e))
+        logger.error("Error on retrieving Message Data from Event Message. Error: {0}".format(e))
 
     try:
         instanceId = data["detail"]["instance-id"]
     except Exception as e:
-        logger.error_log_entry("Error on retrieving Instance Id from Event Message. Error: {0}".format(e))
+        logger.error("Error on retrieving Instance Id from Event Message. Error: {0}".format(e))
 
     try:
         actionType = data["detail"]["state"]
     except Exception as e:
-        logger.error_log_entry("Error on retrieving Action Type from Event Message. Error: {0}".format(e))
+        logger.error("Error on retrieving Action Type from Event Message. Error: {0}".format(e))
 
 
     try:
         eventAccountId = data["account"]
     except Exception as e:
-        logger.error_log_entry("Error on retrieving Event Account Id from Event Message. Error: {0}".format(e))
+        logger.error("Error on retrieving Event Account Id from Event Message. Error: {0}".format(e))
 
 
     try:
         eventRegion = data["region"]
     except Exception as e:
-        logger.error_log_entry("Error on retrieving Event Region from Event Message. Error: {0}".format(e))
-
+        logger.error("Error on retrieving Event Region from Event Message. Error: {0}".format(e))
 
     logName = context.log_stream_name if context.log_stream_name else "None"
-
     try:
         solutionAccountId = context.invoked_function_arn.split(':')[4]
         instanceDetails = aws_services.get_ec2_details(instanceId, solutionAccountId, eventRegion, eventAccountId)
@@ -62,12 +57,12 @@ def lambda_handler(event, context):
             else:
                 instanceStatus = instanceData["Status"]["S"]
                 if instanceStatus == OnBoardStatus.OnBoarded_Failed:
-                    logger.error_log_entry("Item {0} is in status OnBoard failed, removing from DynamoDB table".format(instanceId))
+                    logger.error("Item {0} is in status OnBoard failed, removing from DynamoDB table".format(instanceId))
                     aws_services.remove_instance_from_dynamo_table(instanceId)
                     return None
         elif actionType == 'running':
             if not instanceDetails["address"]:  # In case querying AWS return empty address
-                logger.error_log_entry("Retrieving Instance address from AWS failed.")
+                logger.error("Retrieving Instance address from AWS failed.")
                 return None
             if instanceData:
                 instanceStatus = instanceData["Status"]["S"]
@@ -75,7 +70,7 @@ def lambda_handler(event, context):
                     logger.info_log_entry('Item: {0}, already exists on DB, no need to add it to vault'.format(instanceId))
                     return None
                 elif instanceStatus == OnBoardStatus.OnBoarded_Failed:
-                    logger.error_log_entry("Item {0} exists with status 'OnBoard failed', adding to vault".format(instanceId))
+                    logger.error("Item {0} exists with status 'OnBoard failed', adding to vault".format(instanceId))
                 else:
                     logger.info_log_entry('Item {0} does not exists on DB, adding to vault'.format(instanceId))
         else:
@@ -88,21 +83,21 @@ def lambda_handler(event, context):
         if storeParametersClass.AOB_mode == 'Production':
             # Save PVWA Verification key in /tmp folder
             logger.info_log_entry('Saving verification key')
-            crt = open("/tmp/server.crt","w+")
+            crt = open("/tmp/server.crt", "w+")
             crt.write(storeParametersClass.pvwaVerificationKey)
             crt.close()
         pvwaConnectionnumber, sessionGuid = aws_services.get_available_session_from_dynamo()
         if not pvwaConnectionnumber:
             return
         sessionToken = pvwa_integration_class.logon_pvwa(storeParametersClass.vaultUsername,
-                                                   storeParametersClass.vaultPassword,
-                                                   storeParametersClass.pvwaURL, pvwaConnectionnumber)
+                                                         storeParametersClass.vaultPassword,
+                                                         storeParametersClass.pvwaURL, pvwaConnectionnumber)
 
         if not sessionToken:
             return
         disconnect = False
         if actionType == 'terminated':
-            logger.info_log_entry('Detected termination of ' instanceId)
+            logger.info_log_entry('Detected termination of ' + instanceId)
             instance_processing.delete_instance(instanceId, sessionToken, storeParametersClass, instanceData, instanceDetails)
         elif actionType == 'running':
             # get key pair
@@ -112,15 +107,14 @@ def lambda_handler(event, context):
             keyPairValueOnSafe = "AWS.{0}.{1}.{2}".format(instanceDetails["aws_account_id"], eventRegion,
                                                           instanceDetails["key_name"])
             keyPairAccountId = pvwa_api_calls.check_if_kp_exists(sessionToken, keyPairValueOnSafe,
-                                                                                   storeParametersClass.keyPairSafeName,
-                                                                                   instanceId,
-                                                                                   storeParametersClass.pvwaURL)
+                                                                 storeParametersClass.keyPairSafeName,
+                                                                 instanceId,
+                                                                 storeParametersClass.pvwaURL)
             if not keyPairAccountId:
-                logger.error_log_entry("Key Pair '{0}' does not exist in safe '{1}'".format(keyPairValueOnSafe,
-                                                                           storeParametersClass.keyPairSafeName))
+                logger.error("Key Pair '{0}' does not exist in safe '{1}'".format(keyPairValueOnSafe,
+                                       storeParametersClass.keyPairSafeName))
                 return
-            instanceAccountPassword = pvwa_api_calls.get_account_value(sessionToken, keyPairAccountId, instanceId,
-                                                                       storeParametersClass.pvwaURL)
+            instanceAccountPassword = pvwa_api_calls.get_account_value(sessionToken, keyPairAccountId, instanceId, storeParametersClass.pvwaURL)
             if instanceAccountPassword is False:
                 return
             pvwa_integration_class.logoff_pvwa(storeParametersClass.pvwaURL, sessionToken)
@@ -128,7 +122,7 @@ def lambda_handler(event, context):
             disconnect = True
             instance_processing.create_instance(instanceId, instanceDetails, storeParametersClass, logName, solutionAccountId, eventRegion, eventAccountId, instanceAccountPassword)
         else:
-            logger.error_log_entry('Unknown instance state')
+            logger.error('Unknown instance state')
             return
 
 
@@ -137,14 +131,14 @@ def lambda_handler(event, context):
             aws_services.release_session_on_dynamo(pvwaConnectionnumber, sessionGuid)
 
     except Exception as e:
-        logger.error_log_entry("Unknown error occurred:{0}".format(e))
+        logger.error("Unknown error occurred:{0}".format(e))
         if actionType == 'terminated':
             # put_instance_to_dynamo_table(instanceId, instanceDetails["address"]\
             # , OnBoardStatus.Delete_Failed, str(e), logName)
             aws_services.update_instances_table_status(instanceId, OnBoardStatus.Delete_Failed, str(e))
         elif actionType == 'running':
             aws_services.put_instance_to_dynamo_table(instanceId, instanceDetails["address"], OnBoardStatus.OnBoarded_Failed, str(e),
-                                         logName)
+                                                      logName)
         # TODO: Retry mechanism?
         aws_services.release_session_on_dynamo(pvwaConnectionnumber, sessionGuid)
         return
