@@ -121,13 +121,19 @@ pipeline {
         stage('Git clone AOB') {
             steps{
                 script{
-                    git credentialsId: 'jenkins-github-access-token', url: 'https://github.com/cyberark/cyberark-aws-auto-onboarding.git'
-                    dir ('cyberark-aws-auto-onboarding') {
+                    try{
+                        git credentialsId: 'jenkins-github-access-token', url: 'https://github.com/cyberark/cyberark-aws-auto-onboarding.git'
+                        dir ('cyberark-aws-auto-onboarding') {
+                            sh '''
+                                git clone --single-branch --branch develop https://github.com/cyberark/cyberark-aws-auto-onboarding.git
+                            '''
+                        }
+                    } catch (err) {
+                        echo err.getMessage()
                         sh '''
-                            git clone https://github.com/cyberark/cyberark-aws-auto-onboarding.git
-                        '''
+                            git pull
+                           '''
                     }
-
                 }
             }
         }
@@ -137,20 +143,37 @@ pipeline {
                     git credentialsId: 'jenkins-github-access-token', url: 'https://github.com/cyberark/cyberark-aws-auto-onboarding-tests.git'
                     dir ('cyberark-aws-auto-onboarding-tests') {
                     }
-
                 }
             }
         }
-        // stage('Deploy AOB solution')
-        // {
-        //     steps{
-        //         sh '''
-        //             source ./.testenv/bin/activate
-        //             cd tests/
-        //             ansible-playbook aob_environment_setup.yml -e "{rollback: False}" -vvv
-        //         '''
-        //     }
-        // }
+        stage('Deploy AOB solution')
+        {
+            steps{
+                sh '''
+                    source ./.testenv/bin/activate
+                    cd tests/
+                    ansible-playbook aob_environment_setup.yml -e "{rollback: False, deploy_main_cf: False, deploy_vaultenv: False, deploy_stackset: False}" -vvv
+                '''
+            }
+        }
+        stage('Copy PVWA server certificate to jenkins slave')
+        {
+            steps{
+                sh '''
+                    sudo aws s3 cp s3://aob-auto-test/server.crt /etc/ssl/certs/server.crt
+                '''
+            }
+        }
+        stage('Run Tests')
+        {
+            steps{
+                sh '''
+                    source ./.testenv/bin/activate
+                    cd tests/e2e-tests/
+                    python3 main.py
+                '''
+            }
+        }
     }
     // post {
     //     success {
