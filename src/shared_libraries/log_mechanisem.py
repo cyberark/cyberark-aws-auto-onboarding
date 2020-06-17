@@ -14,5 +14,5 @@ class log_mechanisem:
             print('[INFO] ' + message)
     def trace(self,*args, caller_name):
         if self.debug_level.lower == 'trace':
-            print ('{caller_name}:\n'.format(caller_name=caller_name), args, sep = ' | ')
+            print ('[TRACE] {caller_name}:\n'.format(caller_name=caller_name), args, sep = ' | ')
         

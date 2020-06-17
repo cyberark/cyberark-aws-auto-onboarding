@@ -79,8 +79,7 @@ def get_instance_password_data(instanceId,solutionAccountId,eventRegion,eventAcc
 
 
 def create_instance(instanceId, instanceDetails, storeParametersClass, logName, solutionAccountId, eventRegion, eventAccountId, instanceAccountPassword):
-    logger.trace(instanceId, instanceDetails, storeParametersClass, logName, solutionAccountId, eventRegion, eventAccountId, instanceAccountPassword,
-                 caller_name='create_instance')
+    logger.trace(instanceId, instanceDetails, storeParametersClass, logName, solutionAccountId, eventRegion, eventAccountId, caller_name='create_instance')
     logger.info('Adding ' + instanceId + ' to AOB')
     if instanceDetails['platform'] == "windows":  # Windows machine return 'windows' all other return 'None'
         logger.info('Windows platform detected')
