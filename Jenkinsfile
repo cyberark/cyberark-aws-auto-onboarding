@@ -146,34 +146,34 @@ pipeline {
                 }
             }
         }
-        stage('Deploy AOB solution')
-        {
-            steps{
-                sh '''
-                    source ./.testenv/bin/activate
-                    cd tests/
-                    ansible-playbook aob_environment_setup.yml -e "{rollback: False, deploy_main_cf: False, deploy_vaultenv: False, deploy_stackset: False}" -vvv
-                '''
-            }
-        }
-        stage('Copy PVWA server certificate to jenkins slave')
-        {
-            steps{
-                sh '''
-                    sudo aws s3 cp s3://aob-auto-test/server.crt /etc/ssl/certs/server.crt
-                '''
-            }
-        }
-        stage('Run Tests')
-        {
-            steps{
-                sh '''
-                    source ./.testenv/bin/activate
-                    cd tests/e2e-tests/
-                    python3 main.py
-                '''
-            }
-        }
+        // stage('Deploy AOB solution')
+        // {
+        //     steps{
+        //         sh '''
+        //             source ./.testenv/bin/activate
+        //             cd tests/
+        //             ansible-playbook aob_environment_setup.yml -e "{rollback: False, deploy_main_cf: False, deploy_vaultenv: False, deploy_stackset: False}" -vvv
+        //         '''
+        //     }
+        // }
+        // stage('Copy PVWA server certificate to jenkins slave')
+        // {
+        //     steps{
+        //         sh '''
+        //             sudo aws s3 cp s3://aob-auto-test/server.crt /etc/ssl/certs/server.crt
+        //         '''
+        //     }
+        // }
+        // stage('Run Tests')
+        // {
+        //     steps{
+        //         sh '''
+        //             source ./.testenv/bin/activate
+        //             cd tests/e2e-tests/
+        //             python3 main.py
+        //         '''
+        //     }
+        // }
     }
     // post {
     //     success {
