@@ -15,7 +15,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 def lambda_handler(event, context):
     logger.trace(event, context, caller_name='lambda_handler')
-    logger.info_log_entry('Parsing event')
+    logger.info('Parsing event')
     try:
         message = event["Records"][0]["Sns"]["Message"]
         data = json.loads(message)
@@ -52,7 +52,7 @@ def lambda_handler(event, context):
         instanceData = aws_services.get_instance_data_from_dynamo_table(instanceId)
         if actionType == 'terminated':
             if not instanceData:
-                logger.info_log_entry('Item {0} does not exists on DB'.format(instanceId))
+                logger.info('Item {0} does not exists on DB'.format(instanceId))
                 return None
             else:
                 instanceStatus = instanceData["Status"]["S"]
@@ -67,14 +67,14 @@ def lambda_handler(event, context):
             if instanceData:
                 instanceStatus = instanceData["Status"]["S"]
                 if instanceStatus == OnBoardStatus.OnBoarded:
-                    logger.info_log_entry('Item: {0}, already exists on DB, no need to add it to vault'.format(instanceId))
+                    logger.info('Item: {0}, already exists on DB, no need to add it to vault'.format(instanceId))
                     return None
                 elif instanceStatus == OnBoardStatus.OnBoarded_Failed:
                     logger.error("Item {0} exists with status 'OnBoard failed', adding to vault".format(instanceId))
                 else:
-                    logger.info_log_entry('Item {0} does not exists on DB, adding to vault'.format(instanceId))
+                    logger.info('Item {0} does not exists on DB, adding to vault'.format(instanceId))
         else:
-            logger.info_log_entry('Unknown instance state')
+            logger.info('Unknown instance state')
             return
 
         storeParametersClass = aws_services.get_params_from_param_store()
@@ -82,7 +82,7 @@ def lambda_handler(event, context):
             return
         if storeParametersClass.AOB_mode == 'Production':
             # Save PVWA Verification key in /tmp folder
-            logger.info_log_entry('Saving verification key')
+            logger.info('Saving verification key')
             crt = open("/tmp/server.crt", "w+")
             crt.write(storeParametersClass.pvwaVerificationKey)
             crt.close()
@@ -97,11 +97,11 @@ def lambda_handler(event, context):
             return
         disconnect = False
         if actionType == 'terminated':
-            logger.info_log_entry('Detected termination of ' + instanceId)
+            logger.info('Detected termination of ' + instanceId)
             instance_processing.delete_instance(instanceId, sessionToken, storeParametersClass, instanceData, instanceDetails)
         elif actionType == 'running':
             # get key pair
-            logger.info_log_entry('Retrieving accountId where the key pair is stored')
+            logger.info('Retrieving accountId where the key pair is stored')
             # Retrieving the account id of the account where the instance keyPair is stored
             # AWS.<AWS Account>.<Event Region name>.<key pair name>
             keyPairValueOnSafe = "AWS.{0}.{1}.{2}".format(instanceDetails["aws_account_id"], eventRegion,
