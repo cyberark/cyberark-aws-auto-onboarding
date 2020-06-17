@@ -84,9 +84,7 @@ def delete_account_from_vault(session, accountId, instanceId, pvwaUrl):
         if restResponse.status_code != requests.codes.not_found:
             logger.error("Failed to delete the account for {0} from the vault. The account does not exists".format(
                 instanceId))
-            raise Exception(
-                "Failed to delete the account for {0} from the vault. The account does not exists".format(
-                    instanceId))
+            raise Exception("Failed to delete the account for {0} from the vault. The account does not exists".format(instanceId))
 
         else:
             logger.error("Failed to delete the account for {0} from the vault. an error occurred".format(instanceId))
