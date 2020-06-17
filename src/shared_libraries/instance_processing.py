@@ -28,7 +28,7 @@ def delete_instance(instanceId, session, storeParametersClass, instanceData, ins
                                                                             safeName, instanceId,
                                                                             storeParametersClass.pvwaURL)
     if not instanceAccountId:
-        logger.info(instanceId + " was does not exist in safe")
+        logger.info(instanceId + " does not exist in safe")
         return
 
     pvwa_api_calls.delete_account_from_vault(session, instanceAccountId, instanceId, storeParametersClass.pvwaURL)
