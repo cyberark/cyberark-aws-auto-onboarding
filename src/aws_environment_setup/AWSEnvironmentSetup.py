@@ -29,7 +29,7 @@ def lambda_handler(event, context):
             logger.info('Delete request received')
             if not delete_password_from_param_store():
                 return cfnresponse.send(event, context, cfnresponse.FAILED,
-                                        "Failed to delete 'Vault_Pass' from parameter store, see detailed error in logs", {}, physicalResourceId)
+                                        "Failed to delete 'AOB_Vault_Pass' from parameter store, see detailed error in logs", {}, physicalResourceId)
             delete_sessions_table()
             return cfnresponse.send(event, context, cfnresponse.SUCCESS, None, {}, physicalResourceId)
 
