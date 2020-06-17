@@ -110,7 +110,6 @@ def check_if_kp_exists(session, accountName, safeName, instanceId, restURL):
     try:
         restResponse = pvwa_integration_class.call_rest_api_get(pvwaUrl, header)
         if not restResponse:
-            logger.error("Unknown Error when calling rest service - retrieve accountId")
             raise Exception("Unknown Error when calling rest service - retrieve accountId")
     except Exception as e:
         logger.error('An error occurred:\n' + e)
@@ -140,7 +139,6 @@ def retrieve_accountId_from_account_name(session, accountName, safeName, instanc
     try:
         restResponse = pvwa_integration_class.call_rest_api_get(pvwaUrl, header)
         if not restResponse:
-            logger.error("Unknown Error when calling rest service - retrieve accountId")
             raise Exception("Unknown Error when calling rest service - retrieve accountId")
     except Exception as e:
         logger.error('An error occurred:\n' + e)

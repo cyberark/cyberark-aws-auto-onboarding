@@ -31,7 +31,7 @@ Resources:
     Type: 'AWS::SSM::Parameter'
     Properties:
       Name: AOB_Debug_Level
-      Description: Choose the verbosity of output.
+      Description: Choose the log verbosity level.
       Type: String
       Value: !Ref EnableDebugLevel
   ParameterUnixAccountsSafe:
