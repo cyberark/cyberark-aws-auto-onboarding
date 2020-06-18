@@ -126,7 +126,7 @@ Parameters:
     MaxLength: '255'
   Environment:
     Type: String
-    Description: The type of environment the solution will be deployment in
+    Description: The type of environment the solution will be deployed in
     Default: Production
     AllowedValues:
       - POC
