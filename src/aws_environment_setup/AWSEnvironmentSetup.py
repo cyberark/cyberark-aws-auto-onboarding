@@ -6,10 +6,10 @@ import botocore
 import time
 import boto3
 import json
-from pvwa_integration import pvwa_integration
-import aws_services
-from dynamo_lock import LockerClient
 from log_mechanisem import log_mechanisem
+import aws_services
+from pvwa_integration import pvwa_integration
+from dynamo_lock import LockerClient
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
