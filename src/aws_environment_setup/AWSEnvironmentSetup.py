@@ -165,13 +165,13 @@ def create_safe(pvwa_integration_class, safeName, cpmName, pvwaIP, sessionId, nu
             logger.info("The Safe '{0}' already exists".format(safeName))
             return True
         elif createSafeRestResponse.status_code == requests.codes.bad_request:
-            logger.error("Failed to create safe '{0}', error 400: bad request".format(safeName))
+            logger.error("Failed to create Safe '{0}', error 400: bad request".format(safeName))
             return False
         elif createSafeRestResponse.status_code == requests.codes.created:  # safe created
-            logger.info("The Safe '{0}' was successfully created".format(safeName))
+            logger.info("Safe '{0}' was successfully created".format(safeName))
             return True
         else:  # Error creating safe, retry for 3 times, with 10 seconds between retries
-            logger.error("Error creating safe, status code:{0}, will retry in 10 seconds".format(createSafeRestResponse.status_code))
+            logger.error("Error creating Safe, status code:{0}, will retry in 10 seconds".format(createSafeRestResponse.status_code))
             if i == 3:
                 logger.error("Failed to create safe after several retries, status code:{0}"
                       .format(createSafeRestResponse.status_code))

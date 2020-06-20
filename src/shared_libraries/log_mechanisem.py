@@ -18,21 +18,9 @@ class log_mechanisem:
             print ('[TRACE] {caller_name}:\n'.format(caller_name=caller_name), args, sep = ' | ')
         
 def get_debug_level():
-    AOB_DEBUG_LEVEL = "AOB_Debug_Level"
-    lambdaClient = boto3.client('lambda')
-
-    lambdaRequestData = dict()
-    lambdaRequestData["Parameters"] = [AOB_DEBUG_LEVEL]
-    try:
-        response = lambdaClient.invoke(FunctionName='TrustMechanism',
-                                       InvocationType='RequestResponse',
-                                       Payload=json.dumps(lambdaRequestData))
-    except Exception as e:
-        raise Exception("Error retrieving parameters from parameter parameter store:{0}".format(e))
-    
-    jsonParsedResponse = json.load(response['Payload'])
-    # parsing the parameters, jsonParsedResponse is a list of dictionaries
-    for ssmStoreItem in jsonParsedResponse:
-        if ssmStoreItem['Name'] == AOB_DEBUG_LEVEL:
-            aob_debug_level = ssmStoreItem['Value']
+    ssm = boto3.client('ssm')
+    ssm_parameter = ssm.get_parameter(
+        Name='AOB_Debug_Level'
+    )
+    aob_debug_level = ssm_parameter['Parameter']['Value']
     return aob_debug_level

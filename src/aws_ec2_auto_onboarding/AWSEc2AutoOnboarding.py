@@ -52,7 +52,7 @@ def lambda_handler(event, context):
         instanceData = aws_services.get_instance_data_from_dynamo_table(instanceId)
         if actionType == 'terminated':
             if not instanceData:
-                logger.info('Item {0} does not exists on DB'.format(instanceId))
+                logger.info('Item {0} does not exist on DB'.format(instanceId))
                 return None
             else:
                 instanceStatus = instanceData["Status"]["S"]
@@ -62,17 +62,17 @@ def lambda_handler(event, context):
                     return None
         elif actionType == 'running':
             if not instanceDetails["address"]:  # In case querying AWS return empty address
-                logger.error("Retrieving Instance address from AWS failed.")
+                logger.error("Retrieving Instance Address from AWS failed.")
                 return None
             if instanceData:
                 instanceStatus = instanceData["Status"]["S"]
                 if instanceStatus == OnBoardStatus.OnBoarded:
-                    logger.info('Item: {0}, already exists on DB, no need to add it to vault'.format(instanceId))
+                    logger.info('Item {0} already exists on DB, no need to add it to Vault'.format(instanceId))
                     return None
                 elif instanceStatus == OnBoardStatus.OnBoarded_Failed:
-                    logger.error("Item {0} exists with status 'OnBoard failed', adding to vault".format(instanceId))
+                    logger.error("Item {0} exists with status 'OnBoard failed', adding to Vault".format(instanceId))
                 else:
-                    logger.info('Item {0} does not exists on DB, adding to vault'.format(instanceId))
+                    logger.info('Item {0} does not exist on DB, adding to Vault'.format(instanceId))
         else:
             logger.info('Unknown instance state')
             return
@@ -111,7 +111,7 @@ def lambda_handler(event, context):
                                                                  instanceId,
                                                                  storeParametersClass.pvwaURL)
             if not keyPairAccountId:
-                logger.error("Key Pair '{0}' does not exist in safe '{1}'".format(keyPairValueOnSafe,
+                logger.error("Key Pair '{0}' does not exist in Safe '{1}'".format(keyPairValueOnSafe,
                                        storeParametersClass.keyPairSafeName))
                 return
             instanceAccountPassword = pvwa_api_calls.get_account_value(sessionToken, keyPairAccountId, instanceId, storeParametersClass.pvwaURL)
