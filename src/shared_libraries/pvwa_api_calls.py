@@ -1,11 +1,11 @@
 import requests
 from pvwa_integration import pvwa_integration
-from log_mechanisem import log_mechanisem
+from log_mechanism import log_mechanism
 
 DEBUG_LEVEL_DEBUG = 'debug' # Outputs all information
 DEFAULT_HEADER = {"content-type": "application/json"}
 pvwa_integration_class = pvwa_integration()
-logger = log_mechanisem()
+logger = log_mechanism()
 
 
 def create_account_on_vault(session, account_name, account_password, storeParametersClass, platform_id, address,

@@ -4,11 +4,11 @@ from pvwa_integration import pvwa_integration
 import aws_services
 import instance_processing
 import pvwa_api_calls
-from log_mechanisem import log_mechanisem
+from log_mechanism import log_mechanism
 
 
 DEBUG_LEVEL_DEBUG = 'debug' # Outputs all information
-logger = log_mechanisem()
+logger = log_mechanism()
 pvwa_integration_class = pvwa_integration()
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 

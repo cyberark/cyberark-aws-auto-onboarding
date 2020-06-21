@@ -3,14 +3,14 @@ import aws_services
 import kp_processing
 from pvwa_integration import pvwa_integration
 import boto3
-from log_mechanisem import log_mechanisem
+from log_mechanism import log_mechanism
 
 DEBUG_LEVEL_DEBUG = 'debug' # Outputs all information
 UNIX_PLATFORM = "UnixSSHKeys"
 WINDOWS_PLATFORM = "WinServerLocal"
 ADMINISTRATOR = "Administrator"
 pvwa_integration_class = pvwa_integration()
-logger = log_mechanisem()
+logger = log_mechanism()
 
 def delete_instance(instanceId, session, storeParametersClass, instanceData, instanceDetails):
     logger.trace(instanceId, session, storeParametersClass, instanceData, instanceDetails, caller_name='delete_instance')

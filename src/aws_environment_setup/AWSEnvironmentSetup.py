@@ -6,7 +6,7 @@ import botocore
 import time
 import boto3
 import json
-from log_mechanisem import log_mechanisem
+from log_mechanism import log_mechanism
 import aws_services
 from pvwa_integration import pvwa_integration
 from dynamo_lock import LockerClient
@@ -16,10 +16,12 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 DEBUG_LEVEL_DEBUG = 'debug' # Outputs all information
 DEFAULT_HEADER = {"content-type": "application/json"}
 IS_SAFE_HANDLER = True
-logger = log_mechanisem()
+logger = log_mechanism()
 
 def lambda_handler(event, context):
+    print(f'[PRINT] LambdaHandler:\n{event},{context}')
     logger.trace(event, context, caller_name='lambda_handler')
+    logger.info(event, context, caller_name='lambda_handler')
     try:
         physicalResourceId = str(uuid.uuid4())
         if 'PhysicalResourceId' in event:
@@ -49,8 +51,9 @@ def lambda_handler(event, context):
             requestS3BucketName = event['ResourceProperties']['S3BucketName']
             requestVerificationKeyName = event['ResourceProperties']['PVWAVerificationKeyFileName']
             AOB_mode = event['ResourceProperties']['Environment']
-            
+        
                 
+            logger.info('Adding AOB_Vault_Pass to parameter store',DEBUG_LEVEL_DEBUG)
             isPasswordSaved = add_param_to_parameter_store(requestPassword, "AOB_Vault_Pass", "Vault Password")
             if not isPasswordSaved:  # if password failed to be saved
                 return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to create Vault user's password in Parameter Store",
@@ -60,12 +63,14 @@ def lambda_handler(event, context):
             elif requestS3BucketName != '' and requestVerificationKeyName == '':
                 raise Exception('S3 Bucket cannot be empty if Verification Key is provided')
             else:
+                logger.info('Adding AOB_mode to parameter store',DEBUG_LEVEL_DEBUG)
                 isAOBModeSaved = add_param_to_parameter_store(AOB_mode,'AOB_mode',
                                                                 'Dictates if the solution will work in POC(no SSL) or Production(with SSL) mode')
                 if not isAOBModeSaved:  # if password failed to be saved
                     return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to create AOB_mode parameter in Parameter Store",
                                             {}, physicalResourceId)                                    
                 if AOB_mode == 'Production':
+                    logger.info('Adding verification key to Parameter Store',DEBUG_LEVEL_DEBUG)
                     isVerificationKeySaved = save_verification_key_to_param_store(requestS3BucketName, requestVerificationKeyName)
                     if not isVerificationKeySaved:  # if password failed to be saved
                         return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to create PVWA Verification Key in Parameter Store",

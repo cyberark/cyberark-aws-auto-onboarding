@@ -1,13 +1,13 @@
 import requests
 import aws_services
-from log_mechanisem import log_mechanisem
+from log_mechanism import log_mechanism
 
 DEBUG_LEVEL_DEBUG = 'debug' # Outputs all information
 DEFAULT_HEADER = {"content-type": "application/json"}
 # RestApiCalls:
 class pvwa_integration:
     def __init__(self, is_safe_handler=False,safe_handler_environment=None):
-        self.logger = log_mechanisem()
+        self.logger = log_mechanism()
         self.logger.trace(is_safe_handler, safe_handler_environment, caller_name='__init__')
         self.is_safe_handler = is_safe_handler
         self.safe_handler_environment = safe_handler_environment

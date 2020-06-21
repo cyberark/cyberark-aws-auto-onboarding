@@ -4,19 +4,19 @@ import json
 DEBUG_LEVEL_INFO = 'info' # Outputs erros and info only.
 DEBUG_LEVEL_DEBUG = 'debug' # Outputs all information
 
-class log_mechanisem:
+class log_mechanism:
     def __init__(self):
         self.debug_level = get_debug_level()
         print(self.debug_level)
-    def error(self, message,debug_level=DEBUG_LEVEL_INFO):
-        if debug_level == self.debug_level.lower or self.debug_level.lower == 'trace':
-            print('[ERROR] ' + message)
     def info(self, message,debug_level=DEBUG_LEVEL_INFO):
-        if debug_level == self.debug_level.lower or self.debug_level.lower == 'trace':
-            print('[INFO] ' + message)
+        if debug_level == self.debug_level.lower() or self.debug_level.lower() == 'trace':
+            print(f'[INFO] {message}')
+    def error(self, message,debug_level=DEBUG_LEVEL_INFO):
+        if debug_level == self.debug_level.lower() or self.debug_level.lower() == 'trace':
+            print(f'[ERROR] {message}')
     def trace(self,*args, caller_name):
-        if self.debug_level.lower == 'trace':
-            print ('[TRACE] {caller_name}:\n'.format(caller_name=caller_name), args, sep = ' | ')
+        if self.debug_level.lower() == 'trace':
+            print (f'[TRACE] {caller_name}: ', args, sep = ' | ')
         
 def get_debug_level():
     ssm = boto3.client('ssm')

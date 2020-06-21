@@ -2,11 +2,11 @@ import boto3
 import json
 import time
 import random
-from log_mechanisem import log_mechanisem
+from log_mechanism import log_mechanism
 from dynamo_lock import LockerClient
 
 DEBUG_LEVEL_DEBUG = 'debug' # Outputs all information
-logger = log_mechanisem()
+logger = log_mechanism()
 
 # return ec2 instance relevant data:
 # keyPair_name, instance_address, platform
