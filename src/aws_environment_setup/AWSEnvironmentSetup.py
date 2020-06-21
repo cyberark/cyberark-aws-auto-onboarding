@@ -21,7 +21,6 @@ logger = log_mechanism()
 def lambda_handler(event, context):
     print(f'[PRINT] LambdaHandler:\n{event},{context}')
     logger.trace(event, context, caller_name='lambda_handler')
-    logger.info(event, context, caller_name='lambda_handler')
     try:
         physicalResourceId = str(uuid.uuid4())
         if 'PhysicalResourceId' in event:
