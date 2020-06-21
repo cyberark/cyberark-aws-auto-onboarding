@@ -7,7 +7,6 @@ DEBUG_LEVEL_DEBUG = 'debug' # Outputs all information
 class log_mechanism:
     def __init__(self):
         self.debug_level = get_debug_level()
-        print(self.debug_level)
     def info(self, message,debug_level=DEBUG_LEVEL_INFO):
         if debug_level == self.debug_level.lower() or self.debug_level.lower() == 'trace':
             print(f'[INFO] {message}')

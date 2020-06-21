@@ -13,15 +13,19 @@ class pvwa_integration:
         self.safe_handler_environment = safe_handler_environment
         try:
             self.logger.info('Getting parameters from parameter store')
-            parameters = aws_services.get_params_from_param_store()
-            if parameters.AOB_mode == 'Production':
+            if not is_safe_handler:
+                parameters = aws_services.get_params_from_param_store()
+                environment = parameters.AOB_mode
+            else:
+                environment = self.safe_handler_environment
+            if environment == 'Production':
                 self.logger.info(parameters.AOB_mode + ' Environment Detected',DEBUG_LEVEL_DEBUG)
                 self.certificate = "/tmp/server.crt"
             else:
                 self.certificate = False
                 if parameters.debugLevel == 'True':
                     self.debugMode = 'True'
-                    self.logger.info(parameters.AOB_mode + ' Environment Detected',DEBUG_LEVEL_DEBUG)
+                    self.logger.info(f'{environment} Environment Detected',DEBUG_LEVEL_DEBUG)
         except Exception as e:
             self.logger.error('Failed to retrieve AOB_mode parameter:\n' + e)
             raise Exception("Error occurred while retrieving AOB_mode parameter")
