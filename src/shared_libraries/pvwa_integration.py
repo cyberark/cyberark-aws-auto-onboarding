@@ -31,7 +31,7 @@ class pvwa_integration:
         self.url = url
         self.header = header
         try:
-            self.logger.info('Invoking get request \nurl:\n' + url + ' \nheader:\n' + header)
+            self.logger.info(f'Invoking get request url:{url} header: {header}')
             restResponse = requests.get(self.url, timeout=30, verify=self.certificate, headers=self.header)
         except Exception as e:
             self.logger.error("An error occurred on calling PVWA REST service:\n" + e)
