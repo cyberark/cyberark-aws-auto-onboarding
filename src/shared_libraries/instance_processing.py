@@ -44,7 +44,7 @@ def get_instance_password_data(instanceId,solutionAccountId,eventRegion,eventAcc
         try:
             ec2Resource = boto3.client('ec2', eventRegion)
         except Exception as e:
-            logger.error('Error on creating boto3 session: {0}'.format(e))
+            logger.error('Error on creating boto3 session: {0}'.format(str(e)))
     else:
         try:
             logger.info('Assuming role')
@@ -65,7 +65,7 @@ def get_instance_password_data(instanceId,solutionAccountId,eventRegion,eventAcc
             	aws_session_token=SESSION_TOKEN,
             )
         except Exception as e:
-        	logger.error('Error on getting token from account: {0}'.format(eventAccountId))
+        	logger.error('Error on getting token from account {0} : {1}'.format(eventAccountId,str(e)))
 
     try:
     	# wait until password data available when Windows instance is up
@@ -75,7 +75,7 @@ def get_instance_password_data(instanceId,solutionAccountId,eventRegion,eventAcc
     	instancePasswordData = ec2Resource.get_password_data(InstanceId=instanceId)
     	return instancePasswordData['PasswordData']
     except Exception as e:
-    	logger.error('Error on waiting for instance password: {0}'.format(e))
+    	logger.error('Error on waiting for instance password: {0}'.format(str(e)))
 
 
 def create_instance(instanceId, instanceDetails, storeParametersClass, logName, solutionAccountId, eventRegion, eventAccountId, instanceAccountPassword):

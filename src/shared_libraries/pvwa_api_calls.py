@@ -110,7 +110,7 @@ def check_if_kp_exists(session, accountName, safeName, instanceId, restURL):
         if not restResponse:
             raise Exception("Unknown Error when calling rest service - retrieve accountId")
     except Exception as e:
-        logger.error('An error occurred:\n' + e)
+        logger.error('An error occurred:\n' + str(e))
         raise Exception(e)
     if restResponse.status_code == requests.codes.ok:
         # if response received, check account is not empty {"Count": 0,"accounts": []}
@@ -139,7 +139,7 @@ def retrieve_accountId_from_account_name(session, accountName, safeName, instanc
         if not restResponse:
             raise Exception("Unknown Error when calling rest service - retrieve accountId")
     except Exception as e:
-        logger.error('An error occurred:\n' + e)
+        logger.error('An error occurred:\n' + str(e))
         raise Exception(e)
     if restResponse.status_code == requests.codes.ok:
         # if response received, check account is not empty {"Count": 0,"accounts": []}

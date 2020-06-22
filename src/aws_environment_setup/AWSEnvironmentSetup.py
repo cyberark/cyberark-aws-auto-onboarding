@@ -135,8 +135,8 @@ def lambda_handler(event, context):
                 return cfnresponse.send(event, context, cfnresponse.SUCCESS, None, {}, physicalResourceId)
 
     except Exception as e:
-        logger.error("Exception occurred:{0}:".format(e))
-        return cfnresponse.send(event, context, cfnresponse.FAILED, "Exception occurred: {0}".format(e), {})
+        logger.error("Exception occurred:{0}:".format(str(e)))
+        return cfnresponse.send(event, context, cfnresponse.FAILED, "Exception occurred: {0}".format(str(e)), {})
 
     finally:
         if 'pvwaSessionId' in locals():  # pvwaSessionId has been declared
@@ -251,7 +251,7 @@ def create_session_table():
         sessionsTableLock = LockerClient('Sessions')
         sessionsTableLock.create_lock_table()
     except Exception as e:
-        print("Failed to create 'Sessions' table in DynamoDB. Exception: {0}".format(e))
+        print("Failed to create 'Sessions' table in DynamoDB. Exception: {0}".format(str(e)))
         return None
 
     print("Table 'Sessions' created successfully")
