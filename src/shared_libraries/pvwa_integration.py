@@ -23,9 +23,7 @@ class pvwa_integration:
                 self.certificate = "/tmp/server.crt"
             else:
                 self.certificate = False
-                if parameters.debugLevel == 'True':
-                    self.debugMode = 'True'
-                    self.logger.info(f'{environment} Environment Detected',DEBUG_LEVEL_DEBUG)
+                self.logger.info(f'{environment} Environment Detected',DEBUG_LEVEL_DEBUG)
         except Exception as e:
             self.logger.error('Failed to retrieve AOB_mode parameter:\n' + str(e))
             raise Exception("Error occurred while retrieving AOB_mode parameter")
