@@ -19,7 +19,7 @@ class pvwa_integration:
             else:
                 environment = self.safe_handler_environment
             if environment == 'Production':
-                self.logger.info(parameters.AOB_mode + ' Environment Detected',DEBUG_LEVEL_DEBUG)
+                self.logger.info(environment + ' Environment Detected',DEBUG_LEVEL_DEBUG)
                 self.certificate = "/tmp/server.crt"
             else:
                 self.certificate = False
