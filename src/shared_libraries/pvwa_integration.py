@@ -19,7 +19,7 @@ class pvwa_integration:
             else:
                 environment = self.safe_handler_environment
             if environment == 'Production':
-                self.logger.info(environment + ' Environment Detected',DEBUG_LEVEL_DEBUG)
+                self.logger.info(f'{environment} Environment Detected',DEBUG_LEVEL_DEBUG)
                 self.certificate = "/tmp/server.crt"
             else:
                 self.certificate = False
@@ -33,7 +33,7 @@ class pvwa_integration:
         self.url = url
         self.header = header
         try:
-            self.logger.info(f'Invoking get request url:{url} header: {header}')
+            self.logger.info(f'Invoking get request url:{url} header: {header}',DEBUG_LEVEL_DEBUG)
             restResponse = requests.get(self.url, timeout=30, verify=self.certificate, headers=self.header)
         except Exception as e:
             self.logger.error("An error occurred on calling PVWA REST service:\n" + str(e))
@@ -46,7 +46,7 @@ class pvwa_integration:
         self.url = url
         self.header = header
         try:
-            self.logger.info('Invoking delete request \nurl:\n' + url + ' \nheader:\n' + header,DEBUG_LEVEL_DEBUG)
+            self.logger.info(f'Invoking delete request url {url} , header: {header}' ,DEBUG_LEVEL_DEBUG)
             response = requests.delete(self.url, timeout=30, verify=self.certificate, headers=self.header)
         except Exception as e:
             self.logger.error('Failed to Invoke delete request : \n' + str(e))
@@ -60,7 +60,7 @@ class pvwa_integration:
         self.request = request
         self.header = header
         try:
-            self.logger.info('Invoking post request \nurl:\n' + url + ' \nrequest:\n' + request + ' \nheader:\n' + header,DEBUG_LEVEL_DEBUG)
+            self.logger.info(f'Invoking post request url: {url} ,  request: {request} , header: {header}' ,DEBUG_LEVEL_DEBUG)
             restResponse = requests.post(self.url, data=self.request, timeout=30, verify=self.certificate, headers=self.header, stream=True)
         except Exception as e:
             self.logger.error("Error occurred during POST request to PVWA:\n" + str(e))
