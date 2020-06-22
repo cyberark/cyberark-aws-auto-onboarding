@@ -141,7 +141,7 @@ def lambda_handler(event, context):
     finally:
         if 'pvwaSessionId' in locals():  # pvwaSessionId has been declared
             if pvwaSessionId:  # Logging off the session in case of successful logon
-                pvwa_integration_class.logoff_pvwa(requestPvwaIp, pvwaSessionId)
+                pvwa_integration_class.logoff_pvwa(pvwa_url, pvwaSessionId)
 
 
 # Creating a safe, if a failure occur, retry 3 time, wait 10 sec. between retries
