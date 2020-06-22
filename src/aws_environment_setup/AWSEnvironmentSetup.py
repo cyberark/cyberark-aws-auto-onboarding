@@ -27,8 +27,9 @@ def lambda_handler(event, context):
             physicalResourceId = event['PhysicalResourceId']
         # only deleting the vault_pass from parameter store
         if event['RequestType'] == 'Delete':
+            aob_mode = get_aob_mode()
             logger.info('Delete request received')
-            if not delete_password_from_param_store():
+            if not delete_password_from_param_store(aob_mode):
                 return cfnresponse.send(event, context, cfnresponse.FAILED,
                                         "Failed to delete 'AOB_Vault_Pass' from parameter store, see detailed error in logs", {}, physicalResourceId)
             delete_sessions_table()
@@ -287,8 +288,8 @@ def add_param_to_parameter_store(value, parameterName, parameterDescription):
     return True
 
 
-def delete_password_from_param_store():
-    logger.trace(caller_name='delete_password_from_param_store')
+def delete_password_from_param_store(aob_mode):
+    logger.trace(aob_mode, caller_name='delete_password_from_param_store')
     try:
         logger.info('Deleting parameters from parameter store')
         ssmClient = boto3.client('ssm')
@@ -297,13 +298,14 @@ def delete_password_from_param_store():
         )
         print("Parameter 'AOB_Vault_Pass' deleted successfully from Parameter Store")
         ssmClient.delete_parameter(
-            Name='AOB_PVWA_Verification_Key'
-        )
-        print("Parameter 'AOB_PVWA_Verification_Key' deleted successfully from Parameter Store")
-        ssmClient.delete_parameter(
             Name='AOB_mode'
         )
         print("Parameter 'AOB_mode' deleted successfully from Parameter Store")
+        if aob_mode == 'Production':
+            ssmClient.delete_parameter(
+                Name='AOB_PVWA_Verification_Key'
+            )
+            print("Parameter 'AOB_PVWA_Verification_Key' deleted successfully from Parameter Store")
         return True
     except Exception as e:
         if e.response["Error"]["Code"] == "ParameterNotFound":
@@ -324,3 +326,11 @@ def delete_sessions_table():
     except Exception:
         logger.error("Failed to delete 'Sessions' table from DynamoDB")
         return
+
+def get_aob_mode():
+    ssm = boto3.client('ssm')
+    ssm_parameter = ssm.get_parameter(
+        Name='AOB_mode'
+    )
+    aob_mode = ssm_parameter['Parameter']['Value']
+    return aob_mode
