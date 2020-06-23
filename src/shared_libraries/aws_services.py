@@ -46,7 +46,7 @@ def get_ec2_details(instanceId, solutionAccountId, eventRegion, eventAccountId):
     try:
         instanceResource = ec2Resource.Instance(instanceId)
         instanceImage = ec2Resource.Image(instanceResource.image_id)
-        logger.info('Image Detected: ' + instanceImage)
+        logger.info('Image Detected: ' + str(instanceImage))
         imageDescription = instanceImage.description
     except Exception as e:
         logger.error('Error on getting instance details: {0}'.format(str(e)))

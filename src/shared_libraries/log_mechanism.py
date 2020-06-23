@@ -8,12 +8,15 @@ class log_mechanism:
     def __init__(self):
         self.debug_level = get_debug_level()
     def info(self, message,debug_level=DEBUG_LEVEL_INFO):
+        message = str(message)
         if debug_level == self.debug_level.lower() or self.debug_level.lower() == 'trace':
             print(f'[INFO] {message}')
     def error(self, message,debug_level=DEBUG_LEVEL_INFO):
+        message = str(message)
         if debug_level == self.debug_level.lower() or self.debug_level.lower() == 'trace':
             print(f'[ERROR] {message}')
     def trace(self,*args, caller_name):
+        args = [str(arg) for arg in args]
         if self.debug_level.lower() == 'trace':
             print (f'[TRACE] {caller_name}: ', args, sep = ' | ')
         
