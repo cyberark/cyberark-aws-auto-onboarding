@@ -79,7 +79,7 @@ def lambda_handler(event, context):
                                                 "Failed to create PVWA Verification Key in Parameter Store", {}, physical_resource_id)
             
             pvwa_integration_class = PvwaIntegration(IS_SAFE_HANDLER, aob_mode)
-            pvwa_url = 'https://{0}/PasswordVault'.format(request_pvwa_ip)
+            pvwa_url = f"https://{request_pvwa_ip}/PasswordVault"
             pvwa_session_id = pvwa_integration_class.logon_pvwa(request_username, request_password, pvwa_url,"1")
             if not pvwa_session_id:
                 return cfnresponse.send(event, context, cfnresponse.FAILED,
@@ -89,7 +89,7 @@ def lambda_handler(event, context):
                                             pvwa_session_id, 1)
             if not is_safe_created:
                 return cfnresponse.send(event, context, cfnresponse.FAILED,
-                                        "Failed to create the Safe '{0}', see detailed error in logs".format(request_unix_safe_name),
+                                        f"Failed to create the Safe {request_unix_safe_name}, see detailed error in logs",
                                         {}, physical_resource_id)
 
             is_safe_created = create_safe(pvwa_integration_class, request_windows_safe_name, request_windows_cpm_name, request_pvwa_ip,
@@ -97,8 +97,7 @@ def lambda_handler(event, context):
 
             if not is_safe_created:
                 return cfnresponse.send(event, context, cfnresponse.FAILED,
-                                        "Failed to create the Safe '{0}', see detailed error in logs".format(
-                                            request_windows_safe_name),
+                                        f"Failed to create the Safe {request_windows_safe_name}, see detailed error in logs",
                                         {}, physical_resource_id)
 
             if not create_session_table():
@@ -110,7 +109,7 @@ def lambda_handler(event, context):
             is_safe_created = create_safe(pvwa_integration_class, request_key_pair_safe, "", request_pvwa_ip, pvwa_session_id)
             if not is_safe_created:
                 return cfnresponse.send(event, context, cfnresponse.FAILED,
-                                        "Failed to create the Key Pairs safe: {0}, see detailed error in logs".format(request_key_pair_safe),
+                                        f"Failed to create the Key Pairs safe: {request_key_pair_safe}, see detailed error in logs",
                                         {}, physical_resource_id)
 
             #  key pair is optional parameter
@@ -122,10 +121,10 @@ def lambda_handler(event, context):
 
                 if aws_key_pair is False:
                     # Account already exist, no need to create it, can't insert it to the vault
-                    return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to create Key Pair '{0}' in AWS".format(request_key_pair_name),
+                    return cfnresponse.send(event, context, cfnresponse.FAILED, f"Failed to create Key Pair {request_key_pair_name} in AWS",
                                             {}, physical_resource_id)
                 if aws_key_pair is True:
-                    return cfnresponse.send(event, context, cfnresponse.FAILED, "Key Pair '{0}' already exists in AWS".format(request_key_pair_name),
+                    return cfnresponse.send(event, context, cfnresponse.FAILED, f"Key Pair {request_key_pair_name} already exists in AWS",
                                             {}, physical_resource_id)
                 # Create the key pair account on KeyPairs vault
                 is_aws_account_created = create_key_pair_in_vault(pvwa_integration_class, pvwa_session_id, request_key_pair_name,
@@ -139,8 +138,8 @@ def lambda_handler(event, context):
                 return cfnresponse.send(event, context, cfnresponse.SUCCESS, None, {}, physical_resource_id)
 
     except Exception as e:
-        logger.error("Exception occurred:{0}:".format(str(e)))
-        return cfnresponse.send(event, context, cfnresponse.FAILED, "Exception occurred: {0}".format(str(e)), {})
+        logger.error(f"Exception occurred:{str(e)}:")
+        return cfnresponse.send(event, context, cfnresponse.FAILED, f"Exception occurred: {str(e)}", {})
 
     finally:
         if 'pvwa_session_id' in locals():  # pvwa_session_id has been declared
@@ -153,31 +152,31 @@ def create_safe(pvwa_integration_class, safe_name, cpm_name, pvwa_ip, session_id
     logger.trace(pvwa_integration_class, safe_name, cpm_name, pvwa_ip, session_id, number_of_days_retention, caller_name='create_safe')
     header = DEFAULT_HEADER
     header.update({"Authorization": session_id})
-    create_safe_url = "https://{0}/PasswordVault/WebServices/PIMServices.svc/Safes".format(pvwa_ip)
+    create_safe_url = f"https://{pvwa_ip}/PasswordVault/WebServices/PIMServices.svc/Safes"
     # Create new safe, default number of days retention is 7, unless specified otherwise
-    data = """
-                {{
-          "safe":{{
-        "SafeName":"{0}",
-        "Description":"",
-        "OLACEnabled":false,
-        "ManagingCPM":"{1}",
-        "NumberOfDaysRetention":"{2}"
-          }}
-        }}
-    """.format(safe_name, cpm_name, number_of_days_retention)
+    data = f"""
+            {{{{
+            "safe":{{{{
+                "SafeName":"{safe_name}",
+                "Description":"",
+                "OLACEnabled":false,
+                "ManagingCPM":"{cpm_name}",
+                "NumberOfDaysRetention":"{number_of_days_retention}"
+              }}}}
+            }}}}
+            """
 
     for i in range(0, 3):
         create_safe_rest_response = pvwa_integration_class.call_rest_api_post(create_safe_url, data, header)
 
         if create_safe_rest_response.status_code == requests.codes.conflict:
-            logger.info("The Safe '{0}' already exists".format(safe_name))
+            logger.info(f"The Safe {safe_name} already exists"
             return True
         elif create_safe_rest_response.status_code == requests.codes.bad_request:
-            logger.error("Failed to create Safe '{0}', error 400: bad request".format(safe_name))
+            logger.error(f"Failed to create Safe {safe_name}, error 400: bad request"
             return False
         elif create_safe_rest_response.status_code == requests.codes.created:  # safe created
-            logger.info("Safe '{0}' was successfully created".format(safe_name))
+            logger.info(f"Safe {safe_name} was successfully created"
             return True
         else:  # Error creating safe, retry for 3 times, with 10 seconds between retries
             logger.error(f"Error creating Safe, status code:{create_safe_rest_response.status_code}, will retry in 10 seconds")
@@ -201,10 +200,10 @@ def create_new_key_pair_on_aws(key_pair_name):
         )
     except Exception as e:
         if e.response["Error"]["Code"] == "InvalidKeyPair.Duplicate":
-            logger.error("Key Pair '{0}' already exists".format(key_pair_name))
+            logger.error(f"Key Pair {key_pair_name} already exists")
             return True
         else:
-            logger.error("Creating new key pair failed. error code:\n {0}".format(e.response["Error"]["Code"]))
+            logger.error(f"Creating new key pair failed. error code:\n {e.response["Error"]["Code"]}")
             return False
 
     return key_pair_response["KeyMaterial"]
@@ -221,28 +220,30 @@ def create_key_pair_in_vault(pvwa_integration_class, session, aws_key_name, priv
     trimmed_pem_key = trimmed_pem_key.replace("\r", "\\r")
 
     # AWS.<AWS Account>.<Region name>.<key pair name>
-    unique_user_name = "AWS.{0}.{1}.{2}".format(aws_account_id, aws_region_name, aws_key_name)
-    logger.info("Creating account with username:{0}".format(unique_user_name))
+    unique_user_name = f"AWS.{aws_account_id}.{aws_region_name}.{aws_key_name}"
+    logger.info(f"Creating account with username:{unique_user_name}")
 
-    url = "https://{0}/PasswordVault/WebServices/PIMServices.svc/Account".format(pvwa_ip)
-    data = """{{
-      "account" : {{
-        "safe":"{0}",
-        "platformID":"{1}",
-        "address":1.1.1.1,
-        "password":"{2}",
-        "username":"{3}",
-        "disableAutoMgmt":"true",
-        "disableAutoMgmtReason":"Unmanaged account"
-      }}
-    }}""".format(safe_name, "UnixSSHKeys", trimmed_pem_key, unique_user_name)
+    url = f"https://{pvwa_ip}/PasswordVault/WebServices/PIMServices.svc/Account"
+    data = f"""
+            {{{{
+              "account" : {{{{
+                  "safe":"{safe_name}",
+                  "platformID":"UnixSSHKeys",
+                  "address":1.1.1.1,
+                  "password":"{trimmed_pem_key}",
+                  "username":"{unique_user_name}",
+                  "disableAutoMgmt":"true",
+                  "disableAutoMgmtReason":"Unmanaged account"
+              }}}}
+            }}}}
+        """
     rest_response = pvwa_integration_class.call_rest_api_post(url, data, header)
 
     if rest_response.status_code == requests.codes.created:
-        logger.info("Key Pair created successfully in safe '{0}'".format(safe_name))
+        logger.info(f"Key Pair created successfully in safe '{safe_name}'")
         return True
     elif rest_response.status_code == requests.codes.conflict:
-        logger.info("Key Pair created already exists in safe {0}".format(safe_name))
+        logger.info(f"Key Pair created already exists in safe {safe_name}")
         return True
     else:
         logger.error(f"Failed to create Key Pair in safe {safe_name}, status code:{rest_response.status_code}")
@@ -256,7 +257,7 @@ def create_session_table():
         sessions_table_lock = LockerClient('Sessions')
         sessions_table_lock.create_lock_table()
     except Exception as e:
-        print("Failed to create 'Sessions' table in DynamoDB. Exception: {0}".format(str(e)))
+        print(f"Failed to create 'Sessions' table in DynamoDB. Exception: {str(e)}")
         return None
 
     print("Table 'Sessions' created successfully")
@@ -288,7 +289,7 @@ def add_param_to_parameter_store(value, parameter_name, parameter_description):
             Type="SecureString"
         )
     except Exception as e:
-        logger.error("Unable to create parameter '{0}' in Parameter Store. Exception: {1}".format(parameter_name, e))
+        logger.error(f"Unable to create parameter {parameter_name} in Parameter Store. Exception: {e}")
         return False
     return True
 
@@ -316,7 +317,7 @@ def delete_password_from_param_store(aob_mode):
         if e.response["Error"]["Code"] == "ParameterNotFound":
             return True
         else:
-            logger.error("Failed to delete parameter 'Vault_Pass' from Parameter Store. Error code: {0}".format(e.response["Error"]["Code"]))
+            logger.error(f"Failed to delete parameter 'Vault_Pass' from Parameter Store. Error code: {e.response["Error"]["Code"]}")
             return False
 
 

@@ -79,12 +79,14 @@ class PvwaIntegration:
         self.pvwa_url = pvwa_url
         self.connection_session_id = connection_session_id
         self.logger.info('Logging to PVWA')
-        logon_url = '{0}/WebServices/auth/Cyberark/CyberArkAuthenticationService.svc/Logon'.format(self.pvwa_url)
-        rest_log_on_data = """{{
-            "username": "{0}",
-            "password": "{1}",
-            "connectionNumber": "{2}"
-            }}""".format(self.username, self.password, self.connection_session_id)
+        logon_url = f'{self.pvwa_url}/WebServices/auth/Cyberark/CyberArkAuthenticationService.svc/Logon'
+        rest_log_on_data = f"""
+                            {{{{
+                                "username": "{self.username}",
+                                "password": "{self.password}",
+                                "connectionNumber": "{self.connection_session_id}"
+                            }}}}
+                            """
         try:
             rest_response = self.call_rest_api_post(logon_url, rest_log_on_data, DEFAULT_HEADER)
         except Exception as e:
@@ -109,7 +111,7 @@ class PvwaIntegration:
         self.logger.info('Logging off from PVWA')
         header = DEFAULT_HEADER
         header.update({"Authorization": self.connection_session_token})
-        log_off_url = '{0}/WebServices/auth/Cyberark/CyberArkAuthenticationService.svc/Logoff'.format(self.pvwa_url)
+        log_off_url = f'{self.pvwa_url}/WebServices/auth/Cyberark/CyberArkAuthenticationService.svc/Logoff'
         rest_log_off_data = ""
         try:
             rest_response = self.call_rest_api_post(log_off_url, rest_log_off_data, header)

@@ -9,7 +9,7 @@ def save_key_pair(pem_key):
     logger.trace(pem_key, caller_name='save_key_pair')
     logger.info('Saving key pair to file')
     # Save pem to file
-    save_pem_to_file_command = 'echo {0} > /tmp/pemValue.pem'.format(pem_key)
+    save_pem_to_file_command = f'echo {pem_key} > /tmp/pemValue.pem'
     subprocess.call([save_pem_to_file_command], shell=True)
     subprocess.call(["chmod 777 /tmp/pemValue.pem"], shell=True)
 

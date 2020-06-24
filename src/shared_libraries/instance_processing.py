@@ -23,7 +23,7 @@ def delete_instance(instance_id, session, store_parameters_class, instance_data,
     else:
         safe_name = store_parameters_class.unix_safe_name
         instance_username = get_os_distribution_user(instance_details['image_description'])
-    search_pattern = "{0},{1}".format(instance_ip_address, instance_username)
+    search_pattern = f"{instance_ip_address},{instance_username}"
 
     instance_account_id = pvwa_api_calls.retrieve_account_id_from_account_name(session, search_pattern,
                                                                             safe_name, instance_id,
@@ -45,13 +45,13 @@ def get_instance_password_data(instance_id,solution_account_id,event_region,even
         try:
             ec2_resource = boto3.client('ec2', event_region)
         except Exception as e:
-            logger.error('Error on creating boto3 session: {0}'.format(str(e)))
+            logger.error(f'Error on creating boto3 session: {str(e)}')
     else:
         try:
             logger.info('Assuming role')
             sts_connection = boto3.client('sts')
             acct_b = sts_connection.assume_role(
-            	RoleArn="arn:aws:iam::{0}:role/CyberArk-AOB-AssumeRoleForElasticityLambda".format(event_account_id),
+            	RoleArn=f"arn:aws:iam::{event_account_id}:role/CyberArk-AOB-AssumeRoleForElasticityLambda",
             	RoleSessionName="cross_acct_lambda"
             )
             access_key = acct_b['Credentials']['AccessKeyId']
@@ -66,17 +66,17 @@ def get_instance_password_data(instance_id,solution_account_id,event_region,even
             	aws_session_token=session_token,
             )
         except Exception as e:
-        	logger.error('Error on getting token from account {0} : {1}'.format(event_account_id,str(e)))
+        	logger.error(f'Error on getting token from account {event_account_id} : {str(e)}')
 
     try:
     	# wait until password data available when Windows instance is up
-    	logger.info("Waiting for instance - {0} to become available: ".format(instance_id))
+    	logger.info(f"Waiting for instance - {instance_id} to become available: ")
     	waiter = ec2_resource.get_waiter('password_data_available')
     	waiter.wait(instance_id=instance_id)
     	instance_password_data = ec2_resource.get_password_data(instance_id=instance_id)
     	return instance_password_data['PasswordData']
     except Exception as e:
-    	logger.error('Error on waiting for instance password: {0}'.format(str(e)))
+    	logger.error(f'Error on waiting for instance password: {str(e)}')
 
 
 def create_instance(instance_id, instance_details, store_parameters_class, log_name, solution_account_id, event_region,
@@ -92,7 +92,7 @@ def create_instance(instance_id, instance_details, store_parameters_class, log_n
         rc, decrypted_password = kp_processing.run_command_on_container(
             ["echo", str.strip(instance_password_data), "|", "base64", "--decode", "|", "openssl", "rsautl", "-decrypt",
              "-inkey", "/tmp/pemValue.pem"], True)
-        aws_account_name = 'AWS.{0}.Windows'.format(instance_id)
+        aws_account_name = f'AWS.{instance_id}.Windows'
         instance_key = decrypted_password
         platform = WINDOWS_PLATFORM
         instance_username = ADMINISTRATOR
@@ -104,7 +104,7 @@ def create_instance(instance_id, instance_details, store_parameters_class, log_n
         # ppk_key contains \r\n on each row end, adding escape char '\'
         trimmed_ppk_key = str(ppk_key).replace("\n", "\\n")
         instance_key = trimmed_ppk_key.replace("\r", "\\r")
-        aws_account_name = 'AWS.{0}.Unix'.format(instance_id)
+        aws_account_name = f'AWS.{instance_id}.Unix'
         platform = UNIX_PLATFORM
         safe_name = store_parameters_class.unix_safe_name
         instance_username = get_os_distribution_user(instance_details['image_description'])
@@ -121,7 +121,7 @@ def create_instance(instance_id, instance_details, store_parameters_class, log_n
     if not session_token:
         return
 
-    search_account_pattern = "{0},{1}".format(instance_details["address"], instance_username)
+    search_account_pattern = f"{instance_details['address']},{instance_username}"
     existing_instance_account_id = pvwa_api_calls.retrieve_account_id_from_account_name(session_token, search_account_pattern,
                                                                                     safe_name,
                                                                                     instance_id,

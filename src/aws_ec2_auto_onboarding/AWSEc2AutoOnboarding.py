@@ -20,29 +20,29 @@ def lambda_handler(event, context):
         message = event["Records"][0]["Sns"]["Message"]
         data = json.loads(message)
     except Exception as e:
-        logger.error("Error on retrieving Message Data from Event Message. Error: {0}".format(e))
+        logger.error(f"Error on retrieving Message Data from Event Message. Error: {e}")
 
     try:
         instance_id = data["detail"]["instance-id"]
     except Exception as e:
-        logger.error("Error on retrieving Instance Id from Event Message. Error: {0}".format(e))
+        logger.error(f"Error on retrieving Instance Id from Event Message. Error: {e}")
 
     try:
         action_type = data["detail"]["state"]
     except Exception as e:
-        logger.error("Error on retrieving Action Type from Event Message. Error: {0}".format(e))
+        logger.error(f"Error on retrieving Action Type from Event Message. Error: {e}")
 
 
     try:
         event_account_id = data["account"]
     except Exception as e:
-        logger.error("Error on retrieving Event Account Id from Event Message. Error: {0}".format(e))
+        logger.error(f"Error on retrieving Event Account Id from Event Message. Error: {e}")
 
 
     try:
         event_region = data["region"]
     except Exception as e:
-        logger.error("Error on retrieving Event Region from Event Message. Error: {0}".format(e))
+        logger.error(f"Error on retrieving Event Region from Event Message. Error: {e}")
 
     log_name = context.log_stream_name if context.log_stream_name else "None"
     try:
@@ -52,12 +52,12 @@ def lambda_handler(event, context):
         instance_data = aws_services.get_instance_data_from_dynamo_table(instance_id)
         if action_type == 'terminated':
             if not instance_data:
-                logger.info('Item {0} does not exist on DB'.format(instance_id))
+                logger.info(f"Item {instance_id} does not exist on DB")
                 return None
             else:
                 instance_status = instance_data["Status"]["S"]
                 if instance_status == OnBoardStatus.on_boarded_failed:
-                    logger.error("Item {0} is in status OnBoard failed, removing from DynamoDB table".format(instance_id))
+                    logger.error(f"Item {instance_id} is in status OnBoard failed, removing from DynamoDB table")
                     aws_services.remove_instance_from_dynamo_table(instance_id)
                     return None
         elif action_type == 'running':
@@ -67,12 +67,12 @@ def lambda_handler(event, context):
             if instance_data:
                 instance_status = instance_data["Status"]["S"]
                 if instance_status == OnBoardStatus.on_boarded:
-                    logger.info('Item {0} already exists on DB, no need to add it to Vault'.format(instance_id))
+                    logger.info(f"Item {instance_id} already exists on DB, no need to add it to Vault")
                     return None
                 elif instance_status == OnBoardStatus.on_boarded_failed:
-                    logger.error("Item {0} exists with status 'OnBoard failed', adding to Vault".format(instance_id))
+                    logger.error(f"Item {instance_id} exists with status 'OnBoard failed', adding to Vault")
                 else:
-                    logger.info('Item {0} does not exist on DB, adding to Vault'.format(instance_id))
+                    logger.info(f"Item {instance_id} does not exist on DB, adding to Vault")
         else:
             logger.info('Unknown instance state')
             return
@@ -105,15 +105,13 @@ def lambda_handler(event, context):
             logger.info('Retrieving accountId where the key pair is stored')
             # Retrieving the account id of the account where the instance keyPair is stored
             # AWS.<AWS Account>.<Event Region name>.<key pair name>
-            key_pair_value_on_safe = "AWS.{0}.{1}.{2}".format(instance_details["aws_account_id"], event_region,
-                                                          instance_details["key_name"])
+            key_pair_value_on_safe = f"AWS.{instance_details["aws_account_id"]}.{event_region1}.{instance_details["key_name"]}"
             key_pair_account_id = pvwa_api_calls.check_if_kp_exists(session_token, key_pair_value_on_safe,
                                                                  store_parameters_class.key_pair_safe_name,
                                                                  instance_id,
                                                                  store_parameters_class.pvwa_url)
             if not key_pair_account_id:
-                logger.error("Key Pair '{0}' does not exist in Safe '{1}'".format(key_pair_value_on_safe,
-                                       store_parameters_class.key_pair_safe_name))
+                logger.error(f"Key Pair {key_pair_value_on_safe} does not exist in Safe {store_parameters_class.key_pair_safe_name}")
                 return
             instance_account_password = pvwa_api_calls.get_account_value(session_token, key_pair_account_id, instance_id,
                                         store_parameters_class.pvwa_url)
@@ -134,7 +132,7 @@ def lambda_handler(event, context):
             aws_services.release_session_on_dynamo(pvwa_connection_number, session_guid)
 
     except Exception as e:
-        logger.error("Unknown error occurred:{0}".format(e))
+        logger.error(f"Unknown error occurred:{e}")
         if action_type == 'terminated':
             # put_instance_to_dynamo_table(instance_id, instance_details["address"]\
             # , OnBoardStatus.delete_failed, str(e), log_name)
