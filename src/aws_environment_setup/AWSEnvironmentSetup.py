@@ -6,19 +6,20 @@ import botocore
 import time
 import boto3
 import json
-from pvwa_integration import pvwa_integration
+from log_mechanism import log_mechanism
 import aws_services
+from pvwa_integration import pvwa_integration
 from dynamo_lock import LockerClient
-from log_mechanisem import log_mechanisem
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 DEBUG_LEVEL_DEBUG = 'debug' # Outputs all information
 DEFAULT_HEADER = {"content-type": "application/json"}
 IS_SAFE_HANDLER = True
-logger = log_mechanisem()
+logger = log_mechanism()
 
 def lambda_handler(event, context):
+    print(f'[PRINT] LambdaHandler:\n{event},{context}')
     logger.trace(event, context, caller_name='lambda_handler')
     try:
         physicalResourceId = str(uuid.uuid4())
@@ -26,8 +27,9 @@ def lambda_handler(event, context):
             physicalResourceId = event['PhysicalResourceId']
         # only deleting the vault_pass from parameter store
         if event['RequestType'] == 'Delete':
+            aob_mode = get_aob_mode()
             logger.info('Delete request received')
-            if not delete_password_from_param_store():
+            if not delete_password_from_param_store(aob_mode):
                 return cfnresponse.send(event, context, cfnresponse.FAILED,
                                         "Failed to delete 'AOB_Vault_Pass' from parameter store, see detailed error in logs", {}, physicalResourceId)
             delete_sessions_table()
@@ -49,8 +51,9 @@ def lambda_handler(event, context):
             requestS3BucketName = event['ResourceProperties']['S3BucketName']
             requestVerificationKeyName = event['ResourceProperties']['PVWAVerificationKeyFileName']
             AOB_mode = event['ResourceProperties']['Environment']
-            
+        
                 
+            logger.info('Adding AOB_Vault_Pass to parameter store',DEBUG_LEVEL_DEBUG)
             isPasswordSaved = add_param_to_parameter_store(requestPassword, "AOB_Vault_Pass", "Vault Password")
             if not isPasswordSaved:  # if password failed to be saved
                 return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to create Vault user's password in Parameter Store",
@@ -60,12 +63,14 @@ def lambda_handler(event, context):
             elif requestS3BucketName != '' and requestVerificationKeyName == '':
                 raise Exception('S3 Bucket cannot be empty if Verification Key is provided')
             else:
+                logger.info('Adding AOB_mode to parameter store',DEBUG_LEVEL_DEBUG)
                 isAOBModeSaved = add_param_to_parameter_store(AOB_mode,'AOB_mode',
                                                                 'Dictates if the solution will work in POC(no SSL) or Production(with SSL) mode')
                 if not isAOBModeSaved:  # if password failed to be saved
                     return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to create AOB_mode parameter in Parameter Store",
                                             {}, physicalResourceId)                                    
                 if AOB_mode == 'Production':
+                    logger.info('Adding verification key to Parameter Store',DEBUG_LEVEL_DEBUG)
                     isVerificationKeySaved = save_verification_key_to_param_store(requestS3BucketName, requestVerificationKeyName)
                     if not isVerificationKeySaved:  # if password failed to be saved
                         return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to create PVWA Verification Key in Parameter Store",
@@ -130,13 +135,13 @@ def lambda_handler(event, context):
                 return cfnresponse.send(event, context, cfnresponse.SUCCESS, None, {}, physicalResourceId)
 
     except Exception as e:
-        logger.error("Exception occurred:{0}:".format(e))
-        return cfnresponse.send(event, context, cfnresponse.FAILED, "Exception occurred: {0}".format(e), {})
+        logger.error("Exception occurred:{0}:".format(str(e)))
+        return cfnresponse.send(event, context, cfnresponse.FAILED, "Exception occurred: {0}".format(str(e)), {})
 
     finally:
         if 'pvwaSessionId' in locals():  # pvwaSessionId has been declared
             if pvwaSessionId:  # Logging off the session in case of successful logon
-                pvwa_integration_class.logoff_pvwa(requestPvwaIp, pvwaSessionId)
+                pvwa_integration_class.logoff_pvwa(pvwa_url, pvwaSessionId)
 
 
 # Creating a safe, if a failure occur, retry 3 time, wait 10 sec. between retries
@@ -165,13 +170,13 @@ def create_safe(pvwa_integration_class, safeName, cpmName, pvwaIP, sessionId, nu
             logger.info("The Safe '{0}' already exists".format(safeName))
             return True
         elif createSafeRestResponse.status_code == requests.codes.bad_request:
-            logger.error("Failed to create safe '{0}', error 400: bad request".format(safeName))
+            logger.error("Failed to create Safe '{0}', error 400: bad request".format(safeName))
             return False
         elif createSafeRestResponse.status_code == requests.codes.created:  # safe created
-            logger.info("The Safe '{0}' was successfully created".format(safeName))
+            logger.info("Safe '{0}' was successfully created".format(safeName))
             return True
         else:  # Error creating safe, retry for 3 times, with 10 seconds between retries
-            logger.error("Error creating safe, status code:{0}, will retry in 10 seconds".format(createSafeRestResponse.status_code))
+            logger.error("Error creating Safe, status code:{0}, will retry in 10 seconds".format(createSafeRestResponse.status_code))
             if i == 3:
                 logger.error("Failed to create safe after several retries, status code:{0}"
                       .format(createSafeRestResponse.status_code))
@@ -246,7 +251,7 @@ def create_session_table():
         sessionsTableLock = LockerClient('Sessions')
         sessionsTableLock.create_lock_table()
     except Exception as e:
-        print("Failed to create 'Sessions' table in DynamoDB. Exception: {0}".format(e))
+        print("Failed to create 'Sessions' table in DynamoDB. Exception: {0}".format(str(e)))
         return None
 
     print("Table 'Sessions' created successfully")
@@ -283,8 +288,8 @@ def add_param_to_parameter_store(value, parameterName, parameterDescription):
     return True
 
 
-def delete_password_from_param_store():
-    logger.trace(caller_name='delete_password_from_param_store')
+def delete_password_from_param_store(aob_mode):
+    logger.trace(aob_mode, caller_name='delete_password_from_param_store')
     try:
         logger.info('Deleting parameters from parameter store')
         ssmClient = boto3.client('ssm')
@@ -293,13 +298,14 @@ def delete_password_from_param_store():
         )
         print("Parameter 'AOB_Vault_Pass' deleted successfully from Parameter Store")
         ssmClient.delete_parameter(
-            Name='AOB_PVWA_Verification_Key'
-        )
-        print("Parameter 'AOB_PVWA_Verification_Key' deleted successfully from Parameter Store")
-        ssmClient.delete_parameter(
             Name='AOB_mode'
         )
         print("Parameter 'AOB_mode' deleted successfully from Parameter Store")
+        if aob_mode == 'Production':
+            ssmClient.delete_parameter(
+                Name='AOB_PVWA_Verification_Key'
+            )
+            print("Parameter 'AOB_PVWA_Verification_Key' deleted successfully from Parameter Store")
         return True
     except Exception as e:
         if e.response["Error"]["Code"] == "ParameterNotFound":
@@ -320,3 +326,11 @@ def delete_sessions_table():
     except Exception:
         logger.error("Failed to delete 'Sessions' table from DynamoDB")
         return
+
+def get_aob_mode():
+    ssm = boto3.client('ssm')
+    ssm_parameter = ssm.get_parameter(
+        Name='AOB_mode'
+    )
+    aob_mode = ssm_parameter['Parameter']['Value']
+    return aob_mode

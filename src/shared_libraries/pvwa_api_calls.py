@@ -1,11 +1,11 @@
 import requests
 from pvwa_integration import pvwa_integration
-from log_mechanisem import log_mechanisem
+from log_mechanism import log_mechanism
 
 DEBUG_LEVEL_DEBUG = 'debug' # Outputs all information
 DEFAULT_HEADER = {"content-type": "application/json"}
 pvwa_integration_class = pvwa_integration()
-logger = log_mechanisem()
+logger = log_mechanism()
 
 
 def create_account_on_vault(session, account_name, account_password, storeParametersClass, platform_id, address,
@@ -110,7 +110,7 @@ def check_if_kp_exists(session, accountName, safeName, instanceId, restURL):
         if not restResponse:
             raise Exception("Unknown Error when calling rest service - retrieve accountId")
     except Exception as e:
-        logger.error('An error occurred:\n' + e)
+        logger.error('An error occurred:\n' + str(e))
         raise Exception(e)
     if restResponse.status_code == requests.codes.ok:
         # if response received, check account is not empty {"Count": 0,"accounts": []}
@@ -139,7 +139,7 @@ def retrieve_accountId_from_account_name(session, accountName, safeName, instanc
         if not restResponse:
             raise Exception("Unknown Error when calling rest service - retrieve accountId")
     except Exception as e:
-        logger.error('An error occurred:\n' + e)
+        logger.error('An error occurred:\n' + str(e))
         raise Exception(e)
     if restResponse.status_code == requests.codes.ok:
         # if response received, check account is not empty {"Count": 0,"accounts": []}

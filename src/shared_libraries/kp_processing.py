@@ -1,8 +1,8 @@
 import subprocess
-from log_mechanisem import log_mechanisem
+from log_mechanism import log_mechanism
 
 DEBUG_LEVEL_DEBUG = 'debug' # Outputs all information
-logger = log_mechanisem()
+logger = log_mechanism()
 
 
 def save_key_pair(pemKey):

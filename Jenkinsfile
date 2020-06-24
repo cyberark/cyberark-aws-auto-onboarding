@@ -57,7 +57,7 @@ pipeline {
                      cd package
                      zip -r9 ${OLDPWD}/aws_environment_setup.zip .
                      cd $OLDPWD
-                     zip -g aws_environment_setup.zip aws_services.py AWSEnvironmentSetup.py instance_processing.py kp_processing.py pvwa_api_calls.py pvwa_integration.py log_mechanisem.py
+                     zip -g aws_environment_setup.zip aws_services.py AWSEnvironmentSetup.py instance_processing.py kp_processing.py pvwa_api_calls.py pvwa_integration.py log_mechanism.py
                  '''
              }
         }
@@ -70,7 +70,7 @@ pipeline {
                      cd package
                      zip -r9 ${OLDPWD}/aws_ec2_auto_onboarding.zip .
                      cd $OLDPWD
-                     zip -g aws_ec2_auto_onboarding.zip aws_services.py AWSEc2AutoOnboarding.py instance_processing.py kp_processing.py pvwa_api_calls.py pvwa_integration.py puttygen log_mechanisem.py
+                     zip -g aws_ec2_auto_onboarding.zip aws_services.py AWSEc2AutoOnboarding.py instance_processing.py kp_processing.py pvwa_api_calls.py pvwa_integration.py puttygen log_mechanism.py
                  '''
              }
         }
@@ -118,34 +118,34 @@ pipeline {
                 '''
             }
         }
-        stage('Git clone AOB') {
-            steps{
-                script{
-                    try{
-                        git credentialsId: 'jenkins-github-access-token', url: 'https://github.com/cyberark/cyberark-aws-auto-onboarding.git'
-                        dir ('cyberark-aws-auto-onboarding') {
-                            sh '''
-                                git clone --single-branch --branch develop https://github.com/cyberark/cyberark-aws-auto-onboarding.git
-                            '''
-                        }
-                    } catch (err) {
-                        echo err.getMessage()
-                        sh '''
-                            git pull
-                           '''
-                    }
-                }
-            }
-        }
-        stage('Git clone AOB tests') {
-            steps{
-                script{
-                    git credentialsId: 'jenkins-github-access-token', url: 'https://github.com/cyberark/cyberark-aws-auto-onboarding-tests.git'
-                    dir ('cyberark-aws-auto-onboarding-tests') {
-                    }
-                }
-            }
-        }
+        // stage('Git clone AOB') {
+        //     steps{
+        //         script{
+        //             try{
+        //                 git credentialsId: 'jenkins-github-access-token', url: 'https://github.com/cyberark/cyberark-aws-auto-onboarding.git'
+        //                 dir ('cyberark-aws-auto-onboarding') {
+        //                     sh '''
+        //                         git clone --single-branch --branch develop https://github.com/cyberark/cyberark-aws-auto-onboarding.git
+        //                     '''
+        //                 }
+        //             } catch (err) {
+        //                 echo err.getMessage()
+        //                 sh '''
+        //                     git pull
+        //                   '''
+        //             }
+        //         }
+        //     }
+        // }
+        // stage('Git clone AOB tests') {
+        //     steps{
+        //         script{
+        //             git credentialsId: 'jenkins-github-access-token', url: 'https://github.com/cyberark/cyberark-aws-auto-onboarding-tests.git'
+        //             dir ('cyberark-aws-auto-onboarding-tests') {
+        //             }
+        //         }
+        //     }
+        // }
         // stage('Deploy AOB solution')
         // {
         //     steps{

@@ -2,11 +2,11 @@ import boto3
 import json
 import time
 import random
-from log_mechanisem import log_mechanisem
+from log_mechanism import log_mechanism
 from dynamo_lock import LockerClient
 
 DEBUG_LEVEL_DEBUG = 'debug' # Outputs all information
-logger = log_mechanisem()
+logger = log_mechanism()
 
 # return ec2 instance relevant data:
 # keyPair_name, instance_address, platform
@@ -17,7 +17,7 @@ def get_ec2_details(instanceId, solutionAccountId, eventRegion, eventAccountId):
         try:
             ec2Resource = boto3.resource('ec2', eventRegion)
         except Exception as e:
-            logger.error('Error on creating boto3 session: {0}'.format(e))
+            logger.error('Error on creating boto3 session: {0}'.format(str(e)))
     else:
         try:
             logger.info('Assuming Role')
@@ -46,10 +46,10 @@ def get_ec2_details(instanceId, solutionAccountId, eventRegion, eventAccountId):
     try:
         instanceResource = ec2Resource.Instance(instanceId)
         instanceImage = ec2Resource.Image(instanceResource.image_id)
-        logger.info('Image Detected: ' + instanceImage)
+        logger.info('Image Detected: ' + str(instanceImage))
         imageDescription = instanceImage.description
     except Exception as e:
-        logger.error('Error on getting instance details: {0}'.format(e))
+        logger.error('Error on getting instance details: {0}'.format(str(e)))
         raise e
 
     #  We take the instance address in the order of: public dns -> public ip -> private ip ##
@@ -118,8 +118,8 @@ def get_params_from_param_store():
                                        InvocationType='RequestResponse',
                                        Payload=json.dumps(lambdaRequestData))
     except Exception as e:
-        logger.error("Error retrieving parameters from parameter parameter store:{0}".format(e))
-        raise Exception("Error retrieving parameters from parameter parameter store:{0}".format(e))
+        logger.error("Error retrieving parameters from parameter parameter store:{0}".format(str(e)))
+        raise Exception("Error retrieving parameters from parameter parameter store:{0}".format(str(e))) 
 
     jsonParsedResponse = json.load(response['Payload'])
     # parsing the parameters, jsonParsedResponse is a list of dictionaries
@@ -183,7 +183,7 @@ def release_session_on_dynamo(sessionId, sessionGuid):
         sessionsTableLockClient.guid = sessionGuid
         sessionsTableLockClient.release(sessionId)
     except Exception as e:
-        logger.error('Failed to release session lock from DynamoDB:\n{error}'.format(error=e))
+        logger.error('Failed to release session lock from DynamoDB:\n{error}'.format(error=str(e)))
         return False
 
     return True
@@ -201,7 +201,7 @@ def remove_instance_from_dynamo_table(instanceId):
             }
         )
     except Exception as e:
-        logger.error('Exception occurred on deleting {instanceId} on dynamodb:\n{error}'.format(instanceId=instanceId, error=e))
+        logger.error('Exception occurred on deleting {instanceId} on dynamodb:\n{error}'.format(instanceId=instanceId, error=str(e)))
         return None
 
     logger.info('Item {0} successfully deleted from DB'.format(instanceId))
@@ -228,8 +228,8 @@ def get_available_session_from_dynamo():
         logger.info("Connection limit has been reached")
         return False, ""
     except Exception as e:
-        print("Failed to retrieve session from DynamoDB:{0}".format(e))
-        raise Exception("Exception on get_available_session_from_dynamo:{0}".format(e))
+        print("Failed to retrieve session from DynamoDB:{0}".format(str(e)))
+        raise Exception("Exception on get_available_session_from_dynamo:{0}".format(str(e)))
 
 
 def update_instances_table_status(instanceId, status, error="None"):
