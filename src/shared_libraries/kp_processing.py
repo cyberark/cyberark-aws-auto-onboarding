@@ -1,49 +1,49 @@
 import subprocess
-from log_mechanism import log_mechanism
+from log_mechanism import LogMechanism
 
 DEBUG_LEVEL_DEBUG = 'debug' # Outputs all information
-logger = log_mechanism()
+logger = LogMechanism()
 
 
-def save_key_pair(pemKey):
-    logger.trace(pemKey, caller_name='save_key_pair')
+def save_key_pair(pem_key):
+    logger.trace(pem_key, caller_name='save_key_pair')
     logger.info('Saving key pair to file')
     # Save pem to file
-    savePemToFileCommand = 'echo {0} > /tmp/pemValue.pem'.format(pemKey)
-    subprocess.call([savePemToFileCommand], shell=True)
+    save_pem_to_file_command = 'echo {0} > /tmp/pemValue.pem'.format(pem_key)
+    subprocess.call([save_pem_to_file_command], shell=True)
     subprocess.call(["chmod 777 /tmp/pemValue.pem"], shell=True)
 
 
-def convert_pem_to_ppk(pemKey):
+def convert_pem_to_ppk(pem_key):
     logger.trace(caller_name='convert_pem_to_ppk')
     logger.info('Converting key pair from pem to ppk')
     #  convert pem file, get ppk value
     #  Uses Puttygen sent to the lambda
-    save_key_pair(pemKey=pemKey)
+    save_key_pair(pem_key=pem_key)
     subprocess.call(["cp ./puttygen /tmp/puttygen"], shell=True)
     subprocess.call(["chmod 777 /tmp/puttygen "], shell=True)
     subprocess.check_output("ls /tmp -l", shell=True)
     subprocess.check_output("cat /tmp/pemValue.pem", shell=True)
-    conversionResult = subprocess.call(["/tmp/puttygen /tmp/pemValue.pem -O private -o /tmp/ppkValue.ppk"], shell=True)
-    if conversionResult == 0:
-        ppkKey = subprocess.check_output("cat /tmp/ppkValue.ppk", shell=True).decode("utf-8")
+    conversion_result = subprocess.call(["/tmp/puttygen /tmp/pemValue.pem -O private -o /tmp/ppkValue.ppk"], shell=True)
+    if conversion_result == 0:
+        ppk_key = subprocess.check_output("cat /tmp/ppkValue.ppk", shell=True).decode("utf-8")
         logger.info("Pem key successfully converted")
     else:
         logger.error("Failed to convert pem key to ppk")
         return False
 
-    return ppkKey
+    return ppk_key
 
 
 def run_command_on_container(command, print_output):
     logger.trace(caller_name='run_command_on_container')
-    decryptedPassword = ""
+    decrypted_password = ""
     with subprocess.Popen(' '.join(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True) as p:
         if print_output:
-            decryptedPassword = print_process_outputs_on_end(p)
+            decrypted_password = print_process_outputs_on_end(p)
         else:
             p.wait()
-    return [p.returncode, decryptedPassword]
+    return [p.returncode, decrypted_password]
 
 
 def print_process_outputs_on_end(p):

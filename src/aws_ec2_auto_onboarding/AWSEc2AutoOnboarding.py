@@ -1,15 +1,15 @@
 import json
 import urllib3
-from pvwa_integration import pvwa_integration
+from pvwa_integration import PvwaIntegration
 import aws_services
 import instance_processing
 import pvwa_api_calls
-from log_mechanism import log_mechanism
+from log_mechanism import LogMechanism
 
 
 DEBUG_LEVEL_DEBUG = 'debug' # Outputs all information
-logger = log_mechanism()
-pvwa_integration_class = pvwa_integration()
+logger = LogMechanism()
+pvwa_integration_class = PvwaIntegration()
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
@@ -23,128 +23,131 @@ def lambda_handler(event, context):
         logger.error("Error on retrieving Message Data from Event Message. Error: {0}".format(e))
 
     try:
-        instanceId = data["detail"]["instance-id"]
+        instance_id = data["detail"]["instance-id"]
     except Exception as e:
         logger.error("Error on retrieving Instance Id from Event Message. Error: {0}".format(e))
 
     try:
-        actionType = data["detail"]["state"]
+        action_type = data["detail"]["state"]
     except Exception as e:
         logger.error("Error on retrieving Action Type from Event Message. Error: {0}".format(e))
 
 
     try:
-        eventAccountId = data["account"]
+        event_account_id = data["account"]
     except Exception as e:
         logger.error("Error on retrieving Event Account Id from Event Message. Error: {0}".format(e))
 
 
     try:
-        eventRegion = data["region"]
+        event_region = data["region"]
     except Exception as e:
         logger.error("Error on retrieving Event Region from Event Message. Error: {0}".format(e))
 
-    logName = context.log_stream_name if context.log_stream_name else "None"
+    log_name = context.log_stream_name if context.log_stream_name else "None"
     try:
-        solutionAccountId = context.invoked_function_arn.split(':')[4]
-        instanceDetails = aws_services.get_ec2_details(instanceId, solutionAccountId, eventRegion, eventAccountId)
+        solution_account_id = context.invoked_function_arn.split(':')[4]
+        instance_details = aws_services.get_ec2_details(instance_id, solution_account_id, event_region, event_account_id)
 
-        instanceData = aws_services.get_instance_data_from_dynamo_table(instanceId)
-        if actionType == 'terminated':
-            if not instanceData:
-                logger.info('Item {0} does not exist on DB'.format(instanceId))
+        instance_data = aws_services.get_instance_data_from_dynamo_table(instance_id)
+        if action_type == 'terminated':
+            if not instance_data:
+                logger.info('Item {0} does not exist on DB'.format(instance_id))
                 return None
             else:
-                instanceStatus = instanceData["Status"]["S"]
-                if instanceStatus == OnBoardStatus.OnBoarded_Failed:
-                    logger.error("Item {0} is in status OnBoard failed, removing from DynamoDB table".format(instanceId))
-                    aws_services.remove_instance_from_dynamo_table(instanceId)
+                instance_status = instance_data["Status"]["S"]
+                if instance_status == OnBoardStatus.on_boarded_failed:
+                    logger.error("Item {0} is in status OnBoard failed, removing from DynamoDB table".format(instance_id))
+                    aws_services.remove_instance_from_dynamo_table(instance_id)
                     return None
-        elif actionType == 'running':
-            if not instanceDetails["address"]:  # In case querying AWS return empty address
+        elif action_type == 'running':
+            if not instance_details["address"]:  # In case querying AWS return empty address
                 logger.error("Retrieving Instance Address from AWS failed.")
                 return None
-            if instanceData:
-                instanceStatus = instanceData["Status"]["S"]
-                if instanceStatus == OnBoardStatus.OnBoarded:
-                    logger.info('Item {0} already exists on DB, no need to add it to Vault'.format(instanceId))
+            if instance_data:
+                instance_status = instance_data["Status"]["S"]
+                if instance_status == OnBoardStatus.on_boarded:
+                    logger.info('Item {0} already exists on DB, no need to add it to Vault'.format(instance_id))
                     return None
-                elif instanceStatus == OnBoardStatus.OnBoarded_Failed:
-                    logger.error("Item {0} exists with status 'OnBoard failed', adding to Vault".format(instanceId))
+                elif instance_status == OnBoardStatus.on_boarded_failed:
+                    logger.error("Item {0} exists with status 'OnBoard failed', adding to Vault".format(instance_id))
                 else:
-                    logger.info('Item {0} does not exist on DB, adding to Vault'.format(instanceId))
+                    logger.info('Item {0} does not exist on DB, adding to Vault'.format(instance_id))
         else:
             logger.info('Unknown instance state')
             return
 
-        storeParametersClass = aws_services.get_params_from_param_store()
-        if not storeParametersClass:
+        store_parameters_class = aws_services.get_params_from_param_store()
+        if not store_parameters_class:
             return
-        if storeParametersClass.AOB_mode == 'Production':
+        if store_parameters_class.aob_mode == 'Production':
             # Save PVWA Verification key in /tmp folder
             logger.info('Saving verification key')
             crt = open("/tmp/server.crt", "w+")
-            crt.write(storeParametersClass.pvwaVerificationKey)
+            crt.write(store_parameters_class.pvwaVerificationKey)
             crt.close()
-        pvwaConnectionnumber, sessionGuid = aws_services.get_available_session_from_dynamo()
-        if not pvwaConnectionnumber:
+        pvwa_connection_number, session_guid = aws_services.get_available_session_from_dynamo()
+        if not pvwa_connection_number:
             return
-        sessionToken = pvwa_integration_class.logon_pvwa(storeParametersClass.vaultUsername,
-                                                         storeParametersClass.vaultPassword,
-                                                         storeParametersClass.pvwaURL, pvwaConnectionnumber)
+        session_token = pvwa_integration_class.logon_pvwa(store_parameters_class.vaultUsername,
+                                                         store_parameters_class.vaultPassword,
+                                                         store_parameters_class.pvwa_url, pvwa_connection_number)
 
-        if not sessionToken:
+        if not session_token:
             return
         disconnect = False
-        if actionType == 'terminated':
-            logger.info('Detected termination of ' + instanceId)
-            instance_processing.delete_instance(instanceId, sessionToken, storeParametersClass, instanceData, instanceDetails)
-        elif actionType == 'running':
+        if action_type == 'terminated':
+            logger.info('Detected termination of ' + instance_id)
+            instance_processing.delete_instance(instance_id, session_token, store_parameters_class, instance_data,
+                                                instance_details)
+        elif action_type == 'running':
             # get key pair
             logger.info('Retrieving accountId where the key pair is stored')
             # Retrieving the account id of the account where the instance keyPair is stored
             # AWS.<AWS Account>.<Event Region name>.<key pair name>
-            keyPairValueOnSafe = "AWS.{0}.{1}.{2}".format(instanceDetails["aws_account_id"], eventRegion,
-                                                          instanceDetails["key_name"])
-            keyPairAccountId = pvwa_api_calls.check_if_kp_exists(sessionToken, keyPairValueOnSafe,
-                                                                 storeParametersClass.keyPairSafeName,
-                                                                 instanceId,
-                                                                 storeParametersClass.pvwaURL)
-            if not keyPairAccountId:
-                logger.error("Key Pair '{0}' does not exist in Safe '{1}'".format(keyPairValueOnSafe,
-                                       storeParametersClass.keyPairSafeName))
+            key_pair_value_on_safe = "AWS.{0}.{1}.{2}".format(instance_details["aws_account_id"], event_region,
+                                                          instance_details["key_name"])
+            key_pair_account_id = pvwa_api_calls.check_if_kp_exists(session_token, key_pair_value_on_safe,
+                                                                 store_parameters_class.key_pair_safe_name,
+                                                                 instance_id,
+                                                                 store_parameters_class.pvwa_url)
+            if not key_pair_account_id:
+                logger.error("Key Pair '{0}' does not exist in Safe '{1}'".format(key_pair_value_on_safe,
+                                       store_parameters_class.key_pair_safe_name))
                 return
-            instanceAccountPassword = pvwa_api_calls.get_account_value(sessionToken, keyPairAccountId, instanceId, storeParametersClass.pvwaURL)
-            if instanceAccountPassword is False:
+            instance_account_password = pvwa_api_calls.get_account_value(session_token, key_pair_account_id, instance_id,
+                                        store_parameters_class.pvwa_url)
+            if instance_account_password is False:
                 return
-            pvwa_integration_class.logoff_pvwa(storeParametersClass.pvwaURL, sessionToken)
-            aws_services.release_session_on_dynamo(pvwaConnectionnumber, sessionGuid)
+            pvwa_integration_class.logoff_pvwa(store_parameters_class.pvwa_url, session_token)
+            aws_services.release_session_on_dynamo(pvwa_connection_number, session_guid)
             disconnect = True
-            instance_processing.create_instance(instanceId, instanceDetails, storeParametersClass, logName, solutionAccountId, eventRegion, eventAccountId, instanceAccountPassword)
+            instance_processing.create_instance(instance_id, instance_details, store_parameters_class, log_name,
+                                                solution_account_id, event_region, event_account_id, instance_account_password)
         else:
             logger.error('Unknown instance state')
             return
 
 
         if not disconnect:
-            pvwa_integration_class.logoff_pvwa(storeParametersClass.pvwaURL, sessionToken)
-            aws_services.release_session_on_dynamo(pvwaConnectionnumber, sessionGuid)
+            pvwa_integration_class.logoff_pvwa(store_parameters_class.pvwa_url, session_token)
+            aws_services.release_session_on_dynamo(pvwa_connection_number, session_guid)
 
     except Exception as e:
         logger.error("Unknown error occurred:{0}".format(e))
-        if actionType == 'terminated':
-            # put_instance_to_dynamo_table(instanceId, instanceDetails["address"]\
-            # , OnBoardStatus.Delete_Failed, str(e), logName)
-            aws_services.update_instances_table_status(instanceId, OnBoardStatus.Delete_Failed, str(e))
-        elif actionType == 'running':
-            aws_services.put_instance_to_dynamo_table(instanceId, instanceDetails["address"], OnBoardStatus.OnBoarded_Failed, str(e),
-                                                      logName)
+        if action_type == 'terminated':
+            # put_instance_to_dynamo_table(instance_id, instance_details["address"]\
+            # , OnBoardStatus.delete_failed, str(e), log_name)
+            aws_services.update_instances_table_status(instance_id, OnBoardStatus.delete_failed, str(e))
+        elif action_type == 'running':
+            aws_services.put_instance_to_dynamo_table(instance_id, instance_details["address"], OnBoardStatus.on_boarded_failed,
+                                                        str(e), log_name)
         # TODO: Retry mechanism?
-        aws_services.release_session_on_dynamo(pvwaConnectionnumber, sessionGuid)
+        aws_services.release_session_on_dynamo(pvwa_connection_number, session_guid)
         return
 
 
 class OnBoardStatus:
-    OnBoarded = "on boarded"
-    OnBoarded_Failed = "on board failed"
-    Delete_Failed = "delete failed"
+    on_boarded = "on boarded"
+    on_boarded_failed = "on board failed"
+    delete_failed = "delete failed"

@@ -1,13 +1,13 @@
 import requests
 import aws_services
-from log_mechanism import log_mechanism
+from log_mechanism import LogMechanism
 
 DEBUG_LEVEL_DEBUG = 'debug' # Outputs all information
 DEFAULT_HEADER = {"content-type": "application/json"}
 # RestApiCalls:
-class pvwa_integration:
+class PvwaIntegration:
     def __init__(self, is_safe_handler=False,safe_handler_environment=None):
-        self.logger = log_mechanism()
+        self.logger = LogMechanism()
         self.logger.trace(is_safe_handler, safe_handler_environment, caller_name='__init__')
         self.is_safe_handler = is_safe_handler
         self.safe_handler_environment = safe_handler_environment
@@ -15,7 +15,7 @@ class pvwa_integration:
             self.logger.info('Getting parameters from parameter store')
             if not is_safe_handler:
                 parameters = aws_services.get_params_from_param_store()
-                environment = parameters.AOB_mode
+                environment = parameters.aob_mode
             else:
                 environment = self.safe_handler_environment
             if environment == 'Production':
@@ -25,8 +25,9 @@ class pvwa_integration:
                 self.certificate = False
                 self.logger.info(f'{environment} Environment Detected',DEBUG_LEVEL_DEBUG)
         except Exception as e:
-            self.logger.error('Failed to retrieve AOB_mode parameter:\n' + str(e))
-            raise Exception("Error occurred while retrieving AOB_mode parameter")
+            self.logger.error('Failed to retrieve aob_mode parameter:\n' + str(e))
+            raise Exception("Error occurred while retrieving aob_mode parameter")
+
     
     def call_rest_api_get(self, url, header):
         self.logger.trace(url, header, caller_name='call_rest_api_get')
@@ -34,11 +35,11 @@ class pvwa_integration:
         self.header = header
         try:
             self.logger.info(f'Invoking get request url:{url} header: {header}',DEBUG_LEVEL_DEBUG)
-            restResponse = requests.get(self.url, timeout=30, verify=self.certificate, headers=self.header)
+            rest_response = requests.get(self.url, timeout=30, verify=self.certificate, headers=self.header)
         except Exception as e:
             self.logger.error("An error occurred on calling PVWA REST service:\n" + str(e))
             return None
-        return restResponse
+        return rest_response
     
     
     def call_rest_api_delete(self, url, header):
@@ -61,61 +62,62 @@ class pvwa_integration:
         self.header = header
         try:
             self.logger.info(f'Invoking post request url: {url} ,  request: {request} , header: {header}' ,DEBUG_LEVEL_DEBUG)
-            restResponse = requests.post(self.url, data=self.request, timeout=30, verify=self.certificate, headers=self.header, stream=True)
+            rest_response = requests.post(self.url, data=self.request, timeout=30, verify=self.certificate, headers=self.header,
+                                            stream=True)
         except Exception as e:
             self.logger.error("Error occurred during POST request to PVWA:\n" + str(e))
             return None
-        return restResponse
+        return rest_response
     
     
     # PvwaIntegration:
     # performs logon to PVWA and return the session token
-    def logon_pvwa(self, username, password, pvwaUrl, connectionSessionId):
-        self.logger.trace(username, password, pvwaUrl, connectionSessionId, caller_name='logon_pvwa')
+    def logon_pvwa(self, username, password, pvwa_url, connection_session_id):
+        self.logger.trace(username, password, pvwa_url, connection_session_id, caller_name='logon_pvwa')
         self.username = username
         self.password = password
-        self.pvwaUrl = pvwaUrl
-        self.connectionSessionId = connectionSessionId
+        self.pvwa_url = pvwa_url
+        self.connection_session_id = connection_session_id
         self.logger.info('Logging to PVWA')
-        logonUrl = '{0}/WebServices/auth/Cyberark/CyberArkAuthenticationService.svc/Logon'.format(self.pvwaUrl)
-        restLogonData = """{{
+        logon_url = '{0}/WebServices/auth/Cyberark/CyberArkAuthenticationService.svc/Logon'.format(self.pvwa_url)
+        rest_log_on_data = """{{
             "username": "{0}",
             "password": "{1}",
             "connectionNumber": "{2}"
-            }}""".format(self.username, self.password, self.connectionSessionId)
+            }}""".format(self.username, self.password, self.connection_session_id)
         try:
-            restResponse = self.call_rest_api_post(logonUrl, restLogonData, DEFAULT_HEADER)
+            rest_response = self.call_rest_api_post(logon_url, rest_log_on_data, DEFAULT_HEADER)
         except Exception as e:
             raise Exception("Error occurred on Logon to PVWA: " + str(e))
     
-        if not restResponse:
+        if not rest_response:
             self.logger.error("Connection to PVWA reached timeout")
             raise Exception("Connection to PVWA reached timeout")
-        if restResponse.status_code == requests.codes.ok:
-            jsonParsedResponse = restResponse.json()
+        if rest_response.status_code == requests.codes.ok:
+            json_parsed_response = rest_response.json()
             self.logger.info("User authenticated")
-            return jsonParsedResponse['CyberArkLogonResult']
+            return json_parsed_response['CyberArkLogonResult']
         else:
-            self.logger.error("Authentication failed with response:\n" + restResponse)
+            self.logger.error("Authentication failed with response:\n" + rest_response)
             raise Exception("PVWA authentication failed")
     
     
-    def logoff_pvwa(self, pvwaUrl, connectionSessionToken):
-        self.logger.trace(pvwaUrl, connectionSessionToken, caller_name='logoff_pvwa')
-        self.pvwaUrl = pvwaUrl
-        self.connectionSessionToken = connectionSessionToken
+    def logoff_pvwa(self, pvwa_url, connection_session_token):
+        self.logger.trace(pvwa_url, connection_session_token, caller_name='logoff_pvwa')
+        self.pvwa_url = pvwa_url
+        self.connection_session_token = connection_session_token
         self.logger.info('Logging off from PVWA')
         header = DEFAULT_HEADER
-        header.update({"Authorization": self.connectionSessionToken})
-        logoffUrl = '{0}/WebServices/auth/Cyberark/CyberArkAuthenticationService.svc/Logoff'.format(self.pvwaUrl)
-        restLogoffData = ""
+        header.update({"Authorization": self.connection_session_token})
+        log_off_url = '{0}/WebServices/auth/Cyberark/CyberArkAuthenticationService.svc/Logoff'.format(self.pvwa_url)
+        rest_log_off_data = ""
         try:
-            restResponse = self.call_rest_api_post(logoffUrl, restLogoffData, header)
+            rest_response = self.call_rest_api_post(log_off_url, rest_log_off_data, header)
         except Exception:
             return
     
-        if(restResponse.status_code == requests.codes.ok):
-            jsonParsedResponse = restResponse.json()
+        if(rest_response.status_code == requests.codes.ok):
+            json_parsed_response = rest_response.json()
             self.logger.info("session logged off successfully")
             return True
         else:

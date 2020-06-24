@@ -4,7 +4,7 @@ import json
 DEBUG_LEVEL_INFO = 'info' # Outputs erros and info only.
 DEBUG_LEVEL_DEBUG = 'debug' # Outputs all information
 
-class log_mechanism:
+class LogMechanism:
     def __init__(self):
         self.debug_level = get_debug_level()
     def info(self, message,debug_level=DEBUG_LEVEL_INFO):

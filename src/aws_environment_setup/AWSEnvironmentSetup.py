@@ -6,9 +6,9 @@ import botocore
 import time
 import boto3
 import json
-from log_mechanism import log_mechanism
+from log_mechanism import LogMechanism
 import aws_services
-from pvwa_integration import pvwa_integration
+from pvwa_integration import PvwaIntegration
 from dynamo_lock import LockerClient
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -16,140 +16,144 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 DEBUG_LEVEL_DEBUG = 'debug' # Outputs all information
 DEFAULT_HEADER = {"content-type": "application/json"}
 IS_SAFE_HANDLER = True
-logger = log_mechanism()
+logger = LogMechanism()
 
 def lambda_handler(event, context):
     print(f'[PRINT] LambdaHandler:\n{event},{context}')
     logger.trace(event, context, caller_name='lambda_handler')
     try:
-        physicalResourceId = str(uuid.uuid4())
+        physical_resource_id = str(uuid.uuid4())
         if 'PhysicalResourceId' in event:
-            physicalResourceId = event['PhysicalResourceId']
+            physical_resource_id = event['PhysicalResourceId']
         # only deleting the vault_pass from parameter store
         if event['RequestType'] == 'Delete':
             aob_mode = get_aob_mode()
             logger.info('Delete request received')
             if not delete_password_from_param_store(aob_mode):
                 return cfnresponse.send(event, context, cfnresponse.FAILED,
-                                        "Failed to delete 'AOB_Vault_Pass' from parameter store, see detailed error in logs", {}, physicalResourceId)
+                                        "Failed to delete 'AOB_Vault_Pass' from parameter store, see detailed error in logs", {},
+                                        physical_resource_id)
             delete_sessions_table()
-            return cfnresponse.send(event, context, cfnresponse.SUCCESS, None, {}, physicalResourceId)
+            return cfnresponse.send(event, context, cfnresponse.SUCCESS, None, {}, physical_resource_id)
 
         if event['RequestType'] == 'Create':
             logger.info('Create request received')
-            requestUnixCPMName = event['ResourceProperties']['CPMUnix']
-            requestWindowsCPMName = event['ResourceProperties']['CPMWindows']
-            requestUsername = event['ResourceProperties']['Username']
-            requestUnixSafeName = event['ResourceProperties']['UnixSafeName']
-            requestWindowsSafeName = event['ResourceProperties']['WindowsSafeName']
-            requestPvwaIp = event['ResourceProperties']['PVWAIP']
-            requestPassword = event['ResourceProperties']['Password']
-            requestKeyPairSafe = event['ResourceProperties']['KeyPairSafe']
-            requestKeyPairName = event['ResourceProperties']['KeyPairName']
-            requestAWSRegionName = event['ResourceProperties']['AWSRegionName']
-            requestAWSAccountId = event['ResourceProperties']['AWSAccountId']
-            requestS3BucketName = event['ResourceProperties']['S3BucketName']
-            requestVerificationKeyName = event['ResourceProperties']['PVWAVerificationKeyFileName']
-            AOB_mode = event['ResourceProperties']['Environment']
+            request_unix_cpm_name = event['ResourceProperties']['CPMUnix']
+            request_windows_cpm_name = event['ResourceProperties']['CPMWindows']
+            request_username = event['ResourceProperties']['Username']
+            request_unix_safe_name = event['ResourceProperties']['UnixSafeName']
+            request_windows_safe_name = event['ResourceProperties']['WindowsSafeName']
+            request_pvwa_ip = event['ResourceProperties']['PVWAIP']
+            request_password = event['ResourceProperties']['Password']
+            request_key_pair_safe = event['ResourceProperties']['KeyPairSafe']
+            request_key_pair_name = event['ResourceProperties']['KeyPairName']
+            request_aws_region_name = event['ResourceProperties']['AWSRegionName']
+            request_aws_account_id = event['ResourceProperties']['AWSAccountId']
+            request_s3_bucket_name = event['ResourceProperties']['S3BucketName']
+            request_verification_key_name = event['ResourceProperties']['PVWAVerificationKeyFileName']
+            aob_mode = event['ResourceProperties']['Environment']
         
                 
             logger.info('Adding AOB_Vault_Pass to parameter store',DEBUG_LEVEL_DEBUG)
-            isPasswordSaved = add_param_to_parameter_store(requestPassword, "AOB_Vault_Pass", "Vault Password")
-            if not isPasswordSaved:  # if password failed to be saved
-                return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to create Vault user's password in Parameter Store",
-                                        {}, physicalResourceId)
-            if requestS3BucketName == '' and requestVerificationKeyName != '':
+            is_password_saved = add_param_to_parameter_store(request_password, "AOB_Vault_Pass", "Vault Password")
+            if not is_password_saved:  # if password failed to be saved
+                return cfnresponse.send(event, context, cfnresponse.FAILED,
+                                        "Failed to create Vault user's password in Parameter Store", {}, physical_resource_id)
+            if request_s3_bucket_name == '' and request_verification_key_name != '':
                 raise Exception('Verification Key cannot be empty if S3 Bucket is provided')    
-            elif requestS3BucketName != '' and requestVerificationKeyName == '':
+            elif request_s3_bucket_name != '' and request_verification_key_name == '':
                 raise Exception('S3 Bucket cannot be empty if Verification Key is provided')
             else:
-                logger.info('Adding AOB_mode to parameter store',DEBUG_LEVEL_DEBUG)
-                isAOBModeSaved = add_param_to_parameter_store(AOB_mode,'AOB_mode',
+                logger.info('Adding aob_mode to parameter store',DEBUG_LEVEL_DEBUG)
+                is_aob_mode_saved = add_param_to_parameter_store(aob_mode,'aob_mode',
                                                                 'Dictates if the solution will work in POC(no SSL) or Production(with SSL) mode')
-                if not isAOBModeSaved:  # if password failed to be saved
-                    return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to create AOB_mode parameter in Parameter Store",
-                                            {}, physicalResourceId)                                    
-                if AOB_mode == 'Production':
+                if not is_aob_mode_saved:  # if password failed to be saved
+                    return cfnresponse.send(event, context, cfnresponse.FAILED,
+                                            "Failed to create aob_mode parameter in Parameter Store", {}, physical_resource_id)                                    
+                if aob_mode == 'Production':
                     logger.info('Adding verification key to Parameter Store',DEBUG_LEVEL_DEBUG)
-                    isVerificationKeySaved = save_verification_key_to_param_store(requestS3BucketName, requestVerificationKeyName)
-                    if not isVerificationKeySaved:  # if password failed to be saved
-                        return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to create PVWA Verification Key in Parameter Store",
-                                                {}, physicalResourceId)
+                    is_verification_key_saved = save_verification_key_to_param_store(request_s3_bucket_name,
+                                                request_verification_key_name)
+                    if not is_verification_key_saved:  # if password failed to be saved
+                        return cfnresponse.send(event, context, cfnresponse.FAILED,
+                                                "Failed to create PVWA Verification Key in Parameter Store", {}, physical_resource_id)
             
-            pvwa_integration_class = pvwa_integration(IS_SAFE_HANDLER, AOB_mode)
-            pvwa_url = 'https://{0}/PasswordVault'.format(requestPvwaIp)
-            pvwaSessionId = pvwa_integration_class.logon_pvwa(requestUsername, requestPassword, pvwa_url,"1")
-            if not pvwaSessionId:
-                return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to connect to PVWA, see detailed error in logs",
-                                        {}, physicalResourceId)
-
-            isSafeCreated = create_safe(pvwa_integration_class, requestUnixSafeName, requestUnixCPMName, requestPvwaIp, pvwaSessionId, 1)
-
-            if not isSafeCreated:
+            pvwa_integration_class = PvwaIntegration(IS_SAFE_HANDLER, aob_mode)
+            pvwa_url = 'https://{0}/PasswordVault'.format(request_pvwa_ip)
+            pvwa_session_id = pvwa_integration_class.logon_pvwa(request_username, request_password, pvwa_url,"1")
+            if not pvwa_session_id:
                 return cfnresponse.send(event, context, cfnresponse.FAILED,
-                                        "Failed to create the Safe '{0}', see detailed error in logs".format(requestUnixSafeName),
-                                        {}, physicalResourceId)
+                                        "Failed to connect to PVWA, see detailed error in logs", {}, physical_resource_id)
+            
+            is_safe_created = create_safe(pvwa_integration_class, request_unix_safe_name, request_unix_cpm_name, request_pvwa_ip,
+                                            pvwa_session_id, 1)
+            if not is_safe_created:
+                return cfnresponse.send(event, context, cfnresponse.FAILED,
+                                        "Failed to create the Safe '{0}', see detailed error in logs".format(request_unix_safe_name),
+                                        {}, physical_resource_id)
 
-            isSafeCreated = create_safe(pvwa_integration_class, requestWindowsSafeName, requestWindowsCPMName, requestPvwaIp, pvwaSessionId, 1)
+            is_safe_created = create_safe(pvwa_integration_class, request_windows_safe_name, request_windows_cpm_name, request_pvwa_ip,
+                                            pvwa_session_id, 1)
 
-            if not isSafeCreated:
+            if not is_safe_created:
                 return cfnresponse.send(event, context, cfnresponse.FAILED,
                                         "Failed to create the Safe '{0}', see detailed error in logs".format(
-                                            requestWindowsSafeName),
-                                        {}, physicalResourceId)
+                                            request_windows_safe_name),
+                                        {}, physical_resource_id)
 
             if not create_session_table():
                 return cfnresponse.send(event, context, cfnresponse.FAILED,
                                         "Failed to create 'Sessions' table in DynamoDB, see detailed error in logs",
-                                        {}, physicalResourceId)
+                                        {}, physical_resource_id)
 
             #  Creating KeyPair Safe
-            isSafeCreated = create_safe(pvwa_integration_class, requestKeyPairSafe, "", requestPvwaIp, pvwaSessionId)
-            if not isSafeCreated:
+            is_safe_created = create_safe(pvwa_integration_class, request_key_pair_safe, "", request_pvwa_ip, pvwa_session_id)
+            if not is_safe_created:
                 return cfnresponse.send(event, context, cfnresponse.FAILED,
-                                        "Failed to create the Key Pairs safe: {0}, see detailed error in logs".format(requestKeyPairSafe),
-                                        {}, physicalResourceId)
+                                        "Failed to create the Key Pairs safe: {0}, see detailed error in logs".format(request_key_pair_safe),
+                                        {}, physical_resource_id)
 
             #  key pair is optional parameter
-            if not requestKeyPairName:
+            if not request_key_pair_name:
                 logger.info("Key Pair name parameter is empty, the solution will not create a new Key Pair")
-                return cfnresponse.send(event, context, cfnresponse.SUCCESS, None, {}, physicalResourceId)
+                return cfnresponse.send(event, context, cfnresponse.SUCCESS, None, {}, physical_resource_id)
             else:
-                awsKeypair = create_new_key_pair_on_AWS(requestKeyPairName)
+                aws_key_pair = create_new_key_pair_on_aws(request_key_pair_name)
 
-                if awsKeypair is False:
+                if aws_key_pair is False:
                     # Account already exist, no need to create it, can't insert it to the vault
-                    return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to create Key Pair '{0}' in AWS".format(requestKeyPairName),
-                                            {}, physicalResourceId)
-                if awsKeypair is True:
-                    return cfnresponse.send(event, context, cfnresponse.FAILED, "Key Pair '{0}' already exists in AWS".format(requestKeyPairName),
-                                            {}, physicalResourceId)
+                    return cfnresponse.send(event, context, cfnresponse.FAILED, "Failed to create Key Pair '{0}' in AWS".format(request_key_pair_name),
+                                            {}, physical_resource_id)
+                if aws_key_pair is True:
+                    return cfnresponse.send(event, context, cfnresponse.FAILED, "Key Pair '{0}' already exists in AWS".format(request_key_pair_name),
+                                            {}, physical_resource_id)
                 # Create the key pair account on KeyPairs vault
-                isAwsAccountCreated = create_key_pair_in_vault(pvwa_integration_class, pvwaSessionId, requestKeyPairName, awsKeypair, requestPvwaIp,
-                                                              requestKeyPairSafe, requestAWSAccountId, requestAWSRegionName)
-                if not isAwsAccountCreated:
+                is_aws_account_created = create_key_pair_in_vault(pvwa_integration_class, pvwa_session_id, request_key_pair_name,
+                                                                    aws_key_pair, request_pvwa_ip, request_key_pair_safe,
+                                                                    request_aws_account_id, request_aws_region_name)
+                if not is_aws_account_created:
                     return cfnresponse.send(event, context, cfnresponse.FAILED,
-                                            "Failed to create Key Pair {0} in safe {1}. see detailed error in logs".format(requestKeyPairName, requestKeyPairSafe),
-                                            {}, physicalResourceId)
+                                            f"Failed to create Key Pair {request_key_pair_name} in safe {request_key_pair_safe}. see detailed error in logs",
+                                            {}, physical_resource_id)
 
-                return cfnresponse.send(event, context, cfnresponse.SUCCESS, None, {}, physicalResourceId)
+                return cfnresponse.send(event, context, cfnresponse.SUCCESS, None, {}, physical_resource_id)
 
     except Exception as e:
         logger.error("Exception occurred:{0}:".format(str(e)))
         return cfnresponse.send(event, context, cfnresponse.FAILED, "Exception occurred: {0}".format(str(e)), {})
 
     finally:
-        if 'pvwaSessionId' in locals():  # pvwaSessionId has been declared
-            if pvwaSessionId:  # Logging off the session in case of successful logon
-                pvwa_integration_class.logoff_pvwa(pvwa_url, pvwaSessionId)
+        if 'pvwa_session_id' in locals():  # pvwa_session_id has been declared
+            if pvwa_session_id:  # Logging off the session in case of successful logon
+                pvwa_integration_class.logoff_pvwa(pvwa_url, pvwa_session_id)
 
 
 # Creating a safe, if a failure occur, retry 3 time, wait 10 sec. between retries
-def create_safe(pvwa_integration_class, safeName, cpmName, pvwaIP, sessionId, numberOfDaysRetention=7):
-    logger.trace(pvwa_integration_class, safeName, cpmName, pvwaIP, sessionId, numberOfDaysRetention, caller_name='create_safe')
+def create_safe(pvwa_integration_class, safe_name, cpm_name, pvwa_ip, session_id, number_of_days_retention=7):
+    logger.trace(pvwa_integration_class, safe_name, cpm_name, pvwa_ip, session_id, number_of_days_retention, caller_name='create_safe')
     header = DEFAULT_HEADER
-    header.update({"Authorization": sessionId})
-    createSafeUrl = "https://{0}/PasswordVault/WebServices/PIMServices.svc/Safes".format(pvwaIP)
+    header.update({"Authorization": session_id})
+    create_safe_url = "https://{0}/PasswordVault/WebServices/PIMServices.svc/Safes".format(pvwa_ip)
     # Create new safe, default number of days retention is 7, unless specified otherwise
     data = """
                 {{
@@ -161,66 +165,66 @@ def create_safe(pvwa_integration_class, safeName, cpmName, pvwaIP, sessionId, nu
         "NumberOfDaysRetention":"{2}"
           }}
         }}
-    """.format(safeName, cpmName, numberOfDaysRetention)
+    """.format(safe_name, cpm_name, number_of_days_retention)
 
     for i in range(0, 3):
-        createSafeRestResponse = pvwa_integration_class.call_rest_api_post(createSafeUrl, data, header)
+        create_safe_rest_response = pvwa_integration_class.call_rest_api_post(create_safe_url, data, header)
 
-        if createSafeRestResponse.status_code == requests.codes.conflict:
-            logger.info("The Safe '{0}' already exists".format(safeName))
+        if create_safe_rest_response.status_code == requests.codes.conflict:
+            logger.info("The Safe '{0}' already exists".format(safe_name))
             return True
-        elif createSafeRestResponse.status_code == requests.codes.bad_request:
-            logger.error("Failed to create Safe '{0}', error 400: bad request".format(safeName))
+        elif create_safe_rest_response.status_code == requests.codes.bad_request:
+            logger.error("Failed to create Safe '{0}', error 400: bad request".format(safe_name))
             return False
-        elif createSafeRestResponse.status_code == requests.codes.created:  # safe created
-            logger.info("Safe '{0}' was successfully created".format(safeName))
+        elif create_safe_rest_response.status_code == requests.codes.created:  # safe created
+            logger.info("Safe '{0}' was successfully created".format(safe_name))
             return True
         else:  # Error creating safe, retry for 3 times, with 10 seconds between retries
-            logger.error("Error creating Safe, status code:{0}, will retry in 10 seconds".format(createSafeRestResponse.status_code))
+            logger.error(f"Error creating Safe, status code:{create_safe_rest_response.status_code}, will retry in 10 seconds")
             if i == 3:
-                logger.error("Failed to create safe after several retries, status code:{0}"
-                      .format(createSafeRestResponse.status_code))
+                logger.error(f"Failed to create safe after several retries, status code:{create_safe_rest_response.status_code}")
                 return False
         time.sleep(10)
 
 
 # Search if Key pair exist, if not - create it, return the pem key, False for error
-def create_new_key_pair_on_AWS(keyPairName):
-    logger.trace(keyPairName, caller_name='create_new_key_pair_on_AWS')
-    ec2Client = boto3.client('ec2')
+def create_new_key_pair_on_aws(key_pair_name):
+    logger.trace(key_pair_name, caller_name='create_new_key_pair_on_aws')
+    ec2_client = boto3.client('ec2')
 
     # throws exception if key not found, if exception is InvalidKeyPair.Duplicate return True
     try:
         logger.info('Creating key pair')
-        keyPairResponse = ec2Client.create_key_pair(
-            KeyName=keyPairName,
+        key_pair_response = ec2_client.create_key_pair(
+            KeyName=key_pair_name,
             DryRun=False
         )
     except Exception as e:
         if e.response["Error"]["Code"] == "InvalidKeyPair.Duplicate":
-            logger.error("Key Pair '{0}' already exists".format(keyPairName))
+            logger.error("Key Pair '{0}' already exists".format(key_pair_name))
             return True
         else:
             logger.error("Creating new key pair failed. error code:\n {0}".format(e.response["Error"]["Code"]))
             return False
 
-    return keyPairResponse["KeyMaterial"]
+    return key_pair_response["KeyMaterial"]
 
 
-def create_key_pair_in_vault(pvwa_integration_class, session, awsKeyName, privateKeyValue, pvwaIP, safeName, awsAccountId, awsRegionName):
-    logger.trace(pvwa_integration_class, session, awsKeyName, privateKeyValue, pvwaIP, safeName, awsAccountId, awsRegionName,
-                 caller_name='create_key_pair_in_vault')
+def create_key_pair_in_vault(pvwa_integration_class, session, aws_key_name, private_key_value, pvwa_ip, safe_name,
+                                aws_account_id, aws_region_name):
+    logger.trace(pvwa_integration_class, session, aws_key_name, private_key_value, pvwa_ip, safe_name, aws_account_id,
+                    aws_region_name, caller_name='create_key_pair_in_vault')
     header = DEFAULT_HEADER
     header.update({"Authorization": session})
 
-    trimmedPEMKey = str(privateKeyValue).replace("\n", "\\n")
-    trimmedPEMKey = trimmedPEMKey.replace("\r", "\\r")
+    trimmed_pem_key = str(private_key_value).replace("\n", "\\n")
+    trimmed_pem_key = trimmed_pem_key.replace("\r", "\\r")
 
     # AWS.<AWS Account>.<Region name>.<key pair name>
-    uniqueUsername = "AWS.{0}.{1}.{2}".format(awsAccountId, awsRegionName, awsKeyName)
-    logger.info("Creating account with username:{0}".format(uniqueUsername))
+    unique_user_name = "AWS.{0}.{1}.{2}".format(aws_account_id, aws_region_name, aws_key_name)
+    logger.info("Creating account with username:{0}".format(unique_user_name))
 
-    url = "https://{0}/PasswordVault/WebServices/PIMServices.svc/Account".format(pvwaIP)
+    url = "https://{0}/PasswordVault/WebServices/PIMServices.svc/Account".format(pvwa_ip)
     data = """{{
       "account" : {{
         "safe":"{0}",
@@ -231,25 +235,26 @@ def create_key_pair_in_vault(pvwa_integration_class, session, awsKeyName, privat
         "disableAutoMgmt":"true",
         "disableAutoMgmtReason":"Unmanaged account"
       }}
-    }}""".format(safeName, "UnixSSHKeys", trimmedPEMKey, uniqueUsername)
-    restResponse = pvwa_integration_class.call_rest_api_post(url, data, header)
+    }}""".format(safe_name, "UnixSSHKeys", trimmed_pem_key, unique_user_name)
+    rest_response = pvwa_integration_class.call_rest_api_post(url, data, header)
 
-    if restResponse.status_code == requests.codes.created:
-        logger.info("Key Pair created successfully in safe '{0}'".format(safeName))
+    if rest_response.status_code == requests.codes.created:
+        logger.info("Key Pair created successfully in safe '{0}'".format(safe_name))
         return True
-    elif restResponse.status_code == requests.codes.conflict:
-        logger.info("Key Pair created already exists in safe {0}".format(safeName))
+    elif rest_response.status_code == requests.codes.conflict:
+        logger.info("Key Pair created already exists in safe {0}".format(safe_name))
         return True
     else:
-        logger.error("Failed to create Key Pair in safe '{0}', status code:{1}".format(safeName, restResponse.status_code))
+        logger.error(f"Failed to create Key Pair in safe {safe_name}, status code:{rest_response.status_code}")
         return False
+
 
 def create_session_table():
     logger.trace(caller_name='create_session_table')
     try:
         logger.info('Locking Dynamo Table')
-        sessionsTableLock = LockerClient('Sessions')
-        sessionsTableLock.create_lock_table()
+        sessions_table_lock = LockerClient('Sessions')
+        sessions_table_lock.create_lock_table()
     except Exception as e:
         print("Failed to create 'Sessions' table in DynamoDB. Exception: {0}".format(str(e)))
         return None
@@ -257,33 +262,33 @@ def create_session_table():
     print("Table 'Sessions' created successfully")
     return True
 
-def save_verification_key_to_param_store(S3BucketName, VerificationKeyName):
-    logger.trace(S3BucketName, VerificationKeyName, caller_name='save_verification_key_to_param_store')
+
+def save_verification_key_to_param_store(s3_bucket_name, verification_key_name):
+    logger.trace(s3_bucket_name, verification_key_name, caller_name='save_verification_key_to_param_store')
     try:
         logger.info('Downloading verification key from s3')
         s3Resource = boto3.resource('s3')
-        s3Resource.Bucket(S3BucketName).download_file(VerificationKeyName, '/tmp/server.crt')
+        s3Resource.Bucket(s3_bucket_name).download_file(verification_key_name, '/tmp/server.crt')
         add_param_to_parameter_store(open('/tmp/server.crt').read(),"AOB_PVWA_Verification_Key","PVWA Verification Key")
     except Exception as e:
-        logger.error("An error occurred while downloading Verification Key from S3 Bucket - {0}. Exception: {1}".format(S3BucketName, e))
+        logger.error(f"An error occurred while downloading Verification Key from S3 Bucket - {s3_bucket_name}. Exception: {e}")
         return False
     return True
 
 
-
-def add_param_to_parameter_store(value, parameterName, parameterDescription):
-    logger.trace(value, parameterName, parameterDescription, caller_name='add_param_to_parameter_store')
+def add_param_to_parameter_store(value, parameter_name, parameter_description):
+    logger.trace(value, parameter_name, parameter_description, caller_name='add_param_to_parameter_store')
     try:
-        logger.info('Adding parameter ' + parameterName + ' to parameter store')
-        ssmClient = boto3.client('ssm')
-        ssmClient.put_parameter(
-            Name=parameterName,
-            Description=parameterDescription,
+        logger.info('Adding parameter ' + parameter_name + ' to parameter store')
+        ssm_client = boto3.client('ssm')
+        ssm_client.put_parameter(
+            Name=parameter_name,
+            Description=parameter_description,
             Value=value,
             Type="SecureString"
         )
     except Exception as e:
-        logger.error("Unable to create parameter '{0}' in Parameter Store. Exception: {1}".format(parameterName, e))
+        logger.error("Unable to create parameter '{0}' in Parameter Store. Exception: {1}".format(parameter_name, e))
         return False
     return True
 
@@ -292,17 +297,17 @@ def delete_password_from_param_store(aob_mode):
     logger.trace(aob_mode, caller_name='delete_password_from_param_store')
     try:
         logger.info('Deleting parameters from parameter store')
-        ssmClient = boto3.client('ssm')
-        ssmClient.delete_parameter(
+        ssm_client = boto3.client('ssm')
+        ssm_client.delete_parameter(
             Name='AOB_Vault_Pass'
         )
         print("Parameter 'AOB_Vault_Pass' deleted successfully from Parameter Store")
-        ssmClient.delete_parameter(
-            Name='AOB_mode'
+        ssm_client.delete_parameter(
+            Name='aob_mode'
         )
-        print("Parameter 'AOB_mode' deleted successfully from Parameter Store")
+        print("Parameter 'aob_mode' deleted successfully from Parameter Store")
         if aob_mode == 'Production':
-            ssmClient.delete_parameter(
+            ssm_client.delete_parameter(
                 Name='AOB_PVWA_Verification_Key'
             )
             print("Parameter 'AOB_PVWA_Verification_Key' deleted successfully from Parameter Store")
@@ -320,8 +325,8 @@ def delete_sessions_table():
     try:
         logger.info('Deleting Dynamo session table')
         dynamodb = boto3.resource('dynamodb')
-        sessionsTable = dynamodb.Table('Sessions')
-        sessionsTable.delete()
+        sessions_table = dynamodb.Table('Sessions')
+        sessions_table.delete()
         return
     except Exception:
         logger.error("Failed to delete 'Sessions' table from DynamoDB")
@@ -330,7 +335,7 @@ def delete_sessions_table():
 def get_aob_mode():
     ssm = boto3.client('ssm')
     ssm_parameter = ssm.get_parameter(
-        Name='AOB_mode'
+        Name='aob_mode'
     )
     aob_mode = ssm_parameter['Parameter']['Value']
     return aob_mode
