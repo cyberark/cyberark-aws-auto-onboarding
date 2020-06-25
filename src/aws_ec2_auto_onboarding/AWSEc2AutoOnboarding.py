@@ -105,7 +105,7 @@ def lambda_handler(event, context):
             logger.info('Retrieving accountId where the key pair is stored')
             # Retrieving the account id of the account where the instance keyPair is stored
             # AWS.<AWS Account>.<Event Region name>.<key pair name>
-            key_pair_value_on_safe = f"AWS.{instance_details["aws_account_id"]}.{event_region1}.{instance_details["key_name"]}"
+            key_pair_value_on_safe = f'AWS.{instance_details["aws_account_id"]}.{event_region}.{instance_details["key_name"]}'
             key_pair_account_id = pvwa_api_calls.check_if_kp_exists(session_token, key_pair_value_on_safe,
                                                                  store_parameters_class.key_pair_safe_name,
                                                                  instance_id,
