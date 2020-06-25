@@ -101,9 +101,8 @@ class PvwaIntegration:
             json_parsed_response = rest_response.json()
             self.logger.info("User authenticated")
             return json_parsed_response['CyberArkLogonResult']
-        else:
-            self.logger.error(f"Authentication failed with response:\n{rest_response}")
-            raise Exception("PVWA authentication failed")
+        self.logger.error(f"Authentication failed with response:\n{rest_response}")
+        raise Exception("PVWA authentication failed")
 
 
     def logoff_pvwa(self, pvwa_url, connection_session_token):

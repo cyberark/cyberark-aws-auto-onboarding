@@ -81,10 +81,8 @@ def delete_account_from_vault(session, account_id, instance_id, pvwa_url):
         if rest_response.status_code != requests.codes.not_found:
             logger.error(f"Failed to delete the account for {instance_id} from the vault. The account does not exists")
             raise Exception(f"Failed to delete the account for {instance_id} from the vault. The account does not exists")
-
-        else:
-            logger.error(f"Failed to delete the account for {instance_id} from the vault. an error occurred")
-            raise Exception(f"Unknown status code received {rest_response.status_code}")
+        logger.error(f"Failed to delete the account for {instance_id} from the vault. an error occurred")
+        raise Exception(f"Unknown status code received {rest_response.status_code}")
 
     logger.info(f"The account for {instance_id} was successfully deleted")
     return True
@@ -114,9 +112,8 @@ def check_if_kp_exists(session, account_name, safe_name, instance_id, rest_url):
             parsed_json_response = rest_response.json()['value']
             return parsed_json_response[0]['id']
         return False
-    else:
-        logger.error(f"Status code {rest_response.status_code}, received from REST service")
-        raise Exception(f"Status code {rest_response.status_code}, received from REST service")
+    logger.error(f"Status code {rest_response.status_code}, received from REST service")
+    raise Exception(f"Status code {rest_response.status_code}, received from REST service")
 
 
 def retrieve_account_id_from_account_name(session, account_name, safe_name, instance_id, rest_url):
@@ -144,9 +141,8 @@ def retrieve_account_id_from_account_name(session, account_name, safe_name, inst
             return filter_get_accounts_result(parsed_json_response, instance_id)
         logger.info(f'No match for account: {account_name}')
         return False
-    else:
-        logger.error(f"Status code {rest_response.status_code}, received from REST service")
-        raise Exception(f"Status code {rest_response.status_code}, received from REST service")
+    logger.error(f"Status code {rest_response.status_code}, received from REST service")
+    raise Exception(f"Status code {rest_response.status_code}, received from REST service")
 
 
 def filter_get_accounts_result(parsed_json_response, instance_id):
