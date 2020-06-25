@@ -1,13 +1,10 @@
+import uuid
+import time
 import requests
 import urllib3
-import uuid
-import cfnresponse
-import botocore
-import time
 import boto3
-import json
+import cfnresponse
 from log_mechanism import LogMechanism
-import aws_services
 from pvwa_integration import PvwaIntegration
 from dynamo_lock import LockerClient
 
@@ -52,48 +49,49 @@ def lambda_handler(event, context):
             request_s3_bucket_name = event['ResourceProperties']['S3BucketName']
             request_verification_key_name = event['ResourceProperties']['PVWAVerificationKeyFileName']
             aob_mode = event['ResourceProperties']['Environment']
-        
-                
-            logger.info('Adding AOB_Vault_Pass to parameter store',DEBUG_LEVEL_DEBUG)
+
+
+            logger.info('Adding AOB_Vault_Pass to parameter store', DEBUG_LEVEL_DEBUG)
             is_password_saved = add_param_to_parameter_store(request_password, "AOB_Vault_Pass", "Vault Password")
             if not is_password_saved:  # if password failed to be saved
                 return cfnresponse.send(event, context, cfnresponse.FAILED,
                                         "Failed to create Vault user's password in Parameter Store", {}, physical_resource_id)
             if request_s3_bucket_name == '' and request_verification_key_name != '':
-                raise Exception('Verification Key cannot be empty if S3 Bucket is provided')    
+                raise Exception('Verification Key cannot be empty if S3 Bucket is provided')
             elif request_s3_bucket_name != '' and request_verification_key_name == '':
                 raise Exception('S3 Bucket cannot be empty if Verification Key is provided')
             else:
-                logger.info('Adding aob_mode to parameter store',DEBUG_LEVEL_DEBUG)
-                is_aob_mode_saved = add_param_to_parameter_store(aob_mode,'aob_mode',
-                                                                'Dictates if the solution will work in POC(no SSL) or Production(with SSL) mode')
+                logger.info('Adding aob_mode to parameter store', DEBUG_LEVEL_DEBUG)
+                is_aob_mode_saved = add_param_to_parameter_store(aob_mode, 'aob_mode',
+                                                                 'Dictates if the solution will work in POC(no SSL) or Production(with SSL) mode')
                 if not is_aob_mode_saved:  # if password failed to be saved
                     return cfnresponse.send(event, context, cfnresponse.FAILED,
-                                            "Failed to create aob_mode parameter in Parameter Store", {}, physical_resource_id)                                    
+                                            "Failed to create aob_mode parameter in Parameter Store", {}, physical_resource_id)
                 if aob_mode == 'Production':
-                    logger.info('Adding verification key to Parameter Store',DEBUG_LEVEL_DEBUG)
+                    logger.info('Adding verification key to Parameter Store', DEBUG_LEVEL_DEBUG)
                     is_verification_key_saved = save_verification_key_to_param_store(request_s3_bucket_name,
-                                                request_verification_key_name)
+                                                                                     request_verification_key_name)
                     if not is_verification_key_saved:  # if password failed to be saved
                         return cfnresponse.send(event, context, cfnresponse.FAILED,
-                                                "Failed to create PVWA Verification Key in Parameter Store", {}, physical_resource_id)
-            
+                                                "Failed to create PVWA Verification Key in Parameter Store",
+                                                {}, physical_resource_id)
+
             pvwa_integration_class = PvwaIntegration(IS_SAFE_HANDLER, aob_mode)
             pvwa_url = f"https://{request_pvwa_ip}/PasswordVault"
-            pvwa_session_id = pvwa_integration_class.logon_pvwa(request_username, request_password, pvwa_url,"1")
+            pvwa_session_id = pvwa_integration_class.logon_pvwa(request_username, request_password, pvwa_url, "1")
             if not pvwa_session_id:
                 return cfnresponse.send(event, context, cfnresponse.FAILED,
                                         "Failed to connect to PVWA, see detailed error in logs", {}, physical_resource_id)
-            
+
             is_safe_created = create_safe(pvwa_integration_class, request_unix_safe_name, request_unix_cpm_name, request_pvwa_ip,
-                                            pvwa_session_id, 1)
+                                          pvwa_session_id, 1)
             if not is_safe_created:
                 return cfnresponse.send(event, context, cfnresponse.FAILED,
                                         f"Failed to create the Safe {request_unix_safe_name}, see detailed error in logs",
                                         {}, physical_resource_id)
 
-            is_safe_created = create_safe(pvwa_integration_class, request_windows_safe_name, request_windows_cpm_name, request_pvwa_ip,
-                                            pvwa_session_id, 1)
+            is_safe_created = create_safe(pvwa_integration_class, request_windows_safe_name, request_windows_cpm_name,
+                                          request_pvwa_ip, pvwa_session_id, 1)
 
             if not is_safe_created:
                 return cfnresponse.send(event, context, cfnresponse.FAILED,
@@ -121,15 +119,17 @@ def lambda_handler(event, context):
 
                 if aws_key_pair is False:
                     # Account already exist, no need to create it, can't insert it to the vault
-                    return cfnresponse.send(event, context, cfnresponse.FAILED, f"Failed to create Key Pair {request_key_pair_name} in AWS",
+                    return cfnresponse.send(event, context, cfnresponse.FAILED,
+                                            f"Failed to create Key Pair {request_key_pair_name} in AWS",
                                             {}, physical_resource_id)
                 if aws_key_pair is True:
-                    return cfnresponse.send(event, context, cfnresponse.FAILED, f"Key Pair {request_key_pair_name} already exists in AWS",
+                    return cfnresponse.send(event, context, cfnresponse.FAILED,
+                                            f"Key Pair {request_key_pair_name} already exists in AWS",
                                             {}, physical_resource_id)
                 # Create the key pair account on KeyPairs vault
                 is_aws_account_created = create_key_pair_in_vault(pvwa_integration_class, pvwa_session_id, request_key_pair_name,
-                                                                    aws_key_pair, request_pvwa_ip, request_key_pair_safe,
-                                                                    request_aws_account_id, request_aws_region_name)
+                                                                  aws_key_pair, request_pvwa_ip, request_key_pair_safe,
+                                                                  request_aws_account_id, request_aws_region_name)
                 if not is_aws_account_created:
                     return cfnresponse.send(event, context, cfnresponse.FAILED,
                                             f"Failed to create Key Pair {request_key_pair_name} in safe {request_key_pair_safe}. see detailed error in logs",
@@ -149,7 +149,8 @@ def lambda_handler(event, context):
 
 # Creating a safe, if a failure occur, retry 3 time, wait 10 sec. between retries
 def create_safe(pvwa_integration_class, safe_name, cpm_name, pvwa_ip, session_id, number_of_days_retention=7):
-    logger.trace(pvwa_integration_class, safe_name, cpm_name, pvwa_ip, session_id, number_of_days_retention, caller_name='create_safe')
+    logger.trace(pvwa_integration_class, safe_name, cpm_name, pvwa_ip, session_id, number_of_days_retention,
+                 caller_name='create_safe')
     header = DEFAULT_HEADER
     header.update({"Authorization": session_id})
     create_safe_url = f"https://{pvwa_ip}/PasswordVault/WebServices/PIMServices.svc/Safes"
@@ -210,9 +211,9 @@ def create_new_key_pair_on_aws(key_pair_name):
 
 
 def create_key_pair_in_vault(pvwa_integration_class, session, aws_key_name, private_key_value, pvwa_ip, safe_name,
-                                aws_account_id, aws_region_name):
+                             aws_account_id, aws_region_name):
     logger.trace(pvwa_integration_class, session, aws_key_name, private_key_value, pvwa_ip, safe_name, aws_account_id,
-                    aws_region_name, caller_name='create_key_pair_in_vault')
+                 aws_region_name, caller_name='create_key_pair_in_vault')
     header = DEFAULT_HEADER
     header.update({"Authorization": session})
 
@@ -268,9 +269,9 @@ def save_verification_key_to_param_store(s3_bucket_name, verification_key_name):
     logger.trace(s3_bucket_name, verification_key_name, caller_name='save_verification_key_to_param_store')
     try:
         logger.info('Downloading verification key from s3')
-        s3Resource = boto3.resource('s3')
-        s3Resource.Bucket(s3_bucket_name).download_file(verification_key_name, '/tmp/server.crt')
-        add_param_to_parameter_store(open('/tmp/server.crt').read(),"AOB_PVWA_Verification_Key","PVWA Verification Key")
+        s3_resource = boto3.resource('s3')
+        s3_resource.Bucket(s3_bucket_name).download_file(verification_key_name, '/tmp/server.crt')
+        add_param_to_parameter_store(open('/tmp/server.crt').read(), "AOB_PVWA_Verification_Key", "PVWA Verification Key")
     except Exception as e:
         logger.error(f"An error occurred while downloading Verification Key from S3 Bucket - {s3_bucket_name}. Exception: {e}")
         return False

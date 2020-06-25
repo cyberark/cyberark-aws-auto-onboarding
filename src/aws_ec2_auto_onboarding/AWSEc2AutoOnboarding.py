@@ -32,12 +32,10 @@ def lambda_handler(event, context):
     except Exception as e:
         logger.error(f"Error on retrieving Action Type from Event Message. Error: {e}")
 
-
     try:
         event_account_id = data["account"]
     except Exception as e:
         logger.error(f"Error on retrieving Event Account Id from Event Message. Error: {e}")
-
 
     try:
         event_region = data["region"]
@@ -90,8 +88,9 @@ def lambda_handler(event, context):
         if not pvwa_connection_number:
             return
         session_token = pvwa_integration_class.logon_pvwa(store_parameters_class.vaultUsername,
-                                                         store_parameters_class.vaultPassword,
-                                                         store_parameters_class.pvwa_url, pvwa_connection_number)
+                                                          store_parameters_class.vaultPassword,
+                                                          store_parameters_class.pvwa_url,
+                                                          pvwa_connection_number)
 
         if not session_token:
             return
@@ -107,14 +106,14 @@ def lambda_handler(event, context):
             # AWS.<AWS Account>.<Event Region name>.<key pair name>
             key_pair_value_on_safe = f'AWS.{instance_details["aws_account_id"]}.{event_region}.{instance_details["key_name"]}'
             key_pair_account_id = pvwa_api_calls.check_if_kp_exists(session_token, key_pair_value_on_safe,
-                                                                 store_parameters_class.key_pair_safe_name,
-                                                                 instance_id,
-                                                                 store_parameters_class.pvwa_url)
+                                                                    store_parameters_class.key_pair_safe_name,
+                                                                    instance_id,
+                                                                    store_parameters_class.pvwa_url)
             if not key_pair_account_id:
                 logger.error(f"Key Pair {key_pair_value_on_safe} does not exist in Safe {store_parameters_class.key_pair_safe_name}")
                 return
             instance_account_password = pvwa_api_calls.get_account_value(session_token, key_pair_account_id, instance_id,
-                                        store_parameters_class.pvwa_url)
+                                                                         store_parameters_class.pvwa_url)
             if instance_account_password is False:
                 return
             pvwa_integration_class.logoff_pvwa(store_parameters_class.pvwa_url, session_token)
@@ -125,7 +124,6 @@ def lambda_handler(event, context):
         else:
             logger.error('Unknown instance state')
             return
-
 
         if not disconnect:
             pvwa_integration_class.logoff_pvwa(store_parameters_class.pvwa_url, session_token)
@@ -139,8 +137,8 @@ def lambda_handler(event, context):
             aws_services.update_instances_table_status(instance_id, OnBoardStatus.delete_failed, str(e))
         elif action_type == 'running':
             aws_services.put_instance_to_dynamo_table(instance_id, instance_details["address"], OnBoardStatus.on_boarded_failed,
-                                                        str(e), log_name)
-        # TODO: Retry mechanism?
+                                                      str(e), log_name)
+# TODO: Retry mechanism?
         aws_services.release_session_on_dynamo(pvwa_connection_number, session_guid)
         return
 

@@ -1,7 +1,7 @@
-import boto3
 import json
 import time
 import random
+import boto3
 from log_mechanism import LogMechanism
 from dynamo_lock import LockerClient
 
@@ -104,20 +104,20 @@ def get_params_from_param_store():
     AWS_KEYPAIR_SAFE = "AOB_KeyPair_Safe"
     VAULT_PASSWORD_PARAM_ = "AOB_Vault_Pass"
     PVWA_VERIFICATION_KEY = "AOB_PVWA_Verification_Key"
-    AOB_MODE="aob_mode"
+    AOB_MODE = "AOB_mode"
     AOB_DEBUG_LEVEL = "AOB_Debug_Level"
 
     lambda_client = boto3.client('lambda')
     lambda_request_data = dict()
     lambda_request_data["Parameters"] = [UNIX_SAFE_NAME_PARAM, WINDOWS_SAFE_NAME_PARAM, VAULT_USER_PARAM, PVWA_IP_PARAM,
-                                       AWS_KEYPAIR_SAFE, VAULT_PASSWORD_PARAM_, PVWA_VERIFICATION_KEY, AOB_MODE, AOB_DEBUG_LEVEL]
+                                         AWS_KEYPAIR_SAFE, VAULT_PASSWORD_PARAM_, PVWA_VERIFICATION_KEY, AOB_MODE, AOB_DEBUG_LEVEL]
     try:
         response = lambda_client.invoke(FunctionName='TrustMechanism',
-                                       InvocationType='RequestResponse',
-                                       Payload=json.dumps(lambda_request_data))
+                                        InvocationType='RequestResponse',
+                                        Payload=json.dumps(lambda_request_data))
     except Exception as e:
         logger.error(f"Error retrieving parameters from parameter parameter store:\n{str(e)}")
-        raise Exception(f"Error retrieving parameters from parameter parameter store: {str(e)}") 
+        raise Exception(f"Error retrieving parameters from parameter parameter store: {str(e)}")
 
     json_parsed_response = json.load(response['Payload'])
     # parsing the parameters, json_parsed_response is a list of dictionaries
@@ -145,7 +145,7 @@ def get_params_from_param_store():
         else:
             continue
     store_parameters_class = StoreParameters(unix_safe_name, windows_safe_name, vault_username, vault_password, pvwa_ip,
-                                           key_pair_safe_name, pvwa_verification_key, aob_mode, debug_level)
+                                             key_pair_safe_name, pvwa_verification_key, aob_mode, debug_level)
     return store_parameters_class
 
 
@@ -269,7 +269,8 @@ class StoreParameters:
     aob_mode = ""
 
 
-    def __init__(self, unix_safe_name, windows_safe_name, username, password, ip, key_pair_safe, pvwa_verification_key, mode, debug):
+    def __init__(self, unix_safe_name, windows_safe_name, username, password, ip, key_pair_safe, pvwa_verification_key, mode,
+                 debug):
         self.unix_safe_name = unix_safe_name
         self.windows_safe_name = windows_safe_name
         self.vault_username = username
