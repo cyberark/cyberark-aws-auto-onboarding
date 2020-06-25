@@ -36,7 +36,7 @@ pipeline {
             steps {
                 sh '''
                     source ./.testenv/bin/activate
-                    find ./src -type f -name "*.py" | xargs pylint
+                    find ./src -maxdepth 2 -type f -name "*.py" | xargs pylint
                 '''
             }
         }
