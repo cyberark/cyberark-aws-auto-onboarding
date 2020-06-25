@@ -12,7 +12,7 @@ def create_account_on_vault(session, account_name, account_password, store_param
                             instance_id, username, safe_name):
     logger.trace(session, account_name, account_password, store_parameters_class, platform_id, address,
                  instance_id, username, safe_name, caller_name='create_account_on_vault')
-    logger.info('Creating account in vault for ' + instance_id)
+    logger.info(f'Creating account in vault for {instance_id}')
     header = DEFAULT_HEADER
     header.update({"Authorization": session})
     url = f"{store_parameters_class.pvwa_url}/WebServices/PIMServices.svc/Account"
@@ -40,7 +40,7 @@ def create_account_on_vault(session, account_name, account_password, store_param
 
 def rotate_credentials_immediately(session, pvwa_url, account_id, instance_id):
     logger.trace(session, pvwa_url, account_id, instance_id, caller_name='rotate_credentials_immediately')
-    logger.info('Rotating ' + instance_id + ' credentials')
+    logger.info(f'Rotating {instance_id} credentials')
     header = DEFAULT_HEADER
     header.update({"Authorization": session})
     url = f"{pvwa_url}/API/Accounts/{account_id}/Change"
@@ -56,7 +56,7 @@ def rotate_credentials_immediately(session, pvwa_url, account_id, instance_id):
 
 def get_account_value(session, account, instance_id, rest_url):
     logger.trace(session, account, instance_id, rest_url, caller_name='get_account_value')
-    logger.info('Getting ' + instance_id + ' account from vault')
+    logger.info(f'Getting {instance_id} account from vault')
     header = DEFAULT_HEADER
     header.update({"Authorization": session})
     pvwa_url = f"{rest_url}/api/Accounts/{account}/Password/Retrieve"
@@ -74,7 +74,7 @@ def get_account_value(session, account, instance_id, rest_url):
 
 def delete_account_from_vault(session, account_id, instance_id, pvwa_url):
     logger.trace(session, account_id, instance_id, pvwa_url, caller_name='delete_account_from_vault')
-    logger.info('Deleting ' + instance_id + ' from vault')
+    logger.info(f'Deleting {instance_id} from vault')
     header = DEFAULT_HEADER
     header.update({"Authorization": session})
     rest_url = f"{pvwa_url}/WebServices/PIMServices.svc/Accounts/{account_id}"
@@ -109,7 +109,7 @@ def check_if_kp_exists(session, account_name, safe_name, instance_id, rest_url):
         if not rest_response:
             raise Exception("Unknown Error when calling rest service - retrieve account_id")
     except Exception as e:
-        logger.error('An error occurred:\n' + str(e))
+        logger.error(f'An error occurred:\n{str(e)}')
         raise Exception(e)
     if rest_response.status_code == requests.codes.ok:
         # if response received, check account is not empty {"Count": 0,"accounts": []}
@@ -117,7 +117,7 @@ def check_if_kp_exists(session, account_name, safe_name, instance_id, rest_url):
             parsed_json_response = rest_response.json()['value']
             return parsed_json_response[0]['id']
         else:
-            return Falsef
+            return False
     else:
         logger.error(f"Status code {rest_response.status_code}, received from REST service")
         raise Exception(f"Status code {rest_response.status_code}, received from REST service")
@@ -139,7 +139,7 @@ def retrieve_account_id_from_account_name(session, account_name, safe_name, inst
         if not rest_response:
             raise Exception("Unknown Error when calling rest service - retrieve account_id")
     except Exception as e:
-        logger.error('An error occurred:\n' + str(e))
+        logger.error(f'An error occurred:\n{str(e)}')
         raise Exception(e)
     if rest_response.status_code == requests.codes.ok:
         # if response received, check account is not empty {"Count": 0,"accounts": []}
@@ -147,7 +147,7 @@ def retrieve_account_id_from_account_name(session, account_name, safe_name, inst
             parsed_json_response = rest_response.json()['value']
             return filter_get_accounts_result(parsed_json_response, instance_id)
         else:
-            logger.info('No match for account: ' + account_name)
+            logger.info(f'No match for account: {account_name}')
             return False
     else:
         logger.error(f"Status code {rest_response.status_code}, received from REST service")

@@ -97,7 +97,7 @@ def lambda_handler(event, context):
             return
         disconnect = False
         if action_type == 'terminated':
-            logger.info('Detected termination of ' + instance_id)
+            logger.info(f'Detected termination of {instance_id}')
             instance_processing.delete_instance(instance_id, session_token, store_parameters_class, instance_data,
                                                 instance_details)
         elif action_type == 'running':

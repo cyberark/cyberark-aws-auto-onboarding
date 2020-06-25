@@ -13,7 +13,7 @@ logger = LogMechanism()
 # keyPair_name, instance_address, platform
 def get_ec2_details(instance_id, solution_account_id, event_region, event_account_id):
     logger.trace(instance_id, solution_account_id, event_region, event_account_id, caller_name='get_ec2_details')
-    logger.info('Gathering details about EC2 - ' + instance_id )
+    logger.info(f'Gathering details about EC2 - {instance_id} )
     if event_account_id == solution_account_id:
         try:
             ec2_resource = boto3.resource('ec2', event_region)
@@ -86,7 +86,7 @@ def get_instance_data_from_dynamo_table(instance_id):
     #               'Status': {'S': 'on-boarded'}, 'Error': {'S': 'Some Error'}}
     if 'Item' in dynamo_response:
         if dynamo_response["Item"]["instance_id"]["S"] == instance_id:
-            logger.info(instance_id + ' exists in DynamoDB')
+            logger.info(f'{instance_id} exists in DynamoDB')
             return dynamo_response["Item"]
         else:
             return False
@@ -189,7 +189,7 @@ def release_session_on_dynamo(session_id, session_guid):
 
 def remove_instance_from_dynamo_table(instance_id):
     logger.trace(instance_id, caller_name='remove_instance_from_dynamo_table')
-    logger.info('Removing ' + instance_id +' from DynamoDB')
+    logger.info(f'Removing {instance_id} from DynamoDB')
     dynamodb_resource = boto3.resource('dynamodb')
     instances_table = dynamodb_resource.Table("Instances")
     try:

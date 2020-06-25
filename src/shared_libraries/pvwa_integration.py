@@ -25,7 +25,7 @@ class PvwaIntegration:
                 self.certificate = False
                 self.logger.info(f'{environment} Environment Detected',DEBUG_LEVEL_DEBUG)
         except Exception as e:
-            self.logger.error('Failed to retrieve aob_mode parameter:\n' + str(e))
+            self.logger.error(f'Failed to retrieve aob_mode parameter:\n{str(e)}')
             raise Exception("Error occurred while retrieving aob_mode parameter")
 
     
@@ -37,7 +37,7 @@ class PvwaIntegration:
             self.logger.info(f'Invoking get request url:{url} header: {header}',DEBUG_LEVEL_DEBUG)
             rest_response = requests.get(self.url, timeout=30, verify=self.certificate, headers=self.header)
         except Exception as e:
-            self.logger.error("An error occurred on calling PVWA REST service:\n" + str(e))
+            self.logger.error(f"An error occurred on calling PVWA REST service:\n{str(e)}")
             return None
         return rest_response
     
@@ -50,7 +50,7 @@ class PvwaIntegration:
             self.logger.info(f'Invoking delete request url {url} , header: {header}' ,DEBUG_LEVEL_DEBUG)
             response = requests.delete(self.url, timeout=30, verify=self.certificate, headers=self.header)
         except Exception as e:
-            self.logger.error('Failed to Invoke delete request : \n' + str(e))
+            self.logger.error(f'Failed to Invoke delete request:\n{str(e)}')
             return None
         return response
     
@@ -65,7 +65,7 @@ class PvwaIntegration:
             rest_response = requests.post(self.url, data=self.request, timeout=30, verify=self.certificate, headers=self.header,
                                             stream=True)
         except Exception as e:
-            self.logger.error("Error occurred during POST request to PVWA:\n" + str(e))
+            self.logger.error(f"Error occurred during POST request to PVWA:\n{str(e)}")
             return None
         return rest_response
     
@@ -90,7 +90,7 @@ class PvwaIntegration:
         try:
             rest_response = self.call_rest_api_post(logon_url, rest_log_on_data, DEFAULT_HEADER)
         except Exception as e:
-            raise Exception("Error occurred on Logon to PVWA: " + str(e))
+            raise Exception(f"Error occurred on Logon to PVWA: {str(e)}")
     
         if not rest_response:
             self.logger.error("Connection to PVWA reached timeout")
@@ -100,7 +100,7 @@ class PvwaIntegration:
             self.logger.info("User authenticated")
             return json_parsed_response['CyberArkLogonResult']
         else:
-            self.logger.error("Authentication failed with response:\n" + rest_response)
+            self.logger.error(f"Authentication failed with response:\n{rest_response}")
             raise Exception("PVWA authentication failed")
     
     

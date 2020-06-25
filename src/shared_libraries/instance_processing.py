@@ -15,7 +15,7 @@ logger = LogMechanism()
 
 def delete_instance(instance_id, session, store_parameters_class, instance_data, instance_details):
     logger.trace(instance_id, session, store_parameters_class, instance_data, instance_details, caller_name='delete_instance')
-    logger.info('Removing ' + instance_id + ' From AOB')
+    logger.info(f'Removing {instance_id} From AOB')
     instance_ip_address = instance_data["Address"]["S"]
     if instance_details['platform'] == "windows":
         safe_name = store_parameters_class.windows_safe_name
@@ -29,7 +29,7 @@ def delete_instance(instance_id, session, store_parameters_class, instance_data,
                                                                             safe_name, instance_id,
                                                                             store_parameters_class.pvwa_url)
     if not instance_account_id:
-        logger.info(instance_id + " does not exist in safe")
+        logger.info(f"{instance_id} does not exist in safe")
         return
 
     pvwa_api_calls.delete_account_from_vault(session, instance_account_id, instance_id, store_parameters_class.pvwa_url)
@@ -40,7 +40,7 @@ def delete_instance(instance_id, session, store_parameters_class, instance_data,
 
 def get_instance_password_data(instance_id,solution_account_id,event_region,event_account_id):
     logger.trace(instance_id,solution_account_id,event_region,event_account_id, caller_name='get_instance_password_data')
-    logger.info('Getting ' + instance_id + ' password')
+    logger.info(f'Getting {instance_id} password')
     if event_account_id == solution_account_id:
         try:
             ec2_resource = boto3.client('ec2', event_region)
@@ -83,7 +83,7 @@ def create_instance(instance_id, instance_details, store_parameters_class, log_n
                     event_account_id, instance_account_password):
     logger.trace(instance_id, instance_details, store_parameters_class, log_name, solution_account_id, event_region,
                     event_account_id, caller_name='create_instance')
-    logger.info('Adding ' + instance_id + ' to AOB')
+    logger.info(f'Adding {instance_id} to AOB')
     if instance_details['platform'] == "windows":  # Windows machine return 'windows' all other return 'None'
         logger.info('Windows platform detected')
         kp_processing.save_key_pair(instance_account_password)
