@@ -32,19 +32,19 @@ pipeline {
                 '''
             }
         }
+        stage('Check syntax of python - pylint') {
+            steps {
+                sh '''
+                    source ./.testenv/bin/activate
+                    find ./src -type f -name "*.py" | xargs pylint
+                '''
+            }
+        }
         stage('Check syntax of CloudFormation templates') {
             steps {
                 sh '''
                     source ./.testenv/bin/activate
                     cfn-lint ./dist/**/*.json
-                '''
-            }
-        }
-        stage('Check syntax of python - pylint') {
-            steps {
-                sh '''
-                    source ./.testenv/bin/activate
-                    find . -type f -name "*.py" | xargs pylint
                 '''
             }
         }
