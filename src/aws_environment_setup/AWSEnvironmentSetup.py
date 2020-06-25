@@ -155,15 +155,15 @@ def create_safe(pvwa_integration_class, safe_name, cpm_name, pvwa_ip, session_id
     create_safe_url = f"https://{pvwa_ip}/PasswordVault/WebServices/PIMServices.svc/Safes"
     # Create new safe, default number of days retention is 7, unless specified otherwise
     data = f"""
-            {{{{
-            "safe":{{{{
+            {{
+            "safe":{{
                 "SafeName":"{safe_name}",
                 "Description":"",
                 "OLACEnabled":false,
                 "ManagingCPM":"{cpm_name}",
                 "NumberOfDaysRetention":"{number_of_days_retention}"
-              }}}}
-            }}}}
+              }}
+            }}
             """
 
     for i in range(0, 3):
@@ -225,8 +225,8 @@ def create_key_pair_in_vault(pvwa_integration_class, session, aws_key_name, priv
 
     url = f"https://{pvwa_ip}/PasswordVault/WebServices/PIMServices.svc/Account"
     data = f"""
-            {{{{
-              "account" : {{{{
+            {{
+              "account" : {{
                   "safe":"{safe_name}",
                   "platformID":"UnixSSHKeys",
                   "address":1.1.1.1,
@@ -234,8 +234,8 @@ def create_key_pair_in_vault(pvwa_integration_class, session, aws_key_name, priv
                   "username":"{unique_user_name}",
                   "disableAutoMgmt":"true",
                   "disableAutoMgmtReason":"Unmanaged account"
-              }}}}
-            }}}}
+              }}
+            }}
         """
     rest_response = pvwa_integration_class.call_rest_api_post(url, data, header)
 

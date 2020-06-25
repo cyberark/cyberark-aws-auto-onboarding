@@ -17,8 +17,8 @@ def create_account_on_vault(session, account_name, account_password, store_param
     header.update({"Authorization": session})
     url = f"{store_parameters_class.pvwa_url}/WebServices/PIMServices.svc/Account"
     data = f"""
-    {{{{
-        "account" : {{{{
+    {{
+        "account" : {{
             "safe":"{safe_name}",
             "platformID":"{platform_id}",
             "address":"{address}",
@@ -26,8 +26,8 @@ def create_account_on_vault(session, account_name, account_password, store_param
             "password":"{account_password}",
             "username":"{username}",
             "disableAutoMgmt":"false"
-        }}}}
-    }}}}
+        }}
+    }}
     """
     rest_response = pvwa_integration_class.call_rest_api_post(url, data, header)
     if rest_response.status_code == requests.codes.created:

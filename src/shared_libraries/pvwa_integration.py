@@ -83,11 +83,11 @@ class PvwaIntegration:
         self.logger.info('Logging to PVWA')
         logon_url = f'{self.pvwa_url}/WebServices/auth/Cyberark/CyberArkAuthenticationService.svc/Logon'
         rest_log_on_data = f"""
-                            {{{{
+                            {{
                                 "username": "{self.username}",
                                 "password": "{self.password}",
                                 "connectionNumber": "{self.connection_session_id}"
-                            }}}}
+                            }}
                             """
         try:
             rest_response = self.call_rest_api_post(logon_url, rest_log_on_data, DEFAULT_HEADER)
