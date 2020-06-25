@@ -25,6 +25,7 @@ pipeline {
                     pip install cfn-lint
                     pip install awscli
                     pip install ansible
+                    pip install pylint
 
                     # Install security tools
                     pip install safety bandit
@@ -36,6 +37,14 @@ pipeline {
                 sh '''
                     source ./.testenv/bin/activate
                     cfn-lint ./dist/**/*.json
+                '''
+            }
+        }
+        stage('Check syntax of python - pylint') {
+            steps {
+                sh '''
+                    source ./.testenv/bin/activate
+                    find . -type f -name "*.py" | xargs pylint
                 '''
             }
         }
