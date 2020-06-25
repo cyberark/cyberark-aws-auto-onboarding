@@ -13,7 +13,7 @@ logger = LogMechanism()
 # keyPair_name, instance_address, platform
 def get_ec2_details(instance_id, solution_account_id, event_region, event_account_id):
     logger.trace(instance_id, solution_account_id, event_region, event_account_id, caller_name='get_ec2_details')
-    logger.info(f'Gathering details about EC2 - {instance_id} )
+    logger.info(f'Gathering details about EC2 - {instance_id}')
     if event_account_id == solution_account_id:
         try:
             ec2_resource = boto3.resource('ec2', event_region)

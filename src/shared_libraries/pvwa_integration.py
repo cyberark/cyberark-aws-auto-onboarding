@@ -5,6 +5,8 @@ from log_mechanism import LogMechanism
 DEBUG_LEVEL_DEBUG = 'debug' # Outputs all information
 DEFAULT_HEADER = {"content-type": "application/json"}
 # RestApiCalls:
+
+
 class PvwaIntegration:
     def __init__(self, is_safe_handler=False,safe_handler_environment=None):
         self.logger = LogMechanism()

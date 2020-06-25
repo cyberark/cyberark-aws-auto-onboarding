@@ -18,6 +18,7 @@ DEFAULT_HEADER = {"content-type": "application/json"}
 IS_SAFE_HANDLER = True
 logger = LogMechanism()
 
+
 def lambda_handler(event, context):
     logger.trace(event, context, caller_name='lambda_handler')
     try:
@@ -169,13 +170,13 @@ def create_safe(pvwa_integration_class, safe_name, cpm_name, pvwa_ip, session_id
         create_safe_rest_response = pvwa_integration_class.call_rest_api_post(create_safe_url, data, header)
 
         if create_safe_rest_response.status_code == requests.codes.conflict:
-            logger.info(f"The Safe {safe_name} already exists"
+            logger.info(f"The Safe {safe_name} already exists")
             return True
         elif create_safe_rest_response.status_code == requests.codes.bad_request:
-            logger.error(f"Failed to create Safe {safe_name}, error 400: bad request"
+            logger.error(f"Failed to create Safe {safe_name}, error 400: bad request")
             return False
         elif create_safe_rest_response.status_code == requests.codes.created:  # safe created
-            logger.info(f"Safe {safe_name} was successfully created"
+            logger.info(f"Safe {safe_name} was successfully created")
             return True
         else:  # Error creating safe, retry for 3 times, with 10 seconds between retries
             logger.error(f"Error creating Safe, status code:{create_safe_rest_response.status_code}, will retry in 10 seconds")
@@ -202,7 +203,7 @@ def create_new_key_pair_on_aws(key_pair_name):
             logger.error(f"Key Pair {key_pair_name} already exists")
             return True
         else:
-            logger.error(f"Creating new key pair failed. error code:\n {e.response["Error"]["Code"]}")
+            logger.error(f'Creating new key pair failed. error code:\n {e.response["Error"]["Code"]}')
             return False
 
     return key_pair_response["KeyMaterial"]
@@ -316,7 +317,7 @@ def delete_password_from_param_store(aob_mode):
         if e.response["Error"]["Code"] == "ParameterNotFound":
             return True
         else:
-            logger.error(f"Failed to delete parameter 'Vault_Pass' from Parameter Store. Error code: {e.response["Error"]["Code"]}")
+            logger.error(f'Failed to delete parameter "Vault_Pass" from Parameter Store. Error code: {e.response["Error"]["Code"]}')
             return False
 
 
@@ -331,6 +332,7 @@ def delete_sessions_table():
     except Exception:
         logger.error("Failed to delete 'Sessions' table from DynamoDB")
         return
+
 
 def get_aob_mode():
     ssm = boto3.client('ssm')
