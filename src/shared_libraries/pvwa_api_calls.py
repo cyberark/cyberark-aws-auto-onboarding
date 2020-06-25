@@ -15,26 +15,27 @@ def create_account_on_vault(session, account_name, account_password, store_param
     logger.info('Creating account in vault for ' + instance_id)
     header = DEFAULT_HEADER
     header.update({"Authorization": session})
-    url = "{0}/WebServices/PIMServices.svc/Account".format(store_parameters_class.pvwa_url)
-    data = """{{
-      "account" : {{
-        "safe":"{0}",
-        "platformID":"{1}",
-        "address":"{5}",
-        "accountName":"{2}",
-        "password":"{3}",
-        "username":"{4}",
-        "disableAutoMgmt":"false"
-      }}
-    }}""".format(safe_name, platform_id, account_name, account_password, username, address)
+    url = f"{store_parameters_class.pvwa_url}/WebServices/PIMServices.svc/Account"
+    data = f"""
+    {{{{
+        "account" : {{{{
+            "safe":"{safe_name}",
+            "platformID":"{platform_id}",
+            "address":"{address}",
+            "accountName":"{account_name}",
+            "password":"{account_password}",
+            "username":"{username}",
+            "disableAutoMgmt":"false"
+        }}}}
+    }}}}
+    """
     rest_response = pvwa_integration_class.call_rest_api_post(url, data, header)
     if rest_response.status_code == requests.codes.created:
-        logger.info("Account for {0} was successfully created".format(instance_id))
+        logger.info(f"Account for {instance_id} was successfully created")
         return True, ""
     else:
-        logger.error('Failed to create the account for {0} from the vault. status code:{1}'.format(instance_id,
-                                                                                            rest_response.status_code))
-        return False, "Error Creating Account, Status Code:{0}".format(rest_response.status_code)
+        logger.error(f'Failed to create the account for {instance_id} from the vault. status code:{rest_response.status_code}')
+        return False, f"Error Creating Account, Status Code:{rest_response.status_code}"
 
 
 def rotate_credentials_immediately(session, pvwa_url, account_id, instance_id):
@@ -42,14 +43,14 @@ def rotate_credentials_immediately(session, pvwa_url, account_id, instance_id):
     logger.info('Rotating ' + instance_id + ' credentials')
     header = DEFAULT_HEADER
     header.update({"Authorization": session})
-    url = "{0}/API/Accounts/{1}/Change".format(pvwa_url, account_id)
+    url = f"{pvwa_url}/API/Accounts/{account_id}/Change"
     data = ""
     rest_response = pvwa_integration_class.call_rest_api_post(url, data, header)
     if rest_response.status_code == requests.codes.ok:
-        logger.info("Call for immediate key change for {0} performed successfully".format(instance_id))
+        logger.info(f"Call for immediate key change for {instance_id} performed successfully")
         return True
     else:
-        logger.error('Failed to call key change for {0}. an error occurred'.format(instance_id))
+        logger.error(f'Failed to call key change for {instance_id}. an error occurred')
         return False
 
 
@@ -58,17 +59,16 @@ def get_account_value(session, account, instance_id, rest_url):
     logger.info('Getting ' + instance_id + ' account from vault')
     header = DEFAULT_HEADER
     header.update({"Authorization": session})
-    pvwa_url = "{0}/api/Accounts/{1}/Password/Retrieve".format(rest_url, account)
+    pvwa_url = f"{rest_url}/api/Accounts/{account}/Password/Retrieve"
     rest_logon_data = """{ "reason":"AWS Auto On-Boarding Solution" }"""
     rest_response = pvwa_integration_class.call_rest_api_post(pvwa_url, rest_logon_data, header)
     if rest_response.status_code == requests.codes.ok:
         return rest_response.text
     elif rest_response.status_code == requests.codes.not_found:
-        logger.info("Account {0} for instance {1}, not found on vault".format(account, instance_id))
+        logger.info(f"Account {account} for instance {instance_id}, not found on vault")
         return False
     else:
-        logger.error("Unexpected result from rest service - get account value, status code: {0}".format(
-            rest_response.status_code))
+        logger.error(f"Unexpected result from rest service - get account value, status code: {rest_response.status_code}")
         return False
 
 
@@ -77,20 +77,19 @@ def delete_account_from_vault(session, account_id, instance_id, pvwa_url):
     logger.info('Deleting ' + instance_id + ' from vault')
     header = DEFAULT_HEADER
     header.update({"Authorization": session})
-    rest_url = "{0}/WebServices/PIMServices.svc/Accounts/{1}".format(pvwa_url, account_id)
+    rest_url = f"{pvwa_url}/WebServices/PIMServices.svc/Accounts/{account_id}"
     rest_response = pvwa_integration_class.call_rest_api_delete(rest_url, header)
 
     if rest_response.status_code != requests.codes.ok:
         if rest_response.status_code != requests.codes.not_found:
-            logger.error("Failed to delete the account for {0} from the vault. The account does not exists".format(
-                instance_id))
-            raise Exception("Failed to delete the account for {0} from the vault. The account does not exists".format(instance_id))
+            logger.error(f"Failed to delete the account for {instance_id} from the vault. The account does not exists")
+            raise Exception(f"Failed to delete the account for {instance_id} from the vault. The account does not exists")
 
         else:
-            logger.error("Failed to delete the account for {0} from the vault. an error occurred".format(instance_id))
-            raise Exception("Unknown status code received {0}".format(rest_response.status_code))
+            logger.error(f"Failed to delete the account for {instance_id} from the vault. an error occurred")
+            raise Exception(f"Unknown status code received {rest_response.status_code}")
 
-    logger.info("The account for {0} was successfully deleted".format(instance_id))
+    logger.info(f"The account for {instance_id} was successfully deleted")
     return True
 
 
@@ -102,9 +101,9 @@ def check_if_kp_exists(session, account_name, safe_name, instance_id, rest_url):
     # 2 options of search - if safe name not empty, add it to query, if not - search without it
 
     if safe_name:  # has value
-        pvwa_url = "{0}/api/accounts?search={1}&filter=safe_name eq {2}".format(rest_url, account_name, safe_name)
+        pvwa_url = f"{rest_url}/api/accounts?search={account_name}&filter=safe_name eq {safe_name}"
     else:  # has no value
-        pvwa_url = "{0}/api/accounts?search={1}".format(rest_url, account_name)
+        pvwa_url = f"{rest_url}/api/accounts?search={account_name}"
     try:
         rest_response = pvwa_integration_class.call_rest_api_get(pvwa_url, header)
         if not rest_response:
@@ -118,10 +117,10 @@ def check_if_kp_exists(session, account_name, safe_name, instance_id, rest_url):
             parsed_json_response = rest_response.json()['value']
             return parsed_json_response[0]['id']
         else:
-            return False
+            return Falsef
     else:
-        logger.error("Status code {0}, received from REST service".format(rest_response.status_code))
-        raise Exception("Status code {0}, received from REST service".format(rest_response.status_code))
+        logger.error(f"Status code {rest_response.status_code}, received from REST service")
+        raise Exception(f"Status code {rest_response.status_code}, received from REST service")
 
 
 def retrieve_account_id_from_account_name(session, account_name, safe_name, instance_id, rest_url):
@@ -132,9 +131,9 @@ def retrieve_account_id_from_account_name(session, account_name, safe_name, inst
     # 2 options of search - if safe name not empty, add it to query, if not - search without it
 
     if safe_name:  # has value
-        pvwa_url = "{0}/api/accounts?search={1}&filter=safe_name eq {2}".format(rest_url, account_name, safe_name)
+        pvwa_url = f"{rest_url}/api/accounts?search={account_name}&filter=safe_name eq {safe_name}"
     else:  # has no value
-        pvwa_url = "{0}/api/accounts?search={1}".format(rest_url, account_name)
+        pvwa_url = f"{rest_url}/api/accounts?search={account_name}"
     try:
         rest_response = pvwa_integration_class.call_rest_api_get(pvwa_url, header)
         if not rest_response:
@@ -151,8 +150,8 @@ def retrieve_account_id_from_account_name(session, account_name, safe_name, inst
             logger.info('No match for account: ' + account_name)
             return False
     else:
-        logger.error("Status code {0}, received from REST service".format(rest_response.status_code))
-        raise Exception("Status code {0}, received from REST service".format(rest_response.status_code))
+        logger.error(f"Status code {rest_response.status_code}, received from REST service")
+        raise Exception(f"Status code {rest_response.status_code}, received from REST service")
 
 
 def filter_get_accounts_result(parsed_json_response, instance_id):

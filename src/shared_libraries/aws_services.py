@@ -18,13 +18,13 @@ def get_ec2_details(instance_id, solution_account_id, event_region, event_accoun
         try:
             ec2_resource = boto3.resource('ec2', event_region)
         except Exception as e:
-            logger.error('Error on creating boto3 session: {0}'.format(str(e)))
+            logger.error(f'Error on creating boto3 session: {str(e)}')
     else:
         try:
             logger.info('Assuming Role')
             sts_connection = boto3.client('sts')
             acct_b = sts_connection.assume_role(
-                RoleArn="arn:aws:iam::{0}:role/CyberArk-AOB-AssumeRoleForElasticityLambda".format(event_account_id),
+                RoleArn=f"arn:aws:iam::{event_account_id}:role/CyberArk-AOB-AssumeRoleForElasticityLambda",
                 RoleSessionName="cross_acct_lambda"
             )
 
@@ -41,15 +41,15 @@ def get_ec2_details(instance_id, solution_account_id, event_region, event_accoun
                 aws_session_token=session_token,
             )
         except Exception as e:
-            logger.error('Error on getting token from account: {0}'.format(event_account_id))
+            logger.error(f'Error on getting token from account: {event_account_id}')
 
     try:
         instance_resource = ec2_resource.Instance(instance_id)
         instance_image = ec2_resource.Image(instance_resource.image_id)
-        logger.info('Image Detected: ' + str(instance_image))
+        logger.info(f'Image Detected: {str(instance_image)}')
         image_description = instance_image.description
     except Exception as e:
-        logger.error('Error on getting instance details: {0}'.format(str(e)))
+        logger.error(f'Error on getting instance details: {str(e)}')
         raise e
 
     #  We take the instance address in the order of: public dns -> public ip -> private ip ##
@@ -74,7 +74,7 @@ def get_ec2_details(instance_id, solution_account_id, event_region, event_accoun
 # Return False when not found, or row data from table
 def get_instance_data_from_dynamo_table(instance_id):
     logger.trace(instance_id, caller_name='get_instance_data_from_dynamo_table')
-    logger.info('Check with DynamoDB if instance {0} exists'.format(instance_id))
+    logger.info(f'Check with DynamoDB if instance {instance_id} exists')
     dynamo_resource = boto3.client('dynamodb')
 
     try:
@@ -116,8 +116,8 @@ def get_params_from_param_store():
                                        InvocationType='RequestResponse',
                                        Payload=json.dumps(lambda_request_data))
     except Exception as e:
-        logger.error("Error retrieving parameters from parameter parameter store:{0}".format(str(e)))
-        raise Exception("Error retrieving parameters from parameter parameter store:{0}".format(str(e))) 
+        logger.error(f"Error retrieving parameters from parameter parameter store:\n{str(e)}")
+        raise Exception(f"Error retrieving parameters from parameter parameter store: {str(e)}") 
 
     json_parsed_response = json.load(response['Payload'])
     # parsing the parameters, json_parsed_response is a list of dictionaries
@@ -151,7 +151,7 @@ def get_params_from_param_store():
 
 def put_instance_to_dynamo_table(instance_id, ip_address, on_board_status, on_board_error="None", log_name="None"):
     logger.trace(instance_id, ip_address, on_board_status, on_board_error, log_name, caller_name='put_instance_to_dynamo_table')
-    logger.info('Adding  {instance_id} to DynamoDB'.format(instance_id=instance_id))
+    logger.info(f'Adding  {instance_id} to DynamoDB')
     dynamodb_resource = boto3.resource('dynamodb')
     instances_table = dynamodb_resource.Table("Instances")
     try:
@@ -168,7 +168,7 @@ def put_instance_to_dynamo_table(instance_id, ip_address, on_board_status, on_bo
         logger.error('Exception occurred on add item to DynamoDB')
         return None
 
-    logger.info('Item {0} added successfully to DynamoDB'.format(instance_id))
+    logger.info(f'Item {instance_id} added successfully to DynamoDB')
     return
 
 
@@ -181,7 +181,7 @@ def release_session_on_dynamo(session_id, session_guid):
         sessions_table_lock_client.guid = session_guid
         sessions_table_lock_client.release(session_id)
     except Exception as e:
-        logger.error('Failed to release session lock from DynamoDB:\n{error}'.format(error=str(e)))
+        logger.error(f'Failed to release session lock from DynamoDB:\n{str(e)}')
         return False
 
     return True
@@ -199,10 +199,10 @@ def remove_instance_from_dynamo_table(instance_id):
             }
         )
     except Exception as e:
-        logger.error('Exception occurred on deleting {instance_id} on dynamodb:\n{error}'.format(instance_id=instance_id, error=str(e)))
+        logger.error(f'Exception occurred on deleting {instance_id} on dynamodb:\n{str(e)}')
         return None
 
-    logger.info('Item {0} successfully deleted from DB'.format(instance_id))
+    logger.info(f'Item {instance_id} successfully deleted from DB')
     return
 
 
@@ -226,13 +226,13 @@ def get_available_session_from_dynamo():
         logger.info("Connection limit has been reached")
         return False, ""
     except Exception as e:
-        print("Failed to retrieve session from DynamoDB:{0}".format(str(e)))
-        raise Exception("Exception on get_available_session_from_dynamo:{0}".format(str(e)))
+        print(f"Failed to retrieve session from DynamoDB:\n{str(e)}")
+        raise Exception(f"Exception on get_available_session_from_dynamo:{str(e)}")
 
 
 def update_instances_table_status(instance_id, status, error="None"):
     logger.trace(instance_id, status, error, caller_name='update_instances_table_status')
-    logger.info('Updating DynamoDB with {instance_id} onboarding status. \nStatus: {status}'.format(status=status,instance_id=instance_id))
+    logger.info(f'Updating DynamoDB with {instance_id} onboarding status. \nStatus: {status}')
     dynamodb_resource = boto3.resource('dynamodb')
     instances_table = dynamodb_resource.Table("Instances")
     try:
@@ -274,7 +274,7 @@ class StoreParameters:
         self.windows_safe_name = windows_safe_name
         self.vault_username = username
         self.vault_password = password
-        self.pvwa_url = self.pvwa_url.format(ip)
+        self.pvwa_url = f"https://{ip}/PasswordVault"
         self.key_pair_safe_name = key_pair_safe
         self.pvwa_verification_key = pvwa_verification_key
         self.aob_mode = mode
