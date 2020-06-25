@@ -33,9 +33,8 @@ def create_account_on_vault(session, account_name, account_password, store_param
     if rest_response.status_code == requests.codes.created:
         logger.info(f"Account for {instance_id} was successfully created")
         return True, ""
-    else:
-        logger.error(f'Failed to create the account for {instance_id} from the vault. status code:{rest_response.status_code}')
-        return False, f"Error Creating Account, Status Code:{rest_response.status_code}"
+    logger.error(f'Failed to create the account for {instance_id} from the vault. status code:{rest_response.status_code}')
+    return False, f"Error Creating Account, Status Code:{rest_response.status_code}"
 
 
 def rotate_credentials_immediately(session, pvwa_url, account_id, instance_id):
@@ -49,9 +48,8 @@ def rotate_credentials_immediately(session, pvwa_url, account_id, instance_id):
     if rest_response.status_code == requests.codes.ok:
         logger.info(f"Call for immediate key change for {instance_id} performed successfully")
         return True
-    else:
-        logger.error(f'Failed to call key change for {instance_id}. an error occurred')
-        return False
+    logger.error(f'Failed to call key change for {instance_id}. an error occurred')
+    return False
 
 
 def get_account_value(session, account, instance_id, rest_url):
@@ -67,9 +65,8 @@ def get_account_value(session, account, instance_id, rest_url):
     elif rest_response.status_code == requests.codes.not_found:
         logger.info(f"Account {account} for instance {instance_id}, not found on vault")
         return False
-    else:
-        logger.error(f"Unexpected result from rest service - get account value, status code: {rest_response.status_code}")
-        return False
+    logger.error(f"Unexpected result from rest service - get account value, status code: {rest_response.status_code}")
+    return False
 
 
 def delete_account_from_vault(session, account_id, instance_id, pvwa_url):
@@ -116,8 +113,7 @@ def check_if_kp_exists(session, account_name, safe_name, instance_id, rest_url):
         if 'value' in rest_response.json() and rest_response.json()["value"]:
             parsed_json_response = rest_response.json()['value']
             return parsed_json_response[0]['id']
-        else:
-            return False
+        return False
     else:
         logger.error(f"Status code {rest_response.status_code}, received from REST service")
         raise Exception(f"Status code {rest_response.status_code}, received from REST service")
@@ -146,9 +142,8 @@ def retrieve_account_id_from_account_name(session, account_name, safe_name, inst
         if 'value' in rest_response.json() and rest_response.json()["value"]:
             parsed_json_response = rest_response.json()['value']
             return filter_get_accounts_result(parsed_json_response, instance_id)
-        else:
-            logger.info(f'No match for account: {account_name}')
-            return False
+        logger.info(f'No match for account: {account_name}')
+        return False
     else:
         logger.error(f"Status code {rest_response.status_code}, received from REST service")
         raise Exception(f"Status code {rest_response.status_code}, received from REST service")

@@ -84,7 +84,7 @@ def lambda_handler(event, context):
             crt = open("/tmp/server.crt", "w+")
             crt.write(store_parameters_class.pvwaVerificationKey)
             crt.close()
-        pvwa_connection_number, session_guid = aws_services.get_available_session_from_dynamo()
+        pvwa_connection_number, session_guid = aws_services.get_session_from_dynamo()
         if not pvwa_connection_number:
             return
         session_token = pvwa_integration_class.logon_pvwa(store_parameters_class.vaultUsername,

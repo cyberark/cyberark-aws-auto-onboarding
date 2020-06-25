@@ -124,6 +124,5 @@ class PvwaIntegration:
             json_parsed_response = rest_response.json()
             self.logger.info("session logged off successfully")
             return True
-        else:
-            self.logger.error("Logoff failed")
-            return False
+        self.logger.error("Logoff failed")
+        return False

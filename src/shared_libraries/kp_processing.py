@@ -38,16 +38,16 @@ def convert_pem_to_ppk(pem_key):
 def run_command_on_container(command, print_output):
     logger.trace(caller_name='run_command_on_container')
     decrypted_password = ""
-    with subprocess.Popen(' '.join(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True) as p:
+    with subprocess.Popen(' '.join(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True) as process:
         if print_output:
-            decrypted_password = print_process_outputs_on_end(p)
+            decrypted_password = print_process_outputs_on_end(process)
         else:
-            p.wait()
-    return [p.returncode, decrypted_password]
+            process.wait()
+    return [process.returncode, decrypted_password]
 
 
-def print_process_outputs_on_end(p):
+def print_process_outputs_on_end(process):
     logger.trace(caller_name='print_process_outputs_on_end')
-    out = p.communicate()[0].decode('utf-8')
+    out = process.communicate()[0].decode('utf-8')
     # out = filter(None, map(str.strip, out.decode('utf-8').split('\n')))
     return out

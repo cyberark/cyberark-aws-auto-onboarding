@@ -88,10 +88,7 @@ def get_instance_data_from_dynamo_table(instance_id):
         if dynamo_response["Item"]["instance_id"]["S"] == instance_id:
             logger.info(f'{instance_id} exists in DynamoDB')
             return dynamo_response["Item"]
-        else:
-            return False
-    else:
-        return False
+    return False
 
 
 def get_params_from_param_store():
@@ -206,7 +203,7 @@ def remove_instance_from_dynamo_table(instance_id):
     return
 
 
-def get_available_session_from_dynamo():
+def get_session_from_dynamo():
     logger.info("Getting available Session from DynamoDB")
     sessions_table_lock_client = LockerClient('Sessions')
     timeout = 20000  # Setting the timeout to 20 seconds on a row lock
@@ -227,7 +224,7 @@ def get_available_session_from_dynamo():
         return False, ""
     except Exception as e:
         print(f"Failed to retrieve session from DynamoDB:\n{str(e)}")
-        raise Exception(f"Exception on get_available_session_from_dynamo:{str(e)}")
+        raise Exception(f"Exception on get_session_from_dynamo:{str(e)}")
 
 
 def update_instances_table_status(instance_id, status, error="None"):

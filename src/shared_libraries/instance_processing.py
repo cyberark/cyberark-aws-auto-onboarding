@@ -89,7 +89,7 @@ def create_instance(instance_id, instance_details, store_parameters_class, log_n
         kp_processing.save_key_pair(instance_account_password)
         instance_password_data = get_instance_password_data(instance_id, solution_account_id, event_region, event_account_id)
         # decrypted_password = convert_pem_to_password(instance_account_password, instance_password_data)
-        rc, decrypted_password = kp_processing.run_command_on_container(
+        return_code, decrypted_password = kp_processing.run_command_on_container(
             ["echo", str.strip(instance_password_data), "|", "base64", "--decode", "|", "openssl", "rsautl", "-decrypt",
              "-inkey", "/tmp/pemValue.pem"], True)
         aws_account_name = f'AWS.{instance_id}.Windows'
@@ -111,7 +111,7 @@ def create_instance(instance_id, instance_details, store_parameters_class, log_n
 
     # Check if account already exist - in case exist - just add it to DynamoDB
 
-    pvwa_connection_number, session_guid = aws_services.get_available_session_from_dynamo()
+    pvwa_connection_number, session_guid = aws_services.get_session_from_dynamo()
     if not pvwa_connection_number:
         return
     session_token = pvwa_integration_class.logon_pvwa(store_parameters_class.vault_username,
@@ -155,15 +155,15 @@ def create_instance(instance_id, instance_details, store_parameters_class, log_n
 
 def get_os_distribution_user(image_description):
     logger.trace(image_description, caller_name='get_os_distribution_user')
-    if "centos" in (image_description.lower()):
+    if "centos" in image_description.lower():
         linux_username = "centos"
-    elif "ubuntu" in (image_description.lower()):
+    elif "ubuntu" in image_description.lower():
         linux_username = "ubuntu"
-    elif "debian" in (image_description.lower()):
+    elif "debian" in image_description.lower():
         linux_username = "admin"
-    elif "fedora" in (image_description.lower()):
+    elif "fedora" in image_description.lower():
         linux_username = "fedora"
-    elif "opensuse" in (image_description.lower()):
+    elif "opensuse" in image_description.lower():
         linux_username = "root"
     else:
         linux_username = "ec2-user"
