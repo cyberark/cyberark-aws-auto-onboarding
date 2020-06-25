@@ -63,7 +63,8 @@ def lambda_handler(event, context):
             else:
                 logger.info('Adding aob_mode to parameter store', DEBUG_LEVEL_DEBUG)
                 is_aob_mode_saved = add_param_to_parameter_store(aob_mode, 'aob_mode',
-                                                                 'Dictates if the solution will work in POC(no SSL) or Production(with SSL) mode')
+                                                                 'Dictates if the solution will work in POC(no SSL) or ' \
+                                                                 'Production(with SSL) mode')
                 if not is_aob_mode_saved:  # if password failed to be saved
                     return cfnresponse.send(event, context, cfnresponse.FAILED,
                                             "Failed to create aob_mode parameter in Parameter Store", {}, physical_resource_id)
@@ -132,8 +133,8 @@ def lambda_handler(event, context):
                                                                   request_aws_account_id, request_aws_region_name)
                 if not is_aws_account_created:
                     return cfnresponse.send(event, context, cfnresponse.FAILED,
-                                            f"Failed to create Key Pair {request_key_pair_name} in safe {request_key_pair_safe}. see detailed error in logs",
-                                            {}, physical_resource_id)
+                                            f"Failed to create Key Pair {request_key_pair_name} in safe " \
+                                            f"{request_key_pair_safe}. see detailed error in logs", {}, physical_resource_id)
 
                 return cfnresponse.send(event, context, cfnresponse.SUCCESS, None, {}, physical_resource_id)
 
@@ -203,9 +204,8 @@ def create_new_key_pair_on_aws(key_pair_name):
         if e.response["Error"]["Code"] == "InvalidKeyPair.Duplicate":
             logger.error(f"Key Pair {key_pair_name} already exists")
             return True
-        else:
-            logger.error(f'Creating new key pair failed. error code:\n {e.response["Error"]["Code"]}')
-            return False
+        logger.error(f'Creating new key pair failed. error code:\n {e.response["Error"]["Code"]}')
+        return False
 
     return key_pair_response["KeyMaterial"]
 
@@ -246,9 +246,8 @@ def create_key_pair_in_vault(pvwa_integration_class, session, aws_key_name, priv
     elif rest_response.status_code == requests.codes.conflict:
         logger.info(f"Key Pair created already exists in safe {safe_name}")
         return True
-    else:
-        logger.error(f"Failed to create Key Pair in safe {safe_name}, status code:{rest_response.status_code}")
-        return False
+    logger.error(f"Failed to create Key Pair in safe {safe_name}, status code:{rest_response.status_code}")
+    return False
 
 
 def create_session_table():
@@ -317,9 +316,8 @@ def delete_password_from_param_store(aob_mode):
     except Exception as e:
         if e.response["Error"]["Code"] == "ParameterNotFound":
             return True
-        else:
-            logger.error(f'Failed to delete parameter "Vault_Pass" from Parameter Store. Error code: {e.response["Error"]["Code"]}')
-            return False
+        logger.error(f'Failed to delete parameter "Vault_Pass" from Parameter Store. Error code: {e.response["Error"]["Code"]}')
+        return False
 
 
 def delete_sessions_table():
