@@ -19,7 +19,6 @@ IS_SAFE_HANDLER = True
 logger = LogMechanism()
 
 def lambda_handler(event, context):
-    print(f'[PRINT] LambdaHandler:\n{event},{context}')
     logger.trace(event, context, caller_name='lambda_handler')
     try:
         physical_resource_id = str(uuid.uuid4())
@@ -257,10 +256,10 @@ def create_session_table():
         sessions_table_lock = LockerClient('Sessions')
         sessions_table_lock.create_lock_table()
     except Exception as e:
-        print(f"Failed to create 'Sessions' table in DynamoDB. Exception: {str(e)}")
+        logger.error(f"Failed to create 'Sessions' table in DynamoDB. Exception: {str(e)}")
         return None
 
-    print("Table 'Sessions' created successfully")
+    logger.info("Table 'Sessions' created successfully")
     return True
 
 
@@ -302,16 +301,16 @@ def delete_password_from_param_store(aob_mode):
         ssm_client.delete_parameter(
             Name='AOB_Vault_Pass'
         )
-        print("Parameter 'AOB_Vault_Pass' deleted successfully from Parameter Store")
+        logger.info("Parameter 'AOB_Vault_Pass' deleted successfully from Parameter Store")
         ssm_client.delete_parameter(
             Name='aob_mode'
         )
-        print("Parameter 'aob_mode' deleted successfully from Parameter Store")
+        logger.info("Parameter 'aob_mode' deleted successfully from Parameter Store")
         if aob_mode == 'Production':
             ssm_client.delete_parameter(
                 Name='AOB_PVWA_Verification_Key'
             )
-            print("Parameter 'AOB_PVWA_Verification_Key' deleted successfully from Parameter Store")
+            logger.info("Parameter 'AOB_PVWA_Verification_Key' deleted successfully from Parameter Store")
         return True
     except Exception as e:
         if e.response["Error"]["Code"] == "ParameterNotFound":
