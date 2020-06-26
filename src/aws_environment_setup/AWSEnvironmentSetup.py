@@ -116,28 +116,27 @@ def lambda_handler(event, context):
             if not request_key_pair_name:
                 logger.info("Key Pair name parameter is empty, the solution will not create a new Key Pair")
                 return cfnresponse.send(event, context, cfnresponse.SUCCESS, None, {}, physical_resource_id)
-            else:
-                aws_key_pair = create_new_key_pair_on_aws(request_key_pair_name)
+            aws_key_pair = create_new_key_pair_on_aws(request_key_pair_name)
 
-                if aws_key_pair is False:
-                    # Account already exist, no need to create it, can't insert it to the vault
-                    return cfnresponse.send(event, context, cfnresponse.FAILED,
-                                            f"Failed to create Key Pair {request_key_pair_name} in AWS",
-                                            {}, physical_resource_id)
-                if aws_key_pair is True:
-                    return cfnresponse.send(event, context, cfnresponse.FAILED,
-                                            f"Key Pair {request_key_pair_name} already exists in AWS",
-                                            {}, physical_resource_id)
-                # Create the key pair account on KeyPairs vault
-                is_aws_account_created = create_key_pair_in_vault(pvwa_integration_class, pvwa_session_id, request_key_pair_name,
-                                                                  aws_key_pair, request_pvwa_ip, request_key_pair_safe,
-                                                                  request_aws_account_id, request_aws_region_name)
-                if not is_aws_account_created:
-                    return cfnresponse.send(event, context, cfnresponse.FAILED,
-                                            f"Failed to create Key Pair {request_key_pair_name} in safe " \
-                                            f"{request_key_pair_safe}. see detailed error in logs", {}, physical_resource_id)
+            if aws_key_pair is False:
+                # Account already exist, no need to create it, can't insert it to the vault
+                return cfnresponse.send(event, context, cfnresponse.FAILED,
+                                        f"Failed to create Key Pair {request_key_pair_name} in AWS",
+                                        {}, physical_resource_id)
+            if aws_key_pair is True:
+                return cfnresponse.send(event, context, cfnresponse.FAILED,
+                                        f"Key Pair {request_key_pair_name} already exists in AWS",
+                                        {}, physical_resource_id)
+            # Create the key pair account on KeyPairs vault
+            is_aws_account_created = create_key_pair_in_vault(pvwa_integration_class, pvwa_session_id, request_key_pair_name,
+                                                              aws_key_pair, request_pvwa_ip, request_key_pair_safe,
+                                                              request_aws_account_id, request_aws_region_name)
+            if not is_aws_account_created:
+                return cfnresponse.send(event, context, cfnresponse.FAILED,
+                                        f"Failed to create Key Pair {request_key_pair_name} in safe " \
+                                        f"{request_key_pair_safe}. see detailed error in logs", {}, physical_resource_id)
 
-                return cfnresponse.send(event, context, cfnresponse.SUCCESS, None, {}, physical_resource_id)
+            return cfnresponse.send(event, context, cfnresponse.SUCCESS, None, {}, physical_resource_id)
 
     except Exception as e:
         logger.error(f"Exception occurred:{str(e)}:")

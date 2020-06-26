@@ -52,12 +52,11 @@ def lambda_handler(event, context):
             if not instance_data:
                 logger.info(f"Item {instance_id} does not exist on DB")
                 return None
-            else:
-                instance_status = instance_data["Status"]["S"]
-                if instance_status == OnBoardStatus.on_boarded_failed:
-                    logger.error(f"Item {instance_id} is in status OnBoard failed, removing from DynamoDB table")
-                    aws_services.remove_instance_from_dynamo_table(instance_id)
-                    return None
+            instance_status = instance_data["Status"]["S"]
+            if instance_status == OnBoardStatus.on_boarded_failed:
+                logger.error(f"Item {instance_id} is in status OnBoard failed, removing from DynamoDB table")
+                aws_services.remove_instance_from_dynamo_table(instance_id)
+                return None
         elif action_type == 'running':
             if not instance_details["address"]:  # In case querying AWS return empty address
                 logger.error("Retrieving Instance Address from AWS failed.")
