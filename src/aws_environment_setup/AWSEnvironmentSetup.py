@@ -108,7 +108,8 @@ def lambda_handler(event, context):
             is_safe_created = create_safe(pvwa_integration_class, request_key_pair_safe, "", request_pvwa_ip, pvwa_session_id)
             if not is_safe_created:
                 return cfnresponse.send(event, context, cfnresponse.FAILED,
-                                        f"Failed to create the Key Pairs safe: {request_key_pair_safe}, see detailed error in logs",
+                                        f"Failed to create the Key Pairs safe: {request_key_pair_safe}, " \
+                                        "see detailed error in logs",
                                         {}, physical_resource_id)
 
             #  key pair is optional parameter

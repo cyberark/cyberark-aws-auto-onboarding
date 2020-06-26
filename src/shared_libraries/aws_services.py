@@ -107,7 +107,8 @@ def get_params_from_param_store():
     lambda_client = boto3.client('lambda')
     lambda_request_data = dict()
     lambda_request_data["Parameters"] = [UNIX_SAFE_NAME_PARAM, WINDOWS_SAFE_NAME_PARAM, VAULT_USER_PARAM, PVWA_IP_PARAM,
-                                         AWS_KEYPAIR_SAFE, VAULT_PASSWORD_PARAM_, PVWA_VERIFICATION_KEY, AOB_MODE, AOB_DEBUG_LEVEL]
+                                         AWS_KEYPAIR_SAFE, VAULT_PASSWORD_PARAM_, PVWA_VERIFICATION_KEY, AOB_MODE,
+                                         AOB_DEBUG_LEVEL]
     try:
         response = lambda_client.invoke(FunctionName='TrustMechanism',
                                         InvocationType='RequestResponse',

@@ -110,7 +110,8 @@ def lambda_handler(event, context):
                                                                     instance_id,
                                                                     store_parameters_class.pvwa_url)
             if not key_pair_account_id:
-                logger.error(f"Key Pair {key_pair_value_on_safe} does not exist in Safe {store_parameters_class.key_pair_safe_name}")
+                logger.error(f"Key Pair {key_pair_value_on_safe} does not exist in Safe " \
+                             f"{store_parameters_class.key_pair_safe_name}")
                 return
             instance_account_password = pvwa_api_calls.get_account_value(session_token, key_pair_account_id, instance_id,
                                                                          store_parameters_class.pvwa_url)
