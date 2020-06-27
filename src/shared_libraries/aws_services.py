@@ -11,9 +11,8 @@ logger = LogMechanism()
 
 # return ec2 instance relevant data:
 # keyPair_name, instance_address, platform
-def get_ec2_details(instance_id, solution_account_id, event_region, event_account_id):
-    logger.trace(instance_id, solution_account_id, event_region, event_account_id, caller_name='get_ec2_details')
-    logger.info(f'Gathering details about EC2 - {instance_id}')
+def get_account_details(event_account_id, solution_account_id, event_region):
+    logger.trace(solution_account_id, event_region, event_account_id, caller_name='get_account_details')
     if event_account_id == solution_account_id:
         try:
             ec2_resource = boto3.resource('ec2', event_region)
@@ -42,10 +41,14 @@ def get_ec2_details(instance_id, solution_account_id, event_region, event_accoun
             )
         except Exception as e:
             logger.error(f'Error on getting token from account: {event_account_id}')
+    return ec2_resource
 
+def get_ec2_details(instance_id, ec2_object, event_account_id):
+    logger.trace(instance_id, ec2_object, event_account_id, caller_name='get_ec2_details')
+    logger.info(f'Gathering details about EC2 - {instance_id}')
     try:
-        instance_resource = ec2_resource.Instance(instance_id)
-        instance_image = ec2_resource.Image(instance_resource.image_id)
+        instance_resource = ec2_object.Instance(instance_id)
+        instance_image = ec2_object.Image(instance_resource.image_id)
         logger.info(f'Image Detected: {str(instance_image)}')
         image_description = instance_image.description
     except Exception as e:
@@ -78,14 +81,14 @@ def get_instance_data_from_dynamo_table(instance_id):
     dynamo_resource = boto3.client('dynamodb')
 
     try:
-        dynamo_response = dynamo_resource.get_item(TableName='Instances', Key={"instance_id": {"S": instance_id}})
+        dynamo_response = dynamo_resource.get_item(TableName='Instances', Key={"InstanceId": {"S": instance_id}})
     except Exception:
         logger.error("Error occurred when trying to call dynamoDB")
         return False
     # DynamoDB "Item" response: {'Address': {'S': 'xxx.xxx.xxx.xxx'}, 'instance_id': {'S': 'i-xxxxxyyyyzzz'},
     #               'Status': {'S': 'on-boarded'}, 'Error': {'S': 'Some Error'}}
     if 'Item' in dynamo_response:
-        if dynamo_response["Item"]["instance_id"]["S"] == instance_id:
+        if dynamo_response["Item"]["InstanceId"]["S"] == instance_id:
             logger.info(f'{instance_id} exists in DynamoDB')
             return dynamo_response["Item"]
     return False
@@ -155,7 +158,7 @@ def put_instance_to_dynamo_table(instance_id, ip_address, on_board_status, on_bo
     try:
         instances_table.put_item(
             Item={
-                'instance_id': instance_id,
+                'InstanceId': instance_id,
                 'Address': ip_address,
                 'Status': on_board_status,
                 'Error': on_board_error,
@@ -164,10 +167,10 @@ def put_instance_to_dynamo_table(instance_id, ip_address, on_board_status, on_bo
         )
     except Exception:
         logger.error('Exception occurred on add item to DynamoDB')
-        return None
+        return False
 
     logger.info(f'Item {instance_id} added successfully to DynamoDB')
-    return
+    return True
 
 
 def release_session_on_dynamo(session_id, session_guid):
@@ -193,7 +196,7 @@ def remove_instance_from_dynamo_table(instance_id):
     try:
         instances_table.delete_item(
             Key={
-                'instance_id': instance_id
+                'InstanceId': instance_id
             }
         )
     except Exception as e:

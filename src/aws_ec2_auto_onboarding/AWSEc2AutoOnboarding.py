@@ -39,13 +39,17 @@ def lambda_handler(event, context):
 
     try:
         event_region = data["region"]
+        solution_account_id = context.invoked_function_arn.split(':')[4]
+        log_name = context.log_stream_name if context.log_stream_name else "None"
     except Exception as e:
         logger.error(f"Error on retrieving Event Region from Event Message. Error: {e}")
+    elasticity_function(instance_id, action_type, event_account_id, event_region, solution_account_id, log_name)
 
-    log_name = context.log_stream_name if context.log_stream_name else "None"
+
+def elasticity_function(instance_id, action_type, event_account_id, event_region, solution_account_id, log_name):
     try:
-        solution_account_id = context.invoked_function_arn.split(':')[4]
-        instance_details = aws_services.get_ec2_details(instance_id, solution_account_id, event_region, event_account_id)
+        ec2_object = aws_services.get_account_details(event_region, solution_account_id, event_account_id)
+        instance_details = aws_services.get_ec2_details(instance_id, ec2_object, event_account_id)
 
         instance_data = aws_services.get_instance_data_from_dynamo_table(instance_id)
         if action_type == 'terminated':
