@@ -79,8 +79,8 @@ def get_instance_data_from_dynamo_table(instance_id):
 
     try:
         dynamo_response = dynamo_resource.get_item(TableName='Instances', Key={"instance_id": {"S": instance_id}})
-    except Exception:
-        logger.error("Error occurred when trying to call dynamoDB")
+    except Exception as e:
+        logger.error(f"Error occurred when trying to call DynamoDB: {e}")
         return False
     # DynamoDB "Item" response: {'Address': {'S': 'xxx.xxx.xxx.xxx'}, 'instance_id': {'S': 'i-xxxxxyyyyzzz'},
     #               'Status': {'S': 'on-boarded'}, 'Error': {'S': 'Some Error'}}
@@ -162,8 +162,8 @@ def put_instance_to_dynamo_table(instance_id, ip_address, on_board_status, on_bo
                 'LogId': log_name
             }
         )
-    except Exception:
-        logger.error('Exception occurred on add item to DynamoDB')
+    except Exception as e:
+        logger.error(f'Exception occurred on add item to DynamoDB: {e}')
         return None
 
     logger.info(f'Item {instance_id} added successfully to DynamoDB')
@@ -224,7 +224,7 @@ def get_session_from_dynamo():
         logger.info("Connection limit has been reached")
         return False, ""
     except Exception as e:
-        print(f"Failed to retrieve session from DynamoDB:\n{str(e)}")
+        print(f"Failed to retrieve session from DynamoDB: {str(e)}")
         raise Exception(f"Exception on get_session_from_dynamo:{str(e)}")
 
 
@@ -249,8 +249,8 @@ def update_instances_table_status(instance_id, status, error="None"):
                 }
             }
         )
-    except Exception:
-        logger.error('Exception occurred on updating session on dynamoDB')
+    except Exception as e:
+        logger.error(f'Exception occurred on updating session on DynamoDB: {e}')
         return None
     logger.info("Instance data updated successfully")
     return
