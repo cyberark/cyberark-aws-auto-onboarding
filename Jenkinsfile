@@ -13,19 +13,22 @@ pipeline {
             steps {
                 sh '''
                 if [ $(dpkg-query -W -f='${Status}' zip 2>/dev/null | grep -c "ok installed") -eq 0 ]; then sudo apt-get install -y zip;  fi
-                    python3 -m pip install --user virtualenv
-                    python3 -m virtualenv .testenv
-                    source ./.testenv/bin/activate
 
-                    # Install lambda functions requirements
-                    pip install -r requirements.txt --target ./src/aws_ec2_auto_onboarding/package
-                    pip install -r requirements.txt --target ./src/aws_environment_setup/package
+                python3 -m pip install --user virtualenv
+                python3 -m virtualenv .testenv
+                source ./.testenv/bin/activate
 
-                    # Install linting tools
-                    pip install cfn-lint pylint awscli ansible
+                # Install lambda functions requirements
+                pip install -r requirements.txt --target ./src/aws_ec2_auto_onboarding/package
+                pip install -r requirements.txt --target ./src/aws_environment_setup/package
 
-                    # Install security tools
-                    pip install safety bandit
+                # Install linting tools
+                pip install cfn-lint pylint awscli ansible
+
+                # Install security tools
+                pip install safety bandit
+                
+                mkdir reports
                 '''
             }
         }
@@ -99,7 +102,7 @@ pipeline {
         stage('Copy zips') {
          steps {
              sh '''
-                 rm -rf reports/ artifacts/
+                 rm -rf artifacts/
                  mkdir -p reports artifacts/{aws_ec2_auto_onboarding,aws_environment_setup}
                  cp src/aws_ec2_auto_onboarding/aws_ec2_auto_onboarding.zip src/aws_environment_setup/aws_environment_setup.zip artifacts/
                  cd artifacts
