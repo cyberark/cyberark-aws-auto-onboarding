@@ -22,10 +22,7 @@ pipeline {
                     pip install -r requirements.txt --target ./src/aws_environment_setup/package
 
                     # Install linting tools
-                    pip install cfn-lint
-                    pip install awscli
-                    pip install ansible
-                    pip install pylint
+                    pip install cfn-lint pylint awscli ansible
 
                     # Install security tools
                     pip install safety bandit
@@ -104,7 +101,7 @@ pipeline {
             steps {
                 sh '''
                     source ./.testenv/bin/activate
-                    safety check -r requirements.txt --full-report > reports/safety.txt || true
+                    safety check -r requirements.txt --full-report > reports/safety.txt
                 '''
             }
         }
@@ -112,7 +109,7 @@ pipeline {
             steps {
                 sh '''
                     source ./.testenv/bin/activate
-                    bandit -r artifacts/. --format html > reports/bandit.html || true
+                    bandit -r artifacts/. --format html > reports/bandit.html
                 '''
             }
         }
