@@ -356,7 +356,7 @@
           "S3Key": "aws_ec2_auto_onboarding.zip"
         },
         "Description": "Main Auto Onboarding Lambda",
-        "Handler": "AWSEc2AutoOnboarding.lambda_handler",
+        "Handler": "aws_ec2_auto_onboarding.lambda_handler",
         "Role": {
           "Fn::GetAtt": [
             "ElasticityLambdaRole",
@@ -843,7 +843,7 @@
           "S3Key": "aws_environment_setup.zip"
         },
         "Description": "Environment initial setup Lambda",
-        "Handler": "AWSEnvironmentSetup.lambda_handler",
+        "Handler": "aws_environment_setup.lambda_handler",
         "Role": {
           "Fn::GetAtt": [
             "SafeHandlerLambdaRole",

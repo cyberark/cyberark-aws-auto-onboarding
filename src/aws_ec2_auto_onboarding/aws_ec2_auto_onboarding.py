@@ -50,7 +50,6 @@ def elasticity_function(instance_id, action_type, event_account_id, event_region
     try:
         ec2_object = aws_services.get_account_details(event_region, solution_account_id, event_account_id)
         instance_details = aws_services.get_ec2_details(instance_id, ec2_object, event_account_id)
-
         instance_data = aws_services.get_instance_data_from_dynamo_table(instance_id)
         if action_type == 'terminated':
             if not instance_data:

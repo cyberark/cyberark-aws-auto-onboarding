@@ -11,6 +11,7 @@ logger = LogMechanism()
 
 # return ec2 instance relevant data:
 # keyPair_name, instance_address, platform
+
 def get_account_details(event_account_id, solution_account_id, event_region):
     logger.trace(solution_account_id, event_region, event_account_id, caller_name='get_account_details')
     if event_account_id == solution_account_id:
