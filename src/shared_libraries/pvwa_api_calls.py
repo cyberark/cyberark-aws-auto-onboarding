@@ -96,7 +96,7 @@ def check_if_kp_exists(session, account_name, safe_name, instance_id, rest_url):
     # 2 options of search - if safe name not empty, add it to query, if not - search without it
 
     if safe_name:  # has value
-        pvwa_url = f"{rest_url}/api/accounts?search={account_name}&filter=safe_name eq {safe_name}"
+        pvwa_url = f"{rest_url}/api/accounts?search={account_name}&filter=safeName eq {safe_name}"
     else:  # has no value
         pvwa_url = f"{rest_url}/api/accounts?search={account_name}"
     try:
@@ -124,7 +124,7 @@ def retrieve_account_id_from_account_name(session, account_name, safe_name, inst
     # 2 options of search - if safe name not empty, add it to query, if not - search without it
 
     if safe_name:  # has value
-        pvwa_url = f"{rest_url}/api/accounts?search={account_name}&filter=safe_name eq {safe_name}"
+        pvwa_url = f"{rest_url}/api/accounts?search={account_name}&filter=safeName eq {safe_name}"
     else:  # has no value
         pvwa_url = f"{rest_url}/api/accounts?search={account_name}"
     try:

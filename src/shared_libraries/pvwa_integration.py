@@ -27,7 +27,7 @@ class PvwaIntegration:
                 self.certificate = False
                 self.logger.info(f'{environment} Environment Detected', DEBUG_LEVEL_DEBUG)
         except Exception as e:
-            self.logger.error(f'Failed to retrieve aob_mode parameter:\n{str(e)}')
+            self.logger.error(f'Failed to retrieve aob_mode parameter: {str(e)}')
             raise Exception("Error occurred while retrieving aob_mode parameter")
 
 
@@ -39,7 +39,7 @@ class PvwaIntegration:
             self.logger.info(f'Invoking get request url:{url} header: {header}', DEBUG_LEVEL_DEBUG)
             rest_response = requests.get(self.url, timeout=30, verify=self.certificate, headers=self.header)
         except Exception as e:
-            self.logger.error(f"An error occurred on calling PVWA REST service:\n{str(e)}")
+            self.logger.error(f"An error occurred on calling PVWA REST service: {str(e)}")
             return None
         return rest_response
 
@@ -52,7 +52,7 @@ class PvwaIntegration:
             self.logger.info(f'Invoking delete request url {url} , header: {header}', DEBUG_LEVEL_DEBUG)
             response = requests.delete(self.url, timeout=30, verify=self.certificate, headers=self.header)
         except Exception as e:
-            self.logger.error(f'Failed to Invoke delete request:\n{str(e)}')
+            self.logger.error(f'Failed to Invoke delete request: {str(e)}')
             return None
         return response
 
@@ -67,7 +67,7 @@ class PvwaIntegration:
             rest_response = requests.post(self.url, data=self.request, timeout=30, verify=self.certificate, headers=self.header,
                                           stream=True)
         except Exception as e:
-            self.logger.error(f"Error occurred during POST request to PVWA:\n{str(e)}")
+            self.logger.error(f"Error occurred during POST request to PVWA: {str(e)}")
             return None
         return rest_response
 
