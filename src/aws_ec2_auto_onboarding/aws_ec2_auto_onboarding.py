@@ -86,8 +86,8 @@ def lambda_handler(event, context):
         pvwa_connection_number, session_guid = aws_services.get_session_from_dynamo()
         if not pvwa_connection_number:
             return
-        session_token = pvwa_integration_class.logon_pvwa(store_parameters_class.vaultUsername,
-                                                          store_parameters_class.vaultPassword,
+        session_token = pvwa_integration_class.logon_pvwa(store_parameters_class.vault_username,
+                                                          store_parameters_class.vault_password,
                                                           store_parameters_class.pvwa_url,
                                                           pvwa_connection_number)
 
