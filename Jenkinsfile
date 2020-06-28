@@ -36,97 +36,97 @@ pipeline {
           parallel {
             stage('Check syntax of python - pylint') {
                 steps {
-                    sh '''
-                        source ./.testenv/bin/activate
-                        find ./src -maxdepth 2 -type f -name "*.py" | xargs pylint --rcfile .pylintrc
-                    '''
-                }
+                  sh '''
+                      source ./.testenv/bin/activate
+                      find ./src -maxdepth 2 -type f -name "*.py" | xargs pylint --rcfile .pylintrc
+                  '''
+              }
             }
             stage('Check syntax of CloudFormation templates') {
                 steps {
-                    sh '''
-                        source ./.testenv/bin/activate
-                        cfn-lint ./dist/**/*.json
-                    '''
-                }
+                  sh '''
+                      source ./.testenv/bin/activate
+                      cfn-lint ./dist/**/*.json
+                  '''
+              }
             }
             stage('Validate CloudFormation templates') {
                 steps {
-                    sh '''
-                        aws cloudformation validate-template --template-body file://dist/multi-region-cft/CyberArk-AOB-MultiRegion-CF.json --region ${AWS_REGION}
-                        aws cloudformation validate-template --template-body file://dist/multi-region-cft/CyberArk-AOB-MultiRegion-CF-VaultEnvCreation.yaml --region ${AWS_REGION}
-                        aws cloudformation validate-template --template-body file://dist/multi-region-cft/CyberArk-AOB-MultiRegion-StackSet.json --region ${AWS_REGION}
-                    '''
-                }
+                  sh '''
+                      aws cloudformation validate-template --template-body file://dist/multi-region-cft/CyberArk-AOB-MultiRegion-CF.json --region ${AWS_REGION}
+                      aws cloudformation validate-template --template-body file://dist/multi-region-cft/CyberArk-AOB-MultiRegion-CF-VaultEnvCreation.yaml --region ${AWS_REGION}
+                      aws cloudformation validate-template --template-body file://dist/multi-region-cft/CyberArk-AOB-MultiRegion-StackSet.json --region ${AWS_REGION}
+                  '''
+              }
             }
-            stage('Scan requirements file for vulnerabilities') {
+            stage('Scan requirements file for vulnerabilities - safety') {
                 steps {
-                    sh '''
-                        source ./.testenv/bin/activate
-                        safety check -r requirements.txt --full-report > reports/safety.txt
-                    '''
-                }
+                  sh '''
+                      source ./.testenv/bin/activate
+                      safety check -r requirements.txt --full-report > reports/safety.txt
+                  '''
+              }
             }
           }
         }
         stage("Package zips") {
           parallel {
             stage('Package aws_environment_setup lambda function') {
-                 steps {
-                     sh '''
-                         cp -R src/shared_libraries/* src/aws_environment_setup
-                         ls src/aws_environment_setup
-                         cd src/aws_environment_setup
-                         cd package
-                         zip -r9 ${OLDPWD}/aws_environment_setup.zip .
-                         cd $OLDPWD
-                         zip -g aws_environment_setup.zip aws_services.py AWSEnvironmentSetup.py instance_processing.py kp_processing.py pvwa_api_calls.py pvwa_integration.py log_mechanism.py
-                     '''
-                 }
+               steps {
+                 sh '''
+                     cp -R src/shared_libraries/* src/aws_environment_setup
+                     ls src/aws_environment_setup
+                     cd src/aws_environment_setup
+                     cd package
+                     zip -r9 ${OLDPWD}/aws_environment_setup.zip .
+                     cd $OLDPWD
+                     zip -g aws_environment_setup.zip aws_services.py AWSEnvironmentSetup.py instance_processing.py kp_processing.py pvwa_api_calls.py pvwa_integration.py log_mechanism.py
+                 '''
+              }
             }
             stage('Package aws_ec2_auto_onboarding lambda function') {
-                 steps {
-                     sh '''
-                         cp -R src/shared_libraries/* src/aws_ec2_auto_onboarding
-                         ls src/aws_ec2_auto_onboarding
-                         cd src/aws_ec2_auto_onboarding
-                         cd package
-                         zip -r9 ${OLDPWD}/aws_ec2_auto_onboarding.zip .
-                         cd $OLDPWD
-                         zip -g aws_ec2_auto_onboarding.zip aws_services.py AWSEc2AutoOnboarding.py instance_processing.py kp_processing.py pvwa_api_calls.py pvwa_integration.py puttygen log_mechanism.py
-                     '''
-                 }
+              steps {
+                sh '''
+                     cp -R src/shared_libraries/* src/aws_ec2_auto_onboarding
+                     ls src/aws_ec2_auto_onboarding
+                     cd src/aws_ec2_auto_onboarding
+                     cd package
+                     zip -r9 ${OLDPWD}/aws_ec2_auto_onboarding.zip .
+                     cd $OLDPWD
+                     zip -g aws_ec2_auto_onboarding.zip aws_services.py AWSEc2AutoOnboarding.py instance_processing.py kp_processing.py pvwa_api_calls.py pvwa_integration.py puttygen log_mechanism.py
+                 '''
+              }
             }
           }
         }
         stage('Copy zips') {
-         steps {
-             sh '''
-                 rm -rf artifacts/
-                 mkdir -p reports artifacts/{aws_ec2_auto_onboarding,aws_environment_setup}
-                 cp src/aws_ec2_auto_onboarding/aws_ec2_auto_onboarding.zip src/aws_environment_setup/aws_environment_setup.zip artifacts/
-                 cd artifacts
-                 unzip aws_ec2_auto_onboarding.zip -d aws_ec2_auto_onboarding
-                 unzip aws_environment_setup.zip -d aws_environment_setup
-             '''
+          steps {
+            sh '''
+               rm -rf artifacts/
+               mkdir -p reports artifacts/{aws_ec2_auto_onboarding,aws_environment_setup}
+               cp src/aws_ec2_auto_onboarding/aws_ec2_auto_onboarding.zip src/aws_environment_setup/aws_environment_setup.zip artifacts/
+               cd artifacts
+               unzip aws_ec2_auto_onboarding.zip -d aws_ec2_auto_onboarding
+               unzip aws_environment_setup.zip -d aws_environment_setup
+            '''
           }
         }
-        stage('Scan distributables code for vulnerabilities') {
-            steps {
-                sh '''
-                    source ./.testenv/bin/activate
-                    bandit -r artifacts/. --format html > reports/bandit.html
-                '''
-            }
+        stage('Scan distributables code for vulnerabilities - bandit') {
+          steps {
+            sh '''
+                source ./.testenv/bin/activate
+                bandit -r artifacts/. --format html > reports/bandit.html || true
+            '''
+          }
         }
         stage('Upload artifacts to S3 Bucket') {
-            steps {
-                sh '''
-                    cd artifacts
-                    aws s3 cp aws_environment_setup.zip s3://aob-auto-test
-                    aws s3 cp aws_ec2_auto_onboarding.zip s3://aob-auto-test
-                '''
-            }
+          steps {
+            sh '''
+                cd artifacts
+                aws s3 cp aws_environment_setup.zip s3://aob-auto-test
+                aws s3 cp aws_ec2_auto_onboarding.zip s3://aob-auto-test
+            '''
+          }
         }
         // stage('Git clone AOB') {
         //     steps{
