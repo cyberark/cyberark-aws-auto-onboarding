@@ -78,14 +78,14 @@ def get_instance_data_from_dynamo_table(instance_id):
     dynamo_resource = boto3.client('dynamodb')
 
     try:
-        dynamo_response = dynamo_resource.get_item(TableName='Instances', Key={"instance_id": {"S": instance_id}})
+        dynamo_response = dynamo_resource.get_item(TableName='Instances', Key={"InstanceId": {"S": instance_id}})
     except Exception as e:
         logger.error(f"Error occurred when trying to call DynamoDB: {e}")
         return False
     # DynamoDB "Item" response: {'Address': {'S': 'xxx.xxx.xxx.xxx'}, 'instance_id': {'S': 'i-xxxxxyyyyzzz'},
     #               'Status': {'S': 'on-boarded'}, 'Error': {'S': 'Some Error'}}
     if 'Item' in dynamo_response:
-        if dynamo_response["Item"]["instance_id"]["S"] == instance_id:
+        if dynamo_response["Item"]["InstanceId"]["S"] == instance_id:
             logger.info(f'{instance_id} exists in DynamoDB')
             return dynamo_response["Item"]
     return False
@@ -155,7 +155,7 @@ def put_instance_to_dynamo_table(instance_id, ip_address, on_board_status, on_bo
     try:
         instances_table.put_item(
             Item={
-                'instance_id': instance_id,
+                'InstanceId': instance_id,
                 'Address': ip_address,
                 'Status': on_board_status,
                 'Error': on_board_error,
@@ -193,7 +193,7 @@ def remove_instance_from_dynamo_table(instance_id):
     try:
         instances_table.delete_item(
             Key={
-                'instance_id': instance_id
+                'InstanceId': instance_id
             }
         )
     except Exception as e:
@@ -236,7 +236,7 @@ def update_instances_table_status(instance_id, status, error="None"):
     try:
         instances_table.update_item(
             Key={
-                'instance_id': instance_id
+                'InstanceId': instance_id
             },
             AttributeUpdates={
                 'Status': {
