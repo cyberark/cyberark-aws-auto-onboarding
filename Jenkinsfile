@@ -29,7 +29,7 @@ pipeline {
                 '''
             }
         }
-        Stage("linting & safty validation") {
+        stage("linting & safty validation") {
           parallel {
             stage('Check syntax of python - pylint') {
                 steps {
@@ -66,7 +66,7 @@ pipeline {
             }
           }
         }
-        Stage("Package zips") {
+        stage("Package zips") {
           parallel {
             stage('Package aws_environment_setup lambda function') {
                  steps {
