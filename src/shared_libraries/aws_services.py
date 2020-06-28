@@ -173,16 +173,17 @@ def put_instance_to_dynamo_table(instance_id, ip_address, on_board_status, on_bo
     return True
 
 
-def release_session_on_dynamo(session_id, session_guid):
+def release_session_on_dynamo(session_id, session_guid, sessions_table_lock_client=False):
     logger.trace(session_id, session_guid, caller_name='release_session_on_dynamo')
     logger.info('Releasing session lock from DynamoDB')
     try:
-        sessions_table_lock_client = LockerClient('Sessions')
+        if not sessions_table_lock_client:
+            sessions_table_lock_client = LockerClient('Sessions')
         sessions_table_lock_client.locked = True
         sessions_table_lock_client.guid = session_guid
         sessions_table_lock_client.release(session_id)
     except Exception as e:
-        logger.error(f'Failed to release session lock from DynamoDB:\n{str(e)}')
+        logger.error(f'Failed to release session lock from DynamoDB: {str(e)}')
         return False
 
     return True
@@ -201,15 +202,16 @@ def remove_instance_from_dynamo_table(instance_id):
         )
     except Exception as e:
         logger.error(f'Exception occurred on deleting {instance_id} on dynamodb:\n{str(e)}')
-        return None
+        return False
 
     logger.info(f'Item {instance_id} successfully deleted from DB')
-    return
+    return True
 
 
-def get_session_from_dynamo():
+def get_session_from_dynamo(sessions_table_lock_client=False):
     logger.info("Getting available Session from DynamoDB")
-    sessions_table_lock_client = LockerClient('Sessions')
+    if not sessions_table_lock_client:
+        sessions_table_lock_client = LockerClient('Sessions')
     timeout = 20000  # Setting the timeout to 20 seconds on a row lock
     random_session_number = str(random.randint(1, 100))  # A number between 1 and 100
 
