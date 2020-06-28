@@ -2,15 +2,10 @@ import unittest
 from unittest.mock import Mock
 from unittest.mock import MagicMock
 from unittest.mock import patch
-import boto3
 import sys
+import boto3
+from moto import mock_ec2, mock_iam, mock_dynamodb2, mock_sts, mock_ssm
 sys.path.append('../shared_libraries')
-from moto import mock_ec2
-from moto import mock_iam
-from moto import mock_dynamodb2
-from moto import mock_sts
-from moto import mock_ssm
-from dynamo_lock import LockerClient
 import aws_services
 
 
@@ -37,7 +32,7 @@ class servicesTest(unittest.TestCase):
         self.assertEqual('ec2.ServiceResource()', str(diff_accounts))
         self.assertEqual('ec2.ServiceResource()', str(same_account))
 
-    def test_get_ec2_details(self):   
+    def test_get_ec2_details(self):
         ec2_resource = boto3.resource('ec2')
         ec2_linux_object = ec2_resource.create_instances(ImageId='ami-760aaa0f', MinCount=1, MaxCount=5)[0].id
         ec2_windows_object = ec2_resource.create_instances(ImageId='ami-56ec3e2f', MinCount=1, MaxCount=5)[0].id
@@ -55,7 +50,7 @@ class servicesTest(unittest.TestCase):
                                       KeySchema=[{"AttributeName": "InstanceId", "KeyType": "HASH"}],
                                       AttributeDefinitions=[{"AttributeName": "InstanceId", "AttributeType": "S"}])
         table = dynamodb.Table('Instances')
-        table.put_item(Item={'InstanceId': ec2_linux_object })
+        table.put_item(Item={'InstanceId': ec2_linux_object})
         new_response = aws_services.get_instance_data_from_dynamo_table(ec2_windows_object)
         exist_response = aws_services.get_instance_data_from_dynamo_table(ec2_linux_object)
         self.assertFalse(new_response)
@@ -65,7 +60,7 @@ class servicesTest(unittest.TestCase):
         ec2_resource = boto3.resource('ec2')
         ec2_linux_object = ec2_resource.create_instances(ImageId='ami-760aaa0f', MinCount=1, MaxCount=5)[0].id
         ec2_windows_object = ec2_resource.create_instances(ImageId='ami-56ec3e2f', MinCount=1, MaxCount=5)[0].id
-        dynamodb = boto3.resource('dynamodb')     
+        dynamodb = boto3.resource('dynamodb')  
         on_boarded = aws_services.put_instance_to_dynamo_table(ec2_linux_object, '1.1.1.1', 'on boarded')
         on_boarded_failed = aws_services.put_instance_to_dynamo_table(ec2_linux_object, '1.1.1.1', 'on board failed')
         delete_failed = aws_services.put_instance_to_dynamo_table(ec2_linux_object, '1.1.1.1', 'delete failed')
@@ -92,11 +87,23 @@ class servicesTest(unittest.TestCase):
 
     def test_get_session_from_dynamo(self):
         sessions_table_lock_client = Mock()
-        def fake_acquire():
+        def fake_acquire(a, b):
             return 'ab-1232'
-        #@patch.object(sessions_table_lock_client.acquire, fake_acquire)
-        a, b = aws_services.get_session_from_dynamo(sessions_table_lock_client)
-        print(a, b)
+        def fake_acquire_exc(a, b):
+            raise(Exception('fake_acquire_exc'))
+        @patch.object(sessions_table_lock_client, 'acquire', fake_acquire)
+        def invoke():
+            session_number, guid = aws_services.get_session_from_dynamo(sessions_table_lock_client)
+            return session_number, guid
+        session_number, guid = invoke()
+        self.assertIn('mock.guid', str(guid))
+        self.assertEqual(type('1'), type(session_number))
+        @patch.object(sessions_table_lock_client, 'acquire', fake_acquire_exc)
+        def invoke2():
+            with self.assertRaises(Exception) as context:
+                aws_services.get_session_from_dynamo(sessions_table_lock_client)
+            self.assertTrue('fake_acquire_exc' in str(context.exception))
+        invoke2()
 
 if __name__ == '__main__':
     unittest.main()
