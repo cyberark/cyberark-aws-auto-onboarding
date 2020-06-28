@@ -102,9 +102,9 @@ def check_if_kp_exists(session, account_name, safe_name, instance_id, rest_url):
     try:
         rest_response = pvwa_integration_class.call_rest_api_get(pvwa_url, header)
         if not rest_response:
-            raise Exception("Unknown Error when calling rest service - retrieve account_id")
+            raise Exception(f"Unknown Error when calling rest service - retrieve account - REST response: {rest_response}")
     except Exception as e:
-        logger.error(f'An error occurred:\n{str(e)}')
+        logger.error(f'An error occurred: {str(e)}')
         raise Exception(e)
     if rest_response.status_code == requests.codes.ok:
         # if response received, check account is not empty {"Count": 0,"accounts": []}
