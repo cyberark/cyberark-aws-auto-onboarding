@@ -14,12 +14,12 @@ import instance_processing
 import pvwa_api_calls as pvwa_api
 from pvwa_integration import PvwaIntegration
 
+MOTO_ACCOUNT='123456789012'
 @mock_iam
 @mock_dynamodb2
 @mock_sts
 @mock_ec2
 @mock_ssm
-
 class AwsServicesTest(unittest.TestCase):
     ssm = boto3.client('ssm')
     ssm.put_parameter(
@@ -161,41 +161,26 @@ class KpProcessingTest(unittest.TestCase):
 @mock_sts
 @mock_ec2
 @mock_ssm
-class InstanceProcessing(unittest.TestCase):
+class InstanceProcessingTest(unittest.TestCase):
     pvwa_integration_class = PvwaIntegration()
     def test_delete_instance(self):
         print('test_delete_instance')
+        ec2_class = EC2Details()
         ec2_resource = boto3.resource('ec2')
         linux, windows = generate_ec2(ec2_resource)
-        instance_data = {}
-        string = {}
-        string['S'] = '192.192.192.192'
-        instance_data["Address"] = string
-        details = dict()
-        details['key_name'] = 'myKey'
-        details['address'] = '192.192.192.192'
-        details['platform'] = 'windows'
-        details['image_description'] = 'windows'
-        details['aws_account_id'] = '199183736223'
-        sp_class = aws_services.StoreParameters('unix', 'windows', 'user', 'password', '1.1.1.1', 'kp', 'cert', 'POC', 'trace')
-        sp_class.pvwa_url = 'https://cyberarkaob.cyberark'
-        #pvwa_api_calls = Mock()
-        def retrieve():
-            return '1231'
         req = Mock()
         req.status_code = 200
         dynamodb = boto3.resource('dynamodb')
         table = dynamo_create_instances_table(dynamodb)
-        dynamo_put_ec2_object(dynamodb,linux)
+        dynamo_put_ec2_object(dynamodb, linux)
         @patch('requests.get', return_value='', status_code='')
         @patch('pvwa_integration.PvwaIntegration.call_rest_api_delete', return_value=req)
-        def invoke(a, b, c='c', d='d'):
+        def invoke(*args):
             with patch('pvwa_api_calls.retrieve_account_id_from_account_name') as mp:
                 mp.return_value = '1231'
-                deleted_instance = instance_processing.delete_instance(windows, 1, sp_class, instance_data, details)
-                instance_data['platform'] = 'Linix'
-                instance_data['image_description'] = 'Very Linix'
-                failed_instance = instance_processing.delete_instance(linux, 2, sp_class, instance_data, details)     
+                deleted_instance = instance_processing.delete_instance(windows, 1,ec2_class.sp_class, ec2_class.instance_data,
+                                                                       ec2_class.details)
+                failed_instance = instance_processing.delete_instance(linux, 2, ec2_class.sp_class, ec2_class.instance_data, ec2_class.details)     
             return deleted_instance, failed_instance
         return_windows, return_linux = invoke('a', 'b')
         self.assertTrue(return_windows)
@@ -207,11 +192,57 @@ class InstanceProcessing(unittest.TestCase):
         ec2_resource = boto3.resource('ec2')
         linux, windows = generate_ec2(ec2_resource)
         with patch('boto.ec2.connection.EC2Connection.get_password_data', return_value='StrongPassword'): #### to improve
-            respone = instance_processing.get_instance_password_data(windows, '123456789012', 'eu-west-2', '123456789012')
+            respone = instance_processing.get_instance_password_data(windows, MOTO_ACCOUNT, 'eu-west-2', MOTO_ACCOUNT)
         self.assertEqual(None, respone)
 
-
-
+    def test_create_instance(self): #### split this module!!!!
+        print('test_create_instance')
+        ec2_resource = boto3.resource('ec2')
+        linux, windows = generate_ec2(ec2_resource)
+        ec2_class = EC2Details()
+        mocky = Mock()
+        mocky.return_value = ['1', '2']
+        @patch('kp_processing.save_key_pair', return_value=True)
+        @patch('instance_processing.get_instance_password_data', return_value='StrongPassword')
+        @patch('kp_processing.convert_pem_to_ppk', return_value='VeryValue')
+        @patch('kp_processing.run_command_on_container', mocky)
+        @patch('kp_processing.print_process_outputs_on_end', return_value='StrongPassword')
+        @patch('aws_services.get_session_from_dynamo', return_value=['3', '4'])
+        @patch('pvwa_integration.PvwaIntegration.logon_pvwa', return_value='asbhdsyadbasASDUASDUHB2312312')
+        @patch('pvwa_api_calls.retrieve_account_id_from_account_name', return_value=False)
+        @patch('pvwa_api_calls.create_account_on_vault', return_value=['a','a'])
+        @patch('pvwa_api_calls.rotate_credentials_immediately', return_value='a')
+        @patch('aws_services.put_instance_to_dynamo_table', return_value='a')
+        @patch('pvwa_integration.PvwaIntegration.logoff_pvwa', return_value='a')
+        @patch('aws_services.release_session_on_dynamo',return_value='a')
+        def invoke(*args):
+            status = instance_processing.create_instance(windows, ec2_class.details, ec2_class.sp_class, 'yea', MOTO_ACCOUNT,
+                                                'eu-west-2', MOTO_ACCOUNT, '123123132h')
+            return status
+        response = invoke()
+        self.assertTrue(response)
+        ec2_class.set_platform('linix')
+        ec2_class.set_image_description('Linix')
+        @patch('kp_processing.save_key_pair', return_value=True)
+        @patch('instance_processing.get_instance_password_data', return_value='StrongPassword')
+        @patch('kp_processing.convert_pem_to_ppk', return_value='VeryValue')
+        @patch('kp_processing.run_command_on_container', mocky)
+        @patch('kp_processing.print_process_outputs_on_end', return_value='StrongPassword')
+        @patch('aws_services.get_session_from_dynamo', return_value=['3', '4'])
+        @patch('pvwa_integration.PvwaIntegration.logon_pvwa', return_value='asbhdsyadbasASDUASDUHB2312312')
+        @patch('pvwa_api_calls.retrieve_account_id_from_account_name', return_value=False)
+        @patch('pvwa_api_calls.create_account_on_vault', return_value=['a','a'])
+        @patch('pvwa_api_calls.rotate_credentials_immediately', return_value='a')
+        @patch('aws_services.put_instance_to_dynamo_table', return_value='a')
+        @patch('pvwa_integration.PvwaIntegration.logoff_pvwa', return_value='a')
+        @patch('aws_services.release_session_on_dynamo',return_value='a')
+        def invoke2(*args):
+            status = instance_processing.create_instance(linux, ec2_class.details, ec2_class.sp_class, 'yea', MOTO_ACCOUNT,
+                                                'eu-west-2', MOTO_ACCOUNT, '123123132h')
+            return status
+        print (ec2_class.details['platform'])
+        response = invoke2()
+        self.assertTrue(response)
 
 def fake_exc(a, b):
     raise Exception('fake_exc')
@@ -234,6 +265,30 @@ def dynamo_put_ec2_object(dynamo_resource, ec2_object):
     table = dynamo_resource.Table('Instances')
     table.put_item(Item={'InstanceId': ec2_object})
     return True
+ 
+class EC2Details:
+    def __init__(self):
+        self.details = dict()
+        self.details['key_name'] = 'myKey'
+        self.details['platform'] = 'windows'
+        self.details['image_description'] = 'windows'
+        self.details['aws_account_id'] = '199183736223'
+        self.details['address'] = '192.192.192.192'
+        self.instance_data = {}
+        string = {}
+        string['S'] = '192.192.192.192'
+        self.instance_data["Address"] = string
+        self.instance_data['platform'] = 'Linix'
+        self.instance_data['image_description'] = 'Very Linix'
+        self.sp_class = aws_services.StoreParameters('unix', 'windows', 'user', 'password', '1.1.1.1', 'kp', 'cert',
+                                                     'POC', 'trace')
+        self.sp_class.pvwa_url = 'https://cyberarkaob.cyberark'
+
+    def set_platform(self, platform):
+        self.instance_data['platform'] = platform
+
+    def set_image_description(self, image_description):
+        self.instance_data['image_description'] = image_description
 
 if __name__ == '__main__':
     unittest.main()
