@@ -29,9 +29,12 @@ def convert_pem_to_ppk(pem_key):
                                    '/tmp/ppkValue.ppk'], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
     conversion.wait()
     conversion_result = conversion.returncode
+    Remove_Me = subprocess.Popen(['cat', '/tmp/ppkValue.ppk'],stdout=subprocess.PIPE)
+    logger.trace(conversion_result, Remove_Me.stdout.read() ,caller_name='convert_pem_to_ppk')
     if conversion_result == 0:
         ppk_key = subprocess.check_output("cat /tmp/ppkValue.ppk", shell=True).decode("utf-8")
         logger.info("Pem key successfully converted")
+        print(ppk_key)
     else:
         logger.error("Failed to convert pem key to ppk")
         raise Exception('Failed to convert pem')
