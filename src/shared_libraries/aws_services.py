@@ -11,14 +11,16 @@ logger = LogMechanism()
 
 # return ec2 instance relevant data:
 # keyPair_name, instance_address, platform
-def get_account_details(event_account_id, solution_account_id, event_region):
+def get_account_details(solution_account_id, event_account_id, event_region):
     logger.trace(solution_account_id, event_region, event_account_id, caller_name='get_account_details')
     if event_account_id == solution_account_id:
+        logger.info('Event occurred in the AOB solution account')
         try:
             ec2_resource = boto3.resource('ec2', event_region)
         except Exception as e:
             logger.error(f'Error on creating boto3 session: {str(e)}')
     else:
+        logger.info('Event occurred in different account')
         try:
             logger.info('Assuming Role')
             sts_connection = boto3.client('sts')

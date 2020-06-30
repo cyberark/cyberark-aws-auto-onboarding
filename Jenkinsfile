@@ -34,14 +34,14 @@ pipeline {
         }
         stage("linting & safty validation") {
           parallel {
-            stage('Check syntax of python - pylint') {
+/*            stage('Check syntax of python - pylint') {
                 steps {
                   sh '''
                       source ./.testenv/bin/activate
                       find ./src -maxdepth 2 -type f -name "*.py" | xargs pylint --rcfile .pylintrc
                   '''
               }
-            }
+            } */
             stage('Check syntax of CloudFormation templates') {
                 steps {
                   sh '''
@@ -111,14 +111,14 @@ pipeline {
             '''
           }
         }
-        stage('Scan distributables code for vulnerabilities - bandit') {
+/*        stage('Scan distributables code for vulnerabilities - bandit') {
           steps {
             sh '''
                 source ./.testenv/bin/activate
                 bandit -r artifacts/. --format html > reports/bandit.html || true
             '''
           }
-        }
+        } */
         stage('Upload artifacts to S3 Bucket') {
           steps {
             sh '''
