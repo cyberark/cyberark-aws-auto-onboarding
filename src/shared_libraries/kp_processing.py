@@ -27,10 +27,11 @@ def convert_pem_to_ppk(pem_key):
     subprocess.check_output("cat /tmp/pemValue.pem", shell=True)
     conversion = subprocess.Popen(['/tmp/puttygen', '/tmp/pemValue.pem', '-O', 'private', '-o',
                                    '/tmp/ppkValue.ppk'], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+    Remove_Me = subprocess.Popen(['cat', '/tmp/ppkValue.ppk'],stdout=subprocess.PIPE)
     conversion.wait()
     conversion_result = conversion.returncode
-    Remove_Me = subprocess.Popen(['cat', '/tmp/ppkValue.ppk'],stdout=subprocess.PIPE)
-    logger.trace(conversion_result, Remove_Me.stdout.read() ,caller_name='convert_pem_to_ppk')
+    Remove_Me_2 = subprocess.Popen(['cat', '/tmp/ppkValue.ppk'],stdout=subprocess.PIPE)
+    logger.trace(conversion_result, Remove_Me.stdout.read(), Remove_Me_2.stdout.read() ,caller_name='convert_pem_to_ppk')
     if conversion_result == 0:
         ppk_key = subprocess.check_output("cat /tmp/ppkValue.ppk", shell=True).decode("utf-8")
         logger.info("Pem key successfully converted")
