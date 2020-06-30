@@ -20,3 +20,6 @@ __pycache__
 
 # Serverless directories
 .serverless
+*.ppk
+*.pem
+.DS*

@@ -236,12 +236,12 @@ def get_session_from_dynamo(sessions_table_lock_client=False):
 def update_instances_table_status(instance_id, status, error="None"):
     logger.trace(instance_id, status, error, caller_name='update_instances_table_status')
     logger.info(f'Updating DynamoDB with {instance_id} onboarding status. \nStatus: {status}')
-    dynamodb_resource = boto3.resource('dynamodb')
-    instances_table = dynamodb_resource.Table("Instances")
     try:
+        dynamodb_resource = boto3.resource('dynamodb')
+        instances_table = dynamodb_resource.Table("Instances")
         instances_table.update_item(
             Key={
-                'instance_id': instance_id
+                'InstanceId': instance_id
             },
             AttributeUpdates={
                 'Status': {
@@ -254,11 +254,11 @@ def update_instances_table_status(instance_id, status, error="None"):
                 }
             }
         )
-    except Exception:
-        logger.error('Exception occurred on updating session on dynamoDB')
-        return None
+    except Exception as e:
+        logger.error(f'Exception occurred on updating session on DynamoDB {e}')
+        return False
     logger.info("Instance data updated successfully")
-    return
+    return True
 
 
 class StoreParameters:

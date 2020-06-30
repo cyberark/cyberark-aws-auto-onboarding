@@ -9,8 +9,9 @@ def save_key_pair(pem_key):
     logger.trace(pem_key, caller_name='save_key_pair')
     logger.info('Saving key pair to file')
     # Save pem to file
-    save_pem_to_file_command = f'echo {pem_key} > /tmp/pemValue.pem'
-    subprocess.call([save_pem_to_file_command], shell=True)
+    with open('/tmp/pemValue.pem', 'w') as f:
+        print(str(pem_key), file=f)
+    #subprocess.call(f'echo {pem_file} > /tmp/pemValue.pem', shell=True)
     subprocess.call(["chmod 777 /tmp/pemValue.pem"], shell=True)
 
 
@@ -22,15 +23,18 @@ def convert_pem_to_ppk(pem_key):
     save_key_pair(pem_key=pem_key)
     subprocess.call(["cp ./puttygen /tmp/puttygen"], shell=True)
     subprocess.call(["chmod 777 /tmp/puttygen "], shell=True)
-    subprocess.check_output("ls /tmp -l", shell=True)
+    subprocess.check_output("ls -l /tmp", shell=True)
     subprocess.check_output("cat /tmp/pemValue.pem", shell=True)
-    conversion_result = subprocess.call(["/tmp/puttygen /tmp/pemValue.pem -O private -o /tmp/ppkValue.ppk"], shell=True)
+    conversion = subprocess.Popen(['/tmp/puttygen', '/tmp/pemValue.pem', '-O', 'private', '-o',
+                                   '/tmp/ppkValue.ppk"'], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+    conversion.wait()
+    conversion_result = conversion.returncode
     if conversion_result == 0:
         ppk_key = subprocess.check_output("cat /tmp/ppkValue.ppk", shell=True).decode("utf-8")
         logger.info("Pem key successfully converted")
     else:
         logger.error("Failed to convert pem key to ppk")
-        return False
+        raise Exception('Failed to convert pem')
 
     return ppk_key
 
