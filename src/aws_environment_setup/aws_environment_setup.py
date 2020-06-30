@@ -62,7 +62,7 @@ def lambda_handler(event, context):
                 raise Exception('S3 Bucket cannot be empty if Verification Key is provided')
             else:
                 logger.info('Adding aob_mode to parameter store', DEBUG_LEVEL_DEBUG)
-                is_aob_mode_saved = add_param_to_parameter_store(aob_mode, 'aob_mode',
+                is_aob_mode_saved = add_param_to_parameter_store(aob_mode, 'AOB_mode',
                                                                  'Dictates if the solution will work in POC(no SSL) or ' \
                                                                  'Production(with SSL) mode')
                 if not is_aob_mode_saved:  # if password failed to be saved
