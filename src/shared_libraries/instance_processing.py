@@ -30,12 +30,11 @@ def delete_instance(instance_id, session, store_parameters_class, instance_data,
                                                                                store_parameters_class.pvwa_url)
     if not instance_account_id:
         logger.info(f"{instance_id} does not exist in safe")
-        return
-
+        return False
     pvwa_api_calls.delete_account_from_vault(session, instance_account_id, instance_id, store_parameters_class.pvwa_url)
-
+    logger.info('Removing instance from DynamoDB', DEBUG_LEVEL_DEBUG)
     aws_services.remove_instance_from_dynamo_table(instance_id)
-    return
+    return True
 
 
 def get_instance_password_data(instance_id, solution_account_id, event_region, event_account_id):
@@ -71,8 +70,8 @@ def get_instance_password_data(instance_id, solution_account_id, event_region, e
     	# wait until password data available when Windows instance is up
         logger.info(f"Waiting for instance - {instance_id} to become available: ")
         waiter = ec2_resource.get_waiter('password_data_available')
-        waiter.wait(instance_id=instance_id)
-        instance_password_data = ec2_resource.get_password_data(instance_id=instance_id)
+        waiter.wait(InstanceId=instance_id)
+        instance_password_data = ec2_resource.get_password_data(InstanceId=instance_id)
         return instance_password_data['PasswordData']
     except Exception as e:
         logger.error(f'Error on waiting for instance password: {str(e)}')
