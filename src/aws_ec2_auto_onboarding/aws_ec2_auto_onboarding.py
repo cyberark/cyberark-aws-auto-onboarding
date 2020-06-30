@@ -50,7 +50,6 @@ def elasticity_function(instance_id, action_type, event_account_id, event_region
     try:
         ec2_object = aws_services.get_account_details(event_region, solution_account_id, event_account_id)
         instance_details = aws_services.get_ec2_details(instance_id, ec2_object, event_account_id)
-
         instance_data = aws_services.get_instance_data_from_dynamo_table(instance_id)
         if action_type == 'terminated':
             if not instance_data:
@@ -90,8 +89,8 @@ def elasticity_function(instance_id, action_type, event_account_id, event_region
         pvwa_connection_number, session_guid = aws_services.get_session_from_dynamo()
         if not pvwa_connection_number:
             return
-        session_token = pvwa_integration_class.logon_pvwa(store_parameters_class.vaultUsername,
-                                                          store_parameters_class.vaultPassword,
+        session_token = pvwa_integration_class.logon_pvwa(store_parameters_class.vault_username,
+                                                          store_parameters_class.vault_password,
                                                           store_parameters_class.pvwa_url,
                                                           pvwa_connection_number)
 

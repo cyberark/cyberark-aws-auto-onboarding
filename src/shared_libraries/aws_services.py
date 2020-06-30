@@ -43,6 +43,7 @@ def get_account_details(event_account_id, solution_account_id, event_region):
             logger.error(f'Error on getting token from account: {event_account_id}')
     return ec2_resource
 
+
 def get_ec2_details(instance_id, ec2_object, event_account_id):
     logger.trace(instance_id, ec2_object, event_account_id, caller_name='get_ec2_details')
     logger.info(f'Gathering details about EC2 - {instance_id}')
@@ -82,8 +83,8 @@ def get_instance_data_from_dynamo_table(instance_id):
 
     try:
         dynamo_response = dynamo_resource.get_item(TableName='Instances', Key={"InstanceId": {"S": instance_id}})
-    except Exception:
-        logger.error("Error occurred when trying to call dynamoDB")
+    except Exception as e:
+        logger.error(f"Error occurred when trying to call DynamoDB: {e}")
         return False
     # DynamoDB "Item" response: {'Address': {'S': 'xxx.xxx.xxx.xxx'}, 'instance_id': {'S': 'i-xxxxxyyyyzzz'},
     #               'Status': {'S': 'on-boarded'}, 'Error': {'S': 'Some Error'}}
@@ -212,6 +213,7 @@ def get_session_from_dynamo(sessions_table_lock_client=False):
     logger.info("Getting available Session from DynamoDB")
     if not sessions_table_lock_client:
         sessions_table_lock_client = LockerClient('Sessions')
+
     timeout = 20000  # Setting the timeout to 20 seconds on a row lock
     random_session_number = str(random.randint(1, 100))  # A number between 1 and 100
 
@@ -229,7 +231,7 @@ def get_session_from_dynamo(sessions_table_lock_client=False):
         logger.info("Connection limit has been reached")
         return False, ""
     except Exception as e:
-        print(f"Failed to retrieve session from DynamoDB:\n{str(e)}")
+        print(f"Failed to retrieve session from DynamoDB: {str(e)}")
         raise Exception(f"Exception on get_session_from_dynamo:{str(e)}")
 
 

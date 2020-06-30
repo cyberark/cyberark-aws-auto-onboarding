@@ -132,14 +132,12 @@ def create_instance(instance_id, instance_details, store_parameters_class, log_n
                                                   log_name)
         return False
     else:
-        print('create_account_on_vault')
         account_created, error_message = pvwa_api_calls.create_account_on_vault(session_token, aws_account_name, instance_key,
                                                                                 store_parameters_class,
                                                                                 platform, instance_details['address'],
                                                                                 instance_id, instance_username, safe_name)
         if account_created:
             # if account created, rotate the key immediately
-            print('retrieve_account_id_from_account_name')
             instance_account_id = pvwa_api_calls.retrieve_account_id_from_account_name(session_token, search_account_pattern,
                                                                                        safe_name,
                                                                                        instance_id,
