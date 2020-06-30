@@ -240,9 +240,22 @@ class InstanceProcessingTest(unittest.TestCase):
             status = instance_processing.create_instance(linux, ec2_class.details, ec2_class.sp_class, 'yea', MOTO_ACCOUNT,
                                                 'eu-west-2', MOTO_ACCOUNT, '123123132h')
             return status
-        print (ec2_class.details['platform'])
         response = invoke2()
         self.assertTrue(response)
+
+    def test_get_os_distribution_user(self):
+        user = instance_processing.get_os_distribution_user('centos')
+        self.assertEqual(user, 'centos')
+        user = instance_processing.get_os_distribution_user('ubuntu')
+        self.assertEqual(user, 'ubuntu')
+        user = instance_processing.get_os_distribution_user('debian')
+        self.assertEqual(user, 'admin')
+        user = instance_processing.get_os_distribution_user('opensuse')
+        self.assertEqual(user, 'root')
+        user = instance_processing.get_os_distribution_user('fedora')
+        self.assertEqual(user, 'fedora')
+        user = instance_processing.get_os_distribution_user('Lemon')
+        self.assertEqual(user, 'ec2-user')
 
 def fake_exc(a, b):
     raise Exception('fake_exc')
@@ -265,7 +278,7 @@ def dynamo_put_ec2_object(dynamo_resource, ec2_object):
     table = dynamo_resource.Table('Instances')
     table.put_item(Item={'InstanceId': ec2_object})
     return True
- 
+
 class EC2Details:
     def __init__(self):
         self.details = dict()
@@ -285,10 +298,10 @@ class EC2Details:
         self.sp_class.pvwa_url = 'https://cyberarkaob.cyberark'
 
     def set_platform(self, platform):
-        self.instance_data['platform'] = platform
+        self.details['platform'] = platform
 
     def set_image_description(self, image_description):
-        self.instance_data['image_description'] = image_description
+        self.details['image_description'] = image_description
 
 if __name__ == '__main__':
     unittest.main()
