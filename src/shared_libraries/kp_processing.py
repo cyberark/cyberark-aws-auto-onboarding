@@ -26,7 +26,7 @@ def convert_pem_to_ppk(pem_key):
     subprocess.check_output("ls -l /tmp", shell=True)
     subprocess.check_output("cat /tmp/pemValue.pem", shell=True)
     conversion = subprocess.Popen(['/tmp/puttygen', '/tmp/pemValue.pem', '-O', 'private', '-o',
-                                   '/tmp/ppkValue.ppk"'], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+                                   '/tmp/ppkValue.ppk'], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
     conversion.wait()
     conversion_result = conversion.returncode
     if conversion_result == 0:
