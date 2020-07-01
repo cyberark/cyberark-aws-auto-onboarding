@@ -6,6 +6,7 @@ import sys
 import boto3
 from boto.ec2.connection import EC2Connection
 import requests
+import json
 from moto import mock_ec2, mock_iam, mock_dynamodb2, mock_sts, mock_ssm
 sys.path.append('../shared_libraries')
 import aws_services
@@ -14,7 +15,11 @@ import instance_processing
 import pvwa_api_calls as pvwa_api
 from pvwa_integration import PvwaIntegration
 
-MOTO_ACCOUNT='123456789012'
+MOTO_ACCOUNT = '123456789012'
+UNIX_PLATFORM = "UnixSSHKeys"
+WINDOWS_PLATFORM = "WinServerLocal"
+INSTANCE_ID = 'i-8eff23cd'
+
 @mock_iam
 @mock_dynamodb2
 @mock_sts
@@ -229,8 +234,76 @@ class InstanceProcessingTest(unittest.TestCase):
 
 class PvwaApiCallsTest(unittest.TestCase):
     def test_create_account_on_vault(self):
-        print('aijsij')
+        ec2_class = EC2Details()
+        method = 'create_account_on_vault'
+        parameters = ['1', 'my_account','password', ec2_class.sp_class, UNIX_PLATFORM, '1.1.1.1',
+                      INSTANCE_ID, 'user', 'safe']
+        response = mock_pvwa_integration(method, parameters, 201)
+        self.assertTrue(response)
 
+    def test_create_account_on_vault_exception(self):
+        ec2_class = EC2Details()
+        method = 'create_account_on_vault'
+        parameters = ['1', 'my_account','password', ec2_class.sp_class, UNIX_PLATFORM, '1.1.1.1',
+                      INSTANCE_ID, 'user', 'safe']
+        response = mock_pvwa_integration(method, parameters, 404)
+        self.assertFalse(response[0])
+
+    def test_rotate_credentials_immediately(self):
+        method = 'rotate_credentials_immediately'
+        parameters = ['1', 'https://pvwa', MOTO_ACCOUNT, INSTANCE_ID]
+        response = mock_pvwa_integration(method, parameters, 200)
+        self.assertTrue(response)
+
+    def test_rotate_credentials_immediately_exception(self):
+        method = 'rotate_credentials_immediately'
+        parameters = ['1', 'https://pvwa', MOTO_ACCOUNT, INSTANCE_ID]
+        response = mock_pvwa_integration(method, parameters, 404)
+        self.assertFalse(response)
+
+    def test_get_account_value(self):
+        method = 'get_account_value'
+        parameters = ['1', MOTO_ACCOUNT, INSTANCE_ID, 'https://pvwa']
+        response = mock_pvwa_integration(method, parameters, 200)
+        self.assertEqual('', response)
+
+    def test_get_account_value_not_found(self):
+        method = 'get_account_value'
+        parameters = ['1', MOTO_ACCOUNT, INSTANCE_ID, 'https://pvwa']
+        response = mock_pvwa_integration(method, parameters, 404)
+        self.assertFalse(response)
+
+    def test_get_account_value_exception(self):
+        method = 'get_account_value'
+        parameters = ['1', MOTO_ACCOUNT, INSTANCE_ID, 'https://pvwa']
+        response = mock_pvwa_integration(method, parameters, 400)
+        self.assertFalse(response)
+
+    def test_delete_account_from_vault(self):
+        method = "delete_account_from_vault"
+        parameters = ['1', MOTO_ACCOUNT, INSTANCE_ID, 'https://pvwa']
+        response = mock_pvwa_integration(method, parameters, 200)
+
+    def test_delete_account_from_vault_not_found(self):
+        method = "delete_account_from_vault"
+        parameters = ['1', MOTO_ACCOUNT, INSTANCE_ID, 'https://pvwa']
+        with self.assertRaises(Exception) as context:
+            response = mock_pvwa_integration(method, parameters, 404)
+        self.assertIn('The account does not exists', str(context.exception))
+
+    def test_delete_account_from_vault_exception(self):
+        method = "delete_account_from_vault"
+        parameters = ['1', MOTO_ACCOUNT, INSTANCE_ID, 'https://pvwa']
+        with self.assertRaises(Exception) as context:
+            response = mock_pvwa_integration(method, parameters, 401)
+        self.assertIn('Unknown status code received', str(context.exception))
+
+    def test_check_if_kp_exists(self): #### to be fixed
+        print('Ignored')
+        method = 'check_if_kp_exists'
+        parameters = ['1', 'account', 'safe', INSTANCE_ID, 'https://pvwa']
+        response = mock_pvwa_integration(method, parameters, 200, True)
+        self.assertTrue(response)
 
 ##General Functions##
 def fake_exc(a, b):
@@ -276,6 +349,39 @@ def func_create_instance(ec2_class, ec2_object):
                                             'eu-west-2', MOTO_ACCOUNT, '123123132h')
         return status
     response = invoke()
+    return response
+
+def mock_pvwa_integration(method, parameters, return_code=int, json_response=None):
+    print(parameters)
+    dic = {"create_account_on_vault": pvwa_api.create_account_on_vault,
+           "retrieve_account_id_from_account_name": pvwa_api.retrieve_account_id_from_account_name,
+           "rotate_credentials_immediately": pvwa_api.rotate_credentials_immediately,
+           "check_if_kp_exists": pvwa_api.check_if_kp_exists,
+           "delete_account_from_vault": pvwa_api.delete_account_from_vault,
+           "filter_get_accounts_result": pvwa_api.filter_get_accounts_result,
+           "get_account_value": pvwa_api.get_account_value}
+    if json_response:
+        response = mock_requests_response(return_code, json_response)
+    else:
+        response = mock_requests_response(return_code)
+    @patch('pvwa_integration.PvwaIntegration.call_rest_api_post', return_value=response)
+    @patch('pvwa_integration.PvwaIntegration.call_rest_api_get', return_value=response)
+    @patch('pvwa_integration.PvwaIntegration.call_rest_api_delete', return_value=response)
+    def invoke(*args):
+        response = dic[method](*parameters)
+        print(f'response:  {response}')
+        return response
+    output = invoke()
+    return output
+
+def mock_requests_response(code=int, json_response=None):
+    response = requests.Response()
+    response.status_code = code
+    if json_response:
+        with open('json_response.json') as json_resp:
+            json_str = json_resp.read()
+            response.json = json.dumps(json_str)
+            print(response.json)
     return response
 
 class EC2Details:
