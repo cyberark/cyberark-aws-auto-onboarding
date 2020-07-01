@@ -54,7 +54,7 @@ pipeline {
         stage('AOB stress test') {
             steps {
                 script {
-                    if (!params.test) {
+                    if (params.test) {
                         sh """
                         source ./.testenv/bin/activate
                         cd src/tests/stress
