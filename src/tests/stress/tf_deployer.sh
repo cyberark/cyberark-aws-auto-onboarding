@@ -24,7 +24,7 @@ do
 	sleep 10
 	CS=$(python3 dynamo_on_boarded.py)
 done
-terraform destroy -auto-approve
+terraform destroy -auto-approve -var="region_main=$1" -var="region_sec=$2" -var="subnet_id_main=$3" -var="subnet_id_sec=$4" -var="key_pair_main=$5" -var="key_pair_sec=$6"
 CS=$(python3 dynamo_on_boarded.py)
 i=0
 while [ $CS -gt $BTF ]

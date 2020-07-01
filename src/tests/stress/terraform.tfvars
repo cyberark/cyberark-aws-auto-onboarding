@@ -1,2 +1,2 @@
-instance_name  = "tf-module"
+instance_name  = "abo-stress-tf-jenkins"
 pcs            = 0

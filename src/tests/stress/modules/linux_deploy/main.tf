@@ -12,7 +12,7 @@ resource "aws_instance" "this" {
 
   tags = {
     "Terraform" : "true"
-    "Name"      : "${var.instance_name}-${count.index}"
+    "Name"      : "${var.instance_name}-linux-${count.index}"
     "Testing"   : "true"
     "Platform"  : "Linux"
   }
