@@ -53,13 +53,15 @@ pipeline {
         }
         stage('AOB stress test') {
             steps {
-                if (!params.test) {
-                    sh """
-                    source ./.testenv/bin/activate
-                    cd src/tests/stress
-    
-                    bash tf_deployer.sh ${params.mainRegion} ${params.secRegion} ${params.mainSubnet} ${params.secSubnet} ${params.mainKP} ${params.secKP}
-                    """
+                script {
+                    if (!params.test) {
+                        sh """
+                        source ./.testenv/bin/activate
+                        cd src/tests/stress
+        
+                        bash tf_deployer.sh ${params.mainRegion} ${params.secRegion} ${params.mainSubnet} ${params.secSubnet} ${params.mainKP} ${params.secKP}
+                        """
+                    }
                 }
             }
         }
