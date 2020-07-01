@@ -16,7 +16,7 @@ while [ $DS -gt $CS ]
 do
 	echo "[INFO] There are $CS of $DS successful records"
 	i=$((i+1))
-	if [ $i -eq 5 ]; then
+	if [ $i -eq 20 ]; then
 		echo "[ERR] failed to on board all the instances"
 		success=false
 		break
@@ -30,7 +30,7 @@ i=0
 while [ $CS -gt $BTF ]
 do
 	echo "[INFO] there are $CS of $BTF successful records"
-	if [ $i -eq 5 ]; then
+	if [ $i -eq 20 ]; then
 		echo "[ERR] AOB failed to delete all the instances"
 		success=false
 		break
