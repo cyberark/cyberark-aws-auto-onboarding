@@ -142,9 +142,9 @@ class KpProcessingTest(unittest.TestCase):
             keyf = file.read()
         ppk_key = kp_processing.convert_pem_to_ppk(keyf)
         self.assertIn('Private-MAC:', ppk_key)
-        # with self.assertRaises(Exception) as context:
-        #     kp_processing.convert_pem_to_ppk('3')
-        # self.assertEqual('Failed to convert pem', str(context.exception))
+        with self.assertRaises(Exception) as context:
+            kp_processing.convert_pem_to_ppk('3')
+        self.assertEqual(Exception, type(context.exception))
 
     def test_run_command_on_container(self):
         print('test_run_command_on_container')
@@ -227,10 +227,12 @@ class InstanceProcessingTest(unittest.TestCase):
         user = instance_processing.get_os_distribution_user('Lemon')
         self.assertEqual(user, 'ec2-user')
 
-class PvwaApiCalls(unittest.TestCase):
-    def test(self):
-        print('Blah!')
+class PvwaApiCallsTest(unittest.TestCase):
+    def test_create_account_on_vault(self):
+        print('aijsij')
 
+
+##General Functions##
 def fake_exc(a, b):
     raise Exception('fake_exc')
 

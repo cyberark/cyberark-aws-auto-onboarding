@@ -22,15 +22,17 @@ def convert_pem_to_ppk(pem_key):
     #  convert pem file, get ppk value
     #  Uses Puttygen sent to the lambda
     save_key_pair(pem_key=pem_key)
-    subprocess.call(["cp puttygen /tmp "], shell=True)
-    subprocess.call(["chmod 777 /tmp/puttygen "], shell=True)
-    subprocess.check_output("cat /tmp/pemValue.pem", shell=True)
-    conversion = subprocess.Popen(['/tmp/puttygen', '/tmp/pemValue.pem', '-O', 'private', '-o',
-                                   '/dev/stdout'], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-    conversion.wait()
-    conversion_result = conversion.returncode
-    ppk_key = str(conversion.stdout.read()).replace('\'', '').replace('\\n', '\n')
-    if conversion_result == 0:
+    try:
+        subprocess.call(["cp puttygen /tmp "], shell=True)
+        subprocess.call(["chmod 777 /tmp/puttygen "], shell=True)
+        subprocess.check_output("cat /tmp/pemValue.pem", shell=True)
+        conversion = subprocess.check_output('/usr/local/bin/puttygen /tmp/pemValue.pem -O private -o /dev/stdout',
+                                             shell=True, stderr=subprocess.PIPE)
+        ppk_key = str(conversion).replace('\'', '').replace('\\n', '\n')
+    except Exception as e:
+        logger.error(f'Exception occured: {e}')
+        raise Exception(f'Exception occured: {e}')
+    if 'Private-Lines' in ppk_key:
         logger.info("Pem key successfully converted")
         print(f'\n\n\n_________________________\n{ppk_key}')
     else:
