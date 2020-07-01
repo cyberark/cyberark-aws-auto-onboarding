@@ -1,5 +1,6 @@
 import subprocess
 from log_mechanism import LogMechanism
+from chilkat import CkSshKey
 
 DEBUG_LEVEL_DEBUG = 'debug' # Outputs all information
 logger = LogMechanism()
@@ -20,26 +21,23 @@ def convert_pem_to_ppk(pem_key):
     logger.info('Converting key pair from pem to ppk')
     #  convert pem file, get ppk value
     #  Uses Puttygen sent to the lambda
+    chilkat_key = CkSshKey()
     save_key_pair(pem_key=pem_key)
-    subprocess.call(["cp ./puttygen /tmp/puttygen"], shell=True)
-    subprocess.call(["chmod 777 /tmp/puttygen "], shell=True)
-    subprocess.check_output("ls -l /tmp", shell=True)
-    subprocess.check_output("cat /tmp/pemValue.pem", shell=True)
-    conversion = subprocess.Popen(['/tmp/puttygen', '/tmp/pemValue.pem', '-O', 'private', '-o',
-                                   '/tmp/ppkValue.ppk'], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-    conversion.wait()
-    conversion_result = conversion.returncode
-    Remove_Me = subprocess.Popen(['cat', '/tmp/ppkValue.ppk'],stdout=subprocess.PIPE)
-    logger.trace(conversion_result, Remove_Me.stdout.read() ,caller_name='convert_pem_to_ppk')
-    if conversion_result == 0:
-        ppk_key = subprocess.check_output("cat /tmp/ppkValue.ppk", shell=True).decode("utf-8")
+    is_loaded = chilkat_key.FromOpenSshPrivateKey(pem_key)
+    if not is_loaded:
+        logger.error('Convert ', chilkat_key.lastErrorText())
+        raise Exception('Failed to load pem file')
+    key = chilkat_key.toPuttyPrivateKey(False)
+    if not key:
+        logger.error('Convert ', chilkat_key.lastErrorText())
+        raise Exception('Failed to convert pem')
+    logger.trace(key, caller_name='convert_pem_to_ppk')
+    if key:
         logger.info("Pem key successfully converted")
-        print(ppk_key)
     else:
         logger.error("Failed to convert pem key to ppk")
         raise Exception('Failed to convert pem')
-
-    return ppk_key
+    return key
 
 
 def run_command_on_container(command, print_output):

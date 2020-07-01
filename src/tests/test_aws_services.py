@@ -140,7 +140,7 @@ class KpProcessingTest(unittest.TestCase):
         print('test_convert_pem_to_ppk')
         with self.assertRaises(Exception) as context:
             kp_processing.convert_pem_to_ppk('3')
-        self.assertEqual('Failed to convert pem', str(context.exception))
+        self.assertEqual('Failed to load pem file', str(context.exception))
         with open('pemValue.pem', 'r') as file:
             keyf = file.read()
         ppk_key = kp_processing.convert_pem_to_ppk(keyf)
