@@ -1,2 +1,1 @@
-instance_name  = "abo-stress-tf-jenkins"
-pcs            = 0
+instance_name  = "aob-stress-tf-jenkins"

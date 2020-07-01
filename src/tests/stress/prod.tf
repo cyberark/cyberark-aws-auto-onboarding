@@ -23,9 +23,6 @@ variable "key_pair_main" {
 variable "key_pair_sec" {
   type = string
 }
-variable "pcs" { # Static
-  type = number
-}
 
 provider "aws" {
   profile = "default"
@@ -286,7 +283,7 @@ module "deploy_win_sec" {
   instance_type = var.instance_type
   subnet_id     = var.subnet_id_sec
   key_pair      = var.key_pair_sec
-  pcs           = var.pcs
+  pcs           = 1
 
   providers = {
     aws = aws.sec
@@ -301,7 +298,7 @@ module "deploy_amazon_main" {
   instance_type = var.instance_type
   subnet_id     = var.subnet_id_main
   key_pair      = var.key_pair_main
-  pcs           = 1
+  pcs           = 200
   
   providers = {
     aws = aws.main
@@ -316,7 +313,7 @@ module "deploy_amazon_sec" {
   instance_type = var.instance_type
   subnet_id     = var.subnet_id_sec
   key_pair      = var.key_pair_sec
-  pcs           = var.pcs
+  pcs           = 300
 
   providers = {
     aws = aws.sec
@@ -331,7 +328,7 @@ module "deploy_centos_main" {
   instance_type = var.instance_type
   subnet_id     = var.subnet_id_main
   key_pair      = var.key_pair_main
-  pcs           = var.pcs
+  pcs           = 100
   
   providers = {
     aws = aws.main
@@ -346,7 +343,7 @@ module "deploy_fedora_sec" {
   instance_type = var.instance_type
   subnet_id     = var.subnet_id_sec
   key_pair      = var.key_pair_sec
-  pcs           = var.pcs
+  pcs           = 100
 
   providers = {
     aws = aws.sec
@@ -361,7 +358,7 @@ module "deploy_ubuntu_main" {
   instance_type = var.instance_type
   subnet_id     = var.subnet_id_main
   key_pair      = var.key_pair_main
-  pcs           = var.pcs
+  pcs           = 100
   
   providers = {
     aws = aws.main
@@ -376,7 +373,7 @@ module "deploy_suse_sec" {
   instance_type = var.instance_type
   subnet_id     = var.subnet_id_sec
   key_pair      = var.key_pair_sec
-  pcs           = var.pcs
+  pcs           = 100
 
   providers = {
     aws = aws.sec
@@ -392,7 +389,7 @@ module "deploy_debian_main" {
   instance_type = var.instance_type
   subnet_id     = var.subnet_id_main
   key_pair      = var.key_pair_main
-  pcs           = var.pcs
+  pcs           = 100
   
   providers = {
     aws = aws.main

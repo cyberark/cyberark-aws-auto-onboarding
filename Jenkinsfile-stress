@@ -27,6 +27,10 @@ pipeline {
                name: 'secKP',
                description: 'key pair name at secondary region',
                trim: true
+        ooleanParam(
+               defaultValue: false,
+               description: 'do you want to execute stress test & deploy 1002 instances?',
+               name: 'test')
     }
     environment {
         shortCommit = sh(script: "git log -n 1 --pretty=format:'%h'", returnStdout: true).trim()
@@ -48,14 +52,16 @@ pipeline {
             }
         }
         stage('AOB stress test') {
-          steps {
-            sh """
-                source ./.testenv/bin/activate
-                cd src/tests/stress
-
-                bash tf_deployer.sh ${params.mainRegion} ${params.secRegion} ${params.mainSubnet} ${params.secSubnet} ${params.mainKP} ${params.secKP}
-            """
-          }
+            steps {
+                if (!params.test) {
+                    sh """
+                    source ./.testenv/bin/activate
+                    cd src/tests/stress
+    
+                    bash tf_deployer.sh ${params.mainRegion} ${params.secRegion} ${params.mainSubnet} ${params.secSubnet} ${params.mainKP} ${params.secKP}
+                    """
+                }
+            }
         }
     }
 }
