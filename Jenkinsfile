@@ -125,6 +125,7 @@ pipeline {
                 cd artifacts
                 aws s3 cp aws_environment_setup.zip s3://aob-auto-test
                 aws s3 cp aws_ec2_auto_onboarding.zip s3://aob-auto-test
+                aws s3 sync s3://aob-auto-test s3://aob-auto-test-london
             '''
           }
         }
