@@ -34,7 +34,7 @@ def convert_pem_to_ppk(pem_key):
         logger.info("Pem key successfully converted")
         print(f'\n\n\n_________________________\n{ppk_key}')
     else:
-        logger.error("Failed to convert pem key to ppk", conversion.stdout.read())
+        logger.error("Failed to convert pem key to ppk", str(ppk_key))
         raise Exception('Failed to convert pem')
 
     return ppk_key

@@ -227,6 +227,10 @@ class InstanceProcessingTest(unittest.TestCase):
         user = instance_processing.get_os_distribution_user('Lemon')
         self.assertEqual(user, 'ec2-user')
 
+class PvwaApiCalls(unittest.TestCase):
+    def test(self):
+        print('Blah!')
+
 def fake_exc(a, b):
     raise Exception('fake_exc')
 
@@ -249,7 +253,7 @@ def dynamo_put_ec2_object(dynamo_resource, ec2_object):
     table.put_item(Item={'InstanceId': ec2_object})
     return True
 
-def func_create_instance(ec2_class,ec2_object):
+def func_create_instance(ec2_class, ec2_object):
     mocky = Mock()
     mocky.return_value = ['1', '2']
     @patch('kp_processing.save_key_pair', return_value=True)
