@@ -39,6 +39,8 @@ pipeline {
                 python3 -m virtualenv .testenv
                 source ./.testenv/bin/activate
                 
+                pip install boto3
+                
                 wget https://releases.hashicorp.com/terraform/0.12.26/terraform_0.12.26_linux_amd64.zip
                 unzip -o terraform_0.12.26_linux_amd64.zip 
                 sudo mv terraform /usr/bin/
