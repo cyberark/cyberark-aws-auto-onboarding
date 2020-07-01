@@ -1,6 +1,6 @@
 import subprocess
 from log_mechanism import LogMechanism
-from chilkat import CkSshKey
+from chilkat/chilkat import CkSshKey
 
 DEBUG_LEVEL_DEBUG = 'debug' # Outputs all information
 logger = LogMechanism()
