@@ -29,6 +29,11 @@ pipeline {
                 pip install safety bandit
                 
                 mkdir reports
+                
+                # Download chilkat
+                wget https://chilkatdownload.com/9.5.0.83/chilkat-9.5.0-python-3.6-x86_64-linux.tar.gz
+                mkdir -p ./src/shared_libraries/chilkat
+                tar -xzf chilkat-*.tar.gz -C ./src/shared_libraries/chilkat --strip-components 1
                 '''
             }
         }
