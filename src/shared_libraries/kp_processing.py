@@ -24,7 +24,7 @@ def convert_pem_to_ppk(pem_key):
     save_key_pair(pem_key=pem_key)
     subprocess.call(["chmod 777 puttygen "], shell=True)
     subprocess.check_output("cat pemValue.pem", shell=True)
-    conversion = subprocess.Popen(['puttygen', 'pemValue.pem', '-O', 'private', '-o',
+    conversion = subprocess.Popen(['./puttygen', 'pemValue.pem', '-O', 'private', '-o',
                                    'ppkValue.ppk'], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
     conversion.wait()
     conversion_result = conversion.returncode
