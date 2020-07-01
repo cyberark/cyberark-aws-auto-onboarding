@@ -47,7 +47,7 @@ pipeline {
         }
         stage('AOB stress test') {
           steps {
-            sh '''
+            sh """
                 source ./.testenv/bin/activate
                 cd src/tests/stress
                 success=true
@@ -96,7 +96,7 @@ pipeline {
                 	exit 1
                 fi
                 echo "[INFO] AOB stress test succeed"
-            '''
+            """
           }
         }
     }
