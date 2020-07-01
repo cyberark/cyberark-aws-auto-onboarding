@@ -195,52 +195,22 @@ class InstanceProcessingTest(unittest.TestCase):
             respone = instance_processing.get_instance_password_data(windows, MOTO_ACCOUNT, 'eu-west-2', MOTO_ACCOUNT)
         self.assertEqual(None, respone)
 
-    def test_create_instance(self): #### split this module!!!!
-        print('test_create_instance')
+    def test_create_instance_windows(self): #### split this module!!!!
+        print('test_create_instance_windows')
         ec2_resource = boto3.resource('ec2')
         linux, windows = generate_ec2(ec2_resource)
         ec2_class = EC2Details()
-        mocky = Mock()
-        mocky.return_value = ['1', '2']
-        @patch('kp_processing.save_key_pair', return_value=True)
-        @patch('instance_processing.get_instance_password_data', return_value='StrongPassword')
-        @patch('kp_processing.convert_pem_to_ppk', return_value='VeryValue')
-        @patch('kp_processing.run_command_on_container', mocky)
-        @patch('kp_processing.print_process_outputs_on_end', return_value='StrongPassword')
-        @patch('aws_services.get_session_from_dynamo', return_value=['3', '4'])
-        @patch('pvwa_integration.PvwaIntegration.logon_pvwa', return_value='asbhdsyadbasASDUASDUHB2312312')
-        @patch('pvwa_api_calls.retrieve_account_id_from_account_name', return_value=False)
-        @patch('pvwa_api_calls.create_account_on_vault', return_value=['a','a'])
-        @patch('pvwa_api_calls.rotate_credentials_immediately', return_value='a')
-        @patch('aws_services.put_instance_to_dynamo_table', return_value='a')
-        @patch('pvwa_integration.PvwaIntegration.logoff_pvwa', return_value='a')
-        @patch('aws_services.release_session_on_dynamo',return_value='a')
-        def invoke(*args):
-            status = instance_processing.create_instance(windows, ec2_class.details, ec2_class.sp_class, 'yea', MOTO_ACCOUNT,
-                                                'eu-west-2', MOTO_ACCOUNT, '123123132h')
-            return status
-        response = invoke()
+        response = func_create_instance(ec2_class, windows)
         self.assertTrue(response)
+
+    def test_create_instance_linux(self):
+        print('test_create_instance_linux')
+        ec2_resource = boto3.resource('ec2')
+        linux, windows = generate_ec2(ec2_resource)
+        ec2_class = EC2Details()
         ec2_class.set_platform('linix')
         ec2_class.set_image_description('Linix')
-        @patch('kp_processing.save_key_pair', return_value=True)
-        @patch('instance_processing.get_instance_password_data', return_value='StrongPassword')
-        @patch('kp_processing.convert_pem_to_ppk', return_value='VeryValue')
-        @patch('kp_processing.run_command_on_container', mocky)
-        @patch('kp_processing.print_process_outputs_on_end', return_value='StrongPassword')
-        @patch('aws_services.get_session_from_dynamo', return_value=['3', '4'])
-        @patch('pvwa_integration.PvwaIntegration.logon_pvwa', return_value='asbhdsyadbasASDUASDUHB2312312')
-        @patch('pvwa_api_calls.retrieve_account_id_from_account_name', return_value=False)
-        @patch('pvwa_api_calls.create_account_on_vault', return_value=['a','a'])
-        @patch('pvwa_api_calls.rotate_credentials_immediately', return_value='a')
-        @patch('aws_services.put_instance_to_dynamo_table', return_value='a')
-        @patch('pvwa_integration.PvwaIntegration.logoff_pvwa', return_value='a')
-        @patch('aws_services.release_session_on_dynamo',return_value='a')
-        def invoke2(*args):
-            status = instance_processing.create_instance(linux, ec2_class.details, ec2_class.sp_class, 'yea', MOTO_ACCOUNT,
-                                                'eu-west-2', MOTO_ACCOUNT, '123123132h')
-            return status
-        response = invoke2()
+        response = func_create_instance(ec2_class, windows)
         self.assertTrue(response)
 
     def test_get_os_distribution_user(self):
@@ -278,6 +248,29 @@ def dynamo_put_ec2_object(dynamo_resource, ec2_object):
     table = dynamo_resource.Table('Instances')
     table.put_item(Item={'InstanceId': ec2_object})
     return True
+
+def func_create_instance(ec2_class,ec2_object):
+    mocky = Mock()
+    mocky.return_value = ['1', '2']
+    @patch('kp_processing.save_key_pair', return_value=True)
+    @patch('instance_processing.get_instance_password_data', return_value='StrongPassword')
+    @patch('kp_processing.convert_pem_to_ppk', return_value='VeryValue')
+    @patch('kp_processing.run_command_on_container', mocky)
+    @patch('kp_processing.print_process_outputs_on_end', return_value='StrongPassword')
+    @patch('aws_services.get_session_from_dynamo', return_value=['3', '4'])
+    @patch('pvwa_integration.PvwaIntegration.logon_pvwa', return_value='asbhdsyadbasASDUASDUHB2312312')
+    @patch('pvwa_api_calls.retrieve_account_id_from_account_name', return_value=False)
+    @patch('pvwa_api_calls.create_account_on_vault', return_value=['a','a'])
+    @patch('pvwa_api_calls.rotate_credentials_immediately', return_value='a')
+    @patch('aws_services.put_instance_to_dynamo_table', return_value='a')
+    @patch('pvwa_integration.PvwaIntegration.logoff_pvwa', return_value='a')
+    @patch('aws_services.release_session_on_dynamo',return_value='a')
+    def invoke(*args):
+        status = instance_processing.create_instance(ec2_object, ec2_class.details, ec2_class.sp_class, 'yea', MOTO_ACCOUNT,
+                                            'eu-west-2', MOTO_ACCOUNT, '123123132h')
+        return status
+    response = invoke()
+    return response
 
 class EC2Details:
     def __init__(self):
