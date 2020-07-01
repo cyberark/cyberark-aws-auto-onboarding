@@ -27,7 +27,7 @@ pipeline {
                name: 'secKP',
                description: 'key pair name at secondary region',
                trim: true
-        ooleanParam(
+        booleanParam(
                defaultValue: false,
                description: 'do you want to execute stress test & deploy 1002 instances?',
                name: 'test')
