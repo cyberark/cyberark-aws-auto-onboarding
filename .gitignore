@@ -20,3 +20,10 @@ __pycache__
 
 # Serverless directories
 .serverless
+
+# terraform
+vars.json
+manifest*.json
+*.plan
+*.tfstate*
+.terraform
