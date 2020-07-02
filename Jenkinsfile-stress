@@ -5,32 +5,32 @@ pipeline {
         }
     }
     parameters {
-        choice choices: ['eu-west-2', 'eu-central-1'],
-               name: 'mainRegion',
+        choice name: 'mainRegion',
+               choices: ['eu-west-2', 'eu-central-1'],
                description: 'region name of main AOB solution'
-        choice choices: ['eu-central-1', 'eu-west-2'],
-               name: 'secRegion',
+        choice name: 'secRegion',
+               choices: ['eu-central-1', 'eu-west-2'],
                description: 'region name of secondary AOB solution'
-        string defaultValue: 'subnet-050842545d0fce2d4',
-               name: 'mainSubnet',
+        string name: 'mainSubnet',
+               defaultValue: 'subnet-050842545d0fce2d4',
                description: 'subnet id at main region',
                trim: true
-        string defaultValue: 'subnet-0dbd84f0b33d6ad33',
-               name: 'secSubnet',
+        string name: 'secSubnet',
+               defaultValue: 'subnet-0dbd84f0b33d6ad33',
                description: 'subnet id at secondary region',
                trim: true
-        string defaultValue: 'Erez-AOB-def',
-               name: 'mainKP',
+        string name: 'mainKP',
+               defaultValue: 'Erez-AOB-def',
                description: 'key pair name at main region',
                trim: true
-        string defaultValue: 'aob-frank',
-               name: 'secKP',
+        string name: 'secKP',
+               defaultValue: 'aob-frank',
                description: 'key pair name at secondary region',
                trim: true
         booleanParam(
+               name: 'test',
                defaultValue: false,
-               description: 'do you want to execute stress test & deploy 1002 instances?',
-               name: 'test')
+               description: 'do you want to execute stress test & deploy 1002 instances?')
     }
     environment {
         shortCommit = sh(script: "git log -n 1 --pretty=format:'%h'", returnStdout: true).trim()
