@@ -6,40 +6,36 @@ DEBUG_LEVEL_DEBUG = 'debug' # Outputs all information
 logger = LogMechanism()
 
 
-def save_key_pair(pem_key):
-    logger.trace(pem_key, caller_name='save_key_pair')
-    logger.info('Saving key pair to file')
+def save_key_pair(pemKey):
     # Save pem to file
-    with open('/tmp/pemValue.pem', 'w') as f:
-        print(str(pem_key), file=f)
-    #subprocess.call(f'echo {pem_file} > /tmp/pemValue.pem', shell=True)
+    logger.trace(caller_name='save_key_pair')
+    logger.info('Saving key pair to file')
+    savePemToFileCommand = 'echo {0} > /tmp/pemValue.pem'.format(pemKey)
+    subprocess.call([savePemToFileCommand], shell=True)
     subprocess.call(["chmod 777 /tmp/pemValue.pem"], shell=True)
 
 
-def convert_pem_to_ppk(pem_key):
+def convert_pem_to_ppk(pemKey):
     logger.trace(caller_name='convert_pem_to_ppk')
-    logger.info('Converting key pair from pem to ppk')
+    logger.info('Converting pem to ppk')
     #  convert pem file, get ppk value
     #  Uses Puttygen sent to the lambda
-    save_key_pair(pem_key=pem_key)
-    try:
-        subprocess.call(["cp puttygen /tmp "], shell=True)
-        subprocess.call(["chmod 777 /tmp/puttygen "], shell=True)
-        subprocess.check_output("cat /tmp/pemValue.pem", shell=True)
-        conversion = subprocess.check_output('/tmp/puttygen /tmp/pemValue.pem -O private -o /dev/stdout',
-                                             shell=True, stderr=subprocess.PIPE)
-        ppk_key = conversion.decode("utf-8")
-    except Exception as e:
-        logger.error(f'Exception occured: {e}')
-        raise Exception(f'Exception occured: {e}')
-    if 'Private-Lines' in ppk_key:
-        logger.info("Pem key successfully converted")
-        print(f'\n\n\n_________________________\n{ppk_key}')
-    else:
-        logger.error("Failed to convert pem key to ppk", str(ppk_key))
-        raise Exception('Failed to convert pem')
+    save_key_pair(pemKey=pemKey)
+    subprocess.call(["cp ./puttygen /tmp/puttygen"], shell=True)
+    subprocess.call(["chmod 777 /tmp/puttygen "], shell=True)
+    subprocess.check_output("ls /tmp -l", shell=True)
+    subprocess.check_output("cat /tmp/pemValue.pem", shell=True)
+    conversionResult = subprocess.call(["/tmp/puttygen /tmp/pemValue.pem -O private -o /tmp/ppkValue.ppk"], shell=True)
+    if conversionResult == 0:
+        ppkKey = subprocess.check_output("cat /tmp/ppkValue.ppk", shell=True).decode("utf-8")
+        if 'Private-Lines' in ppk_key:
+            print("Pem key successfully converted")
+        else:
+            print("Failed to convert pem key to ppk")
+            raise Exception("Failed to convert pem key to ppk"))
+    return False
 
-    return ppk_key
+    return ppkKey
 
 
 def run_command_on_container(command, print_output):
