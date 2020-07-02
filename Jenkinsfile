@@ -28,7 +28,8 @@ pipeline {
                 # Install security tools
                 pip install safety bandit
                 
-                mkdir reports
+                mkdir reports -p
+                rm -rf reports/*
                 '''
             }
         }
