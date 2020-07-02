@@ -381,7 +381,6 @@ def mock_requests_response(code=int, json_response=None):
     if json_response:
         with open('json_response.json') as json_resp:
             json_str = json.load(json_resp)
-            print(json_str)
         return response, json_str
     return response
 
