@@ -361,12 +361,13 @@ def mock_pvwa_integration(method, parameters, return_code=int, json_response=Non
            "filter_get_accounts_result": pvwa_api.filter_get_accounts_result,
            "get_account_value": pvwa_api.get_account_value}
     if json_response:
-        response = mock_requests_response(return_code, json_response)
+        response, json_response = mock_requests_response(return_code, json_response)
     else:
         response = mock_requests_response(return_code)
     @patch('pvwa_integration.PvwaIntegration.call_rest_api_post', return_value=response)
     @patch('pvwa_integration.PvwaIntegration.call_rest_api_get', return_value=response)
     @patch('pvwa_integration.PvwaIntegration.call_rest_api_delete', return_value=response)
+    @patch('requests.Response.json', return_value=json_response)
     def invoke(*args):
         response = dic[method](*parameters)
         print(f'response:  {response}')
@@ -379,9 +380,9 @@ def mock_requests_response(code=int, json_response=None):
     response.status_code = code
     if json_response:
         with open('json_response.json') as json_resp:
-            json_str = json_resp.read()
-            response.json = json.dumps(json_str)
-            print(response.json)
+            json_str = json.load(json_resp)
+            print(json_str)
+        return response, json_str
     return response
 
 class EC2Details:
