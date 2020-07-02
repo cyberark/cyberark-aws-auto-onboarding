@@ -299,11 +299,62 @@ class PvwaApiCallsTest(unittest.TestCase):
         self.assertIn('Unknown status code received', str(context.exception))
 
     def test_check_if_kp_exists(self): #### to be fixed
-        print('Ignored')
         method = 'check_if_kp_exists'
         parameters = ['1', 'account', 'safe', INSTANCE_ID, 'https://pvwa']
         response = mock_pvwa_integration(method, parameters, 200, True)
         self.assertTrue(response)
+
+    def test_check_if_kp_exists_exception(self):
+        method = 'check_if_kp_exists'
+        parameters = ['1', 'account', 'safe', INSTANCE_ID, 'https://pvwa']
+        with self.assertRaises(Exception) as context:
+            response = mock_pvwa_integration(method, parameters, 404, False)
+        self.assertEqual(Exception, type(context.exception))
+
+    def test_retrieve_account_id_from_account_name(self):
+        method = 'retrieve_account_id_from_account_name'
+        parameters = ['1', MOTO_ACCOUNT, 'safe', INSTANCE_ID, 'https://pvwa']
+        @patch('pvwa_api_calls.filter_get_accounts_result', return_value=True)
+        def invoke(*args):
+            response = mock_pvwa_integration(method, parameters, 200, True)
+            return response
+        response = invoke()
+        self.assertTrue(response)
+
+    def test_retrieve_account_id_from_account_name_no_match(self):
+        method = 'retrieve_account_id_from_account_name'
+        parameters = ['1', MOTO_ACCOUNT, 'safe', INSTANCE_ID, 'https://pvwa']
+        @patch('pvwa_api_calls.filter_get_accounts_result', return_value=False)
+        def invoke(*args):
+            response = mock_pvwa_integration(method, parameters, 200, True)
+            return response
+        response = invoke()
+        self.assertFalse(response)
+
+    def test_retrieve_account_id_from_account_name_exception(self):
+        method = 'retrieve_account_id_from_account_name'
+        parameters = ['1', MOTO_ACCOUNT, 'safe', INSTANCE_ID, 'https://pvwa']
+        @patch('pvwa_api_calls.filter_get_accounts_result', return_value=False)
+        def invoke(*args):
+            with self.assertRaises(Exception) as context:
+                response = mock_pvwa_integration(method, parameters, 403, False)
+            return context.exception
+        response = invoke()
+        self.assertEqual(Exception, type(response))
+
+    def test_filter_get_accounts_result(self):
+        with open('json_response.json') as json_resp:
+            json_str = json.load(json_resp)
+        parsed_json_response = json_str['value']
+        response = pvwa_api.filter_get_accounts_result(parsed_json_response, '138339392836')
+        self.assertEqual('30_4', response)
+
+    def test_filter_get_accounts_result_false(self):
+        with open('json_response.json') as json_resp:
+            json_str = json.load(json_resp)
+        parsed_json_response = json_str['value']
+        response = pvwa_api.filter_get_accounts_result(parsed_json_response, INSTANCE_ID)
+        self.assertFalse(response)
 
 ##General Functions##
 def fake_exc(a, b):

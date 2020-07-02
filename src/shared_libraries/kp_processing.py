@@ -28,11 +28,11 @@ def convert_pem_to_ppk(pemKey):
     conversionResult = subprocess.call(["/tmp/puttygen /tmp/pemValue.pem -O private -o /tmp/ppkValue.ppk"], shell=True)
     if conversionResult == 0:
         ppkKey = subprocess.check_output("cat /tmp/ppkValue.ppk", shell=True).decode("utf-8")
-        if 'Private-Lines' in ppk_key:
+        if 'Private-Lines' in ppkKey:
             print("Pem key successfully converted")
         else:
             print("Failed to convert pem key to ppk")
-            raise Exception("Failed to convert pem key to ppk"))
+            raise Exception("Failed to convert pem key to ppk")
     return False
 
     return ppkKey
