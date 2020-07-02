@@ -79,7 +79,7 @@ pipeline {
                      ls src/aws_environment_setup
                      cd src/aws_environment_setup
                      cd package
-                     rm -rf botocore
+                     rm -rf boto*
                      zip -r9 ${OLDPWD}/aws_environment_setup.zip .
                      cd $OLDPWD
                      zip -g aws_environment_setup.zip aws_services.py aws_environment_setup.py instance_processing.py kp_processing.py pvwa_api_calls.py pvwa_integration.py log_mechanism.py
@@ -93,7 +93,7 @@ pipeline {
                      ls src/aws_ec2_auto_onboarding
                      cd src/aws_ec2_auto_onboarding
                      cd package
-                     rm -rf botocore
+                     rm -rf boto*
                      zip -r9 ${OLDPWD}/aws_ec2_auto_onboarding.zip .
                      cd $OLDPWD
                      zip -g aws_ec2_auto_onboarding.zip aws_services.py aws_ec2_auto_onboarding.py instance_processing.py kp_processing.py pvwa_api_calls.py pvwa_integration.py puttygen log_mechanism.py
