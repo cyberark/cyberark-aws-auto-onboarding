@@ -28,7 +28,7 @@ def convert_pem_to_ppk(pem_key):
         subprocess.check_output("cat /tmp/pemValue.pem", shell=True)
         conversion = subprocess.check_output('/tmp/puttygen /tmp/pemValue.pem -O private -o /dev/stdout',
                                              shell=True, stderr=subprocess.PIPE)
-        ppk_key = str(conversion).replace('\'', '').replace('\\n', '\n')
+        ppk_key = conversion.decode("utf-8")
     except Exception as e:
         logger.error(f'Exception occured: {e}')
         raise Exception(f'Exception occured: {e}')
