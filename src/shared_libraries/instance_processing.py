@@ -86,10 +86,7 @@ def create_instance(instance_id, instance_details, store_parameters_class, log_n
         logger.info('Windows platform detected')
         kp_processing.save_key_pair(instance_account_password)
         instance_password_data = get_instance_password_data(instance_id, solution_account_id, event_region, event_account_id)
-        # decrypted_password = convert_pem_to_password(instance_account_password, instance_password_data)
-        command = ["echo", str.strip(instance_password_data), "|", "base64", "--decode", "|", "openssl", "rsautl", "-decrypt",
-                   "-inkey", "/tmp/pemValue.pem"]
-        return_code, decrypted_password = kp_processing.run_command_on_container(command, True)
+        decrypted_password = kp_processing.decrypt_password(instance_password_data)
         aws_account_name = f'AWS.{instance_id}.Windows'
         instance_key = decrypted_password
         platform = WINDOWS_PLATFORM

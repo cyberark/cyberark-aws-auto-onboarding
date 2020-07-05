@@ -1,5 +1,7 @@
 import subprocess
 import sys
+import rsa
+import base64
 from log_mechanism import LogMechanism
 
 DEBUG_LEVEL_DEBUG = 'debug' # Outputs all information
@@ -33,24 +35,13 @@ def convert_pem_to_ppk(pemKey):
         else:
             print("Failed to convert pem key to ppk")
             raise Exception("Failed to convert pem key to ppk")
-    return False
-
     return ppkKey
 
 
-def run_command_on_container(command, print_output):
-    logger.trace(caller_name='run_command_on_container')
-    decrypted_password = ""
-    with subprocess.Popen(' '.join(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True) as process:
-        if print_output:
-            decrypted_password = print_process_outputs_on_end(process)
-        else:
-            process.wait()
-    return [process.returncode, decrypted_password]
-
-
-def print_process_outputs_on_end(process):
-    logger.trace(caller_name='print_process_outputs_on_end')
-    out = process.communicate()[0].decode('utf-8')
-    # out = filter(None, map(str.strip, out.decode('utf-8').split('\n')))
-    return out
+def decrypt_password(instance_password_data):
+    logger.trace(caller_name='decrypt_password')
+    passwd = base64.b64decode(instance_password_data)
+    with open ("/tmp/pemValue.pem", 'r') as f:
+        private = rsa.PrivateKey.load_pkcs1(f.read())
+    decrypted_password = rsa.decrypt(passwd,private).decode("utf-8")
+    return decrypted_password
