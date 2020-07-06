@@ -304,9 +304,9 @@ def delete_password_from_param_store(aob_mode):
         )
         logger.info("Parameter 'AOB_Vault_Pass' deleted successfully from Parameter Store")
         ssm_client.delete_parameter(
-            Name='aob_mode'
+            Name='AOB_mode'
         )
-        logger.info("Parameter 'aob_mode' deleted successfully from Parameter Store")
+        logger.info("Parameter 'AOB_mode' deleted successfully from Parameter Store")
         if aob_mode == 'Production':
             ssm_client.delete_parameter(
                 Name='AOB_PVWA_Verification_Key'
