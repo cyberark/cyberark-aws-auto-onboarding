@@ -22,6 +22,8 @@ __pycache__
 .serverless
 *.ppk
 *.pem
+*.crt
+*.pfx
 .DS*
 
 # terraform
@@ -30,3 +32,4 @@ manifest*.json
 *.plan
 *.tfstate*
 .terraform
+*.example
