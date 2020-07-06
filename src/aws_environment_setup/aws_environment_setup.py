@@ -61,13 +61,13 @@ def lambda_handler(event, context):
             elif request_s3_bucket_name != '' and request_verification_key_name == '':
                 raise Exception('S3 Bucket cannot be empty if Verification Key is provided')
             else:
-                logger.info('Adding aob_mode to parameter store', DEBUG_LEVEL_DEBUG)
+                logger.info('Adding AOB_mode to parameter store', DEBUG_LEVEL_DEBUG)
                 is_aob_mode_saved = add_param_to_parameter_store(aob_mode, 'AOB_mode',
                                                                  'Dictates if the solution will work in POC(no SSL) or ' \
                                                                  'Production(with SSL) mode')
                 if not is_aob_mode_saved:  # if password failed to be saved
                     return cfnresponse.send(event, context, cfnresponse.FAILED,
-                                            "Failed to create aob_mode parameter in Parameter Store", {}, physical_resource_id)
+                                            "Failed to create AOB_mode parameter in Parameter Store", {}, physical_resource_id)
                 if aob_mode == 'Production':
                     logger.info('Adding verification key to Parameter Store', DEBUG_LEVEL_DEBUG)
                     is_verification_key_saved = save_verification_key_to_param_store(request_s3_bucket_name,
@@ -304,9 +304,9 @@ def delete_password_from_param_store(aob_mode):
         )
         logger.info("Parameter 'AOB_Vault_Pass' deleted successfully from Parameter Store")
         ssm_client.delete_parameter(
-            Name='aob_mode'
+            Name='AOB_mode'
         )
-        logger.info("Parameter 'aob_mode' deleted successfully from Parameter Store")
+        logger.info("Parameter 'AOB_mode' deleted successfully from Parameter Store")
         if aob_mode == 'Production':
             ssm_client.delete_parameter(
                 Name='AOB_PVWA_Verification_Key'
@@ -336,7 +336,7 @@ def delete_sessions_table():
 def get_aob_mode():
     ssm = boto3.client('ssm')
     ssm_parameter = ssm.get_parameter(
-        Name='aob_mode'
+        Name='AOB_mode'
     )
     aob_mode = ssm_parameter['Parameter']['Value']
     return aob_mode

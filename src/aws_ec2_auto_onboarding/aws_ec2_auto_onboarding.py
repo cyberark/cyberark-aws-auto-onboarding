@@ -39,14 +39,17 @@ def lambda_handler(event, context):
 
     try:
         event_region = data["region"]
+        solution_account_id = context.invoked_function_arn.split(':')[4]
+        log_name = context.log_stream_name if context.log_stream_name else "None"
     except Exception as e:
         logger.error(f"Error on retrieving Event Region from Event Message. Error: {e}")
+    elasticity_function(instance_id, action_type, event_account_id, event_region, solution_account_id, log_name)
 
-    log_name = context.log_stream_name if context.log_stream_name else "None"
+
+def elasticity_function(instance_id, action_type, event_account_id, event_region, solution_account_id, log_name):
     try:
-        solution_account_id = context.invoked_function_arn.split(':')[4]
-        instance_details = aws_services.get_ec2_details(instance_id, solution_account_id, event_region, event_account_id)
-
+        ec2_object = aws_services.get_account_details(solution_account_id, event_account_id, event_region)
+        instance_details = aws_services.get_ec2_details(instance_id, ec2_object, event_account_id)
         instance_data = aws_services.get_instance_data_from_dynamo_table(instance_id)
         if action_type == 'terminated':
             if not instance_data:
@@ -90,7 +93,6 @@ def lambda_handler(event, context):
                                                           store_parameters_class.vault_password,
                                                           store_parameters_class.pvwa_url,
                                                           pvwa_connection_number)
-
         if not session_token:
             return
         disconnect = False
@@ -100,7 +102,7 @@ def lambda_handler(event, context):
                                                 instance_details)
         elif action_type == 'running':
             # get key pair
-            logger.info('Retrieving accountId where the key pair is stored')
+            logger.info('Retrieving account id where the key-pair is stored')
             # Retrieving the account id of the account where the instance keyPair is stored
             # AWS.<AWS Account>.<Event Region name>.<key pair name>
             key_pair_value_on_safe = f'AWS.{instance_details["aws_account_id"]}.{event_region}.{instance_details["key_name"]}'
@@ -130,7 +132,7 @@ def lambda_handler(event, context):
             aws_services.release_session_on_dynamo(pvwa_connection_number, session_guid)
 
     except Exception as e:
-        logger.error(f"Unknown error occurred:{e}")
+        logger.error(f"Unknown error occurred: {e}")
         if action_type == 'terminated':
             # put_instance_to_dynamo_table(instance_id, instance_details["address"]\
             # , OnBoardStatus.delete_failed, str(e), log_name)

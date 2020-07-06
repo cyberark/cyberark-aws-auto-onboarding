@@ -20,6 +20,9 @@ __pycache__
 
 # Serverless directories
 .serverless
+*.ppk
+*.pem
+.DS*
 
 # terraform
 vars.json

@@ -11,15 +11,16 @@ logger = LogMechanism()
 
 # return ec2 instance relevant data:
 # keyPair_name, instance_address, platform
-def get_ec2_details(instance_id, solution_account_id, event_region, event_account_id):
-    logger.trace(instance_id, solution_account_id, event_region, event_account_id, caller_name='get_ec2_details')
-    logger.info(f'Gathering details about EC2 - {instance_id}')
+def get_account_details(solution_account_id, event_account_id, event_region):
+    logger.trace(solution_account_id, event_region, event_account_id, caller_name='get_account_details')
     if event_account_id == solution_account_id:
+        logger.info('Event occurred in the AOB solution account')
         try:
             ec2_resource = boto3.resource('ec2', event_region)
         except Exception as e:
             logger.error(f'Error on creating boto3 session: {str(e)}')
     else:
+        logger.info('Event occurred in different account')
         try:
             logger.info('Assuming Role')
             sts_connection = boto3.client('sts')
@@ -42,10 +43,15 @@ def get_ec2_details(instance_id, solution_account_id, event_region, event_accoun
             )
         except Exception as e:
             logger.error(f'Error on getting token from account: {event_account_id}')
+    return ec2_resource
 
+
+def get_ec2_details(instance_id, ec2_object, event_account_id):
+    logger.trace(instance_id, ec2_object, event_account_id, caller_name='get_ec2_details')
+    logger.info(f'Gathering details about EC2 - {instance_id}')
     try:
-        instance_resource = ec2_resource.Instance(instance_id)
-        instance_image = ec2_resource.Image(instance_resource.image_id)
+        instance_resource = ec2_object.Instance(instance_id)
+        instance_image = ec2_object.Image(instance_resource.image_id)
         logger.info(f'Image Detected: {str(instance_image)}')
         image_description = instance_image.description
     except Exception as e:
@@ -162,24 +168,25 @@ def put_instance_to_dynamo_table(instance_id, ip_address, on_board_status, on_bo
                 'LogId': log_name
             }
         )
-    except Exception as e:
-        logger.error(f'Exception occurred on add item to DynamoDB: {e}')
-        return None
+    except Exception:
+        logger.error('Exception occurred on add item to DynamoDB')
+        return False
 
     logger.info(f'Item {instance_id} added successfully to DynamoDB')
-    return
+    return True
 
 
-def release_session_on_dynamo(session_id, session_guid):
+def release_session_on_dynamo(session_id, session_guid, sessions_table_lock_client=False):
     logger.trace(session_id, session_guid, caller_name='release_session_on_dynamo')
     logger.info('Releasing session lock from DynamoDB')
     try:
-        sessions_table_lock_client = LockerClient('Sessions')
+        if not sessions_table_lock_client:
+            sessions_table_lock_client = LockerClient('Sessions')
         sessions_table_lock_client.locked = True
         sessions_table_lock_client.guid = session_guid
         sessions_table_lock_client.release(session_id)
     except Exception as e:
-        logger.error(f'Failed to release session lock from DynamoDB:\n{str(e)}')
+        logger.error(f'Failed to release session lock from DynamoDB: {str(e)}')
         return False
 
     return True
@@ -198,15 +205,17 @@ def remove_instance_from_dynamo_table(instance_id):
         )
     except Exception as e:
         logger.error(f'Exception occurred on deleting {instance_id} on dynamodb:\n{str(e)}')
-        return None
+        return False
 
     logger.info(f'Item {instance_id} successfully deleted from DB')
-    return
+    return True
 
 
-def get_session_from_dynamo():
+def get_session_from_dynamo(sessions_table_lock_client=False):
     logger.info("Getting available Session from DynamoDB")
-    sessions_table_lock_client = LockerClient('Sessions')
+    if not sessions_table_lock_client:
+        sessions_table_lock_client = LockerClient('Sessions')
+
     timeout = 20000  # Setting the timeout to 20 seconds on a row lock
     random_session_number = str(random.randint(1, 100))  # A number between 1 and 100
 
@@ -231,9 +240,9 @@ def get_session_from_dynamo():
 def update_instances_table_status(instance_id, status, error="None"):
     logger.trace(instance_id, status, error, caller_name='update_instances_table_status')
     logger.info(f'Updating DynamoDB with {instance_id} onboarding status. \nStatus: {status}')
-    dynamodb_resource = boto3.resource('dynamodb')
-    instances_table = dynamodb_resource.Table("Instances")
     try:
+        dynamodb_resource = boto3.resource('dynamodb')
+        instances_table = dynamodb_resource.Table("Instances")
         instances_table.update_item(
             Key={
                 'InstanceId': instance_id
@@ -250,10 +259,10 @@ def update_instances_table_status(instance_id, status, error="None"):
             }
         )
     except Exception as e:
-        logger.error(f'Exception occurred on updating session on DynamoDB: {e}')
-        return None
+        logger.error(f'Exception occurred on updating session on DynamoDB {e}')
+        return False
     logger.info("Instance data updated successfully")
-    return
+    return True
 
 
 class StoreParameters:
