@@ -1,0 +1,69 @@
+pipeline {
+    agent {
+        node {
+            label 'ansible'
+        }
+    }
+    parameters {
+        choice name: 'mainRegion',
+               choices: ['eu-west-2', 'eu-central-1'],
+               description: 'region name of main AOB solution'
+        choice name: 'secRegion',
+               choices: ['eu-central-1', 'eu-west-2'],
+               description: 'region name of secondary AOB solution'
+        string name: 'mainSubnet',
+               defaultValue: 'subnet-050842545d0fce2d4',
+               description: 'subnet id at main region',
+               trim: true
+        string name: 'secSubnet',
+               defaultValue: 'subnet-0dbd84f0b33d6ad33',
+               description: 'subnet id at secondary region',
+               trim: true
+        string name: 'mainKP',
+               defaultValue: 'Erez-AOB-def',
+               description: 'key pair name at main region',
+               trim: true
+        string name: 'secKP',
+               defaultValue: 'aob-frank',
+               description: 'key pair name at secondary region',
+               trim: true
+        booleanParam(
+               name: 'test',
+               defaultValue: false,
+               description: 'do you want to execute stress test & deploy 1002 instances?')
+    }
+    environment {
+        shortCommit = sh(script: "git log -n 1 --pretty=format:'%h'", returnStdout: true).trim()
+    }
+    stages {
+        stage('Install virtual environment') {
+            steps {
+                sh '''
+                python3 -m pip install --user virtualenv
+                python3 -m virtualenv .testenv
+                source ./.testenv/bin/activate
+                
+                pip install boto3
+                
+                wget https://releases.hashicorp.com/terraform/0.12.26/terraform_0.12.26_linux_amd64.zip
+                unzip -o terraform_0.12.26_linux_amd64.zip 
+                sudo mv terraform /usr/bin/
+                '''
+            }
+        }
+        stage('AOB stress test') {
+            steps {
+                script {
+                    if (params.test) {
+                        sh """
+                        source ./.testenv/bin/activate
+                        cd src/tests/stress
+        
+                        bash tf_deployer.sh ${params.mainRegion} ${params.secRegion} ${params.mainSubnet} ${params.secSubnet} ${params.mainKP} ${params.secKP}
+                        """
+                    }
+                }
+            }
+        }
+    }
+}
