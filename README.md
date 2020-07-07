@@ -27,18 +27,19 @@ This solution requires the following:
 4. The CPM that manages the SSH keys must have a network connection to the target devices (ex: vpc peering)
 5. To connect to new instances, PSM must have a network connection to the target devices (ex: vpc peering)
 6. The expected maximum number of instances must be within the number of accounts license limits  
-7. In the "UnixSSH" platform, set the "ChangeNotificationPeriod" value to 60 sec (this platform will be used for managing Unix accounts, and setting this parameter gives the instance time to boot before attempting to change the password) 
-8. In the "WinServerLocal" platform, set the "ChangeNotificationPeriod" value to 60 sec (this platform will be used for managing Unix accounts, and setting this parameter gives the instance time to boot before attempting to change the password) 
-9. Dedicated Vault user for the solution with the following authorizations (not Admin):
+7. PVWA configured with SSL (unless its a POC environment).
+8. In the "UnixSSH" platform, set the "ChangeNotificationPeriod" value to 60 sec (this platform will be used for managing Unix accounts, and setting this parameter gives the instance time to boot before attempting to change the password) 
+9. In the "WinServerLocal" platform, set the "ChangeNotificationPeriod" value to 60 sec (this platform will be used for managing Unix accounts, and setting this parameter gives the instance time to boot before attempting to change the password) 
+10. Dedicated Vault user for the solution with the following authorizations (not Admin):
 
 	| General Vault Permissions:|
 	| ------ |
 		 Add Safes
 
-10. StackSet Enabled according to AWS documentation:
+11. StackSet Enabled according to AWS documentation:
     https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-prereqs-self-managed.html
 
-11. If the Keypair and/or the Safes already exist (not created by the solution), the Vault user must be the owner of these Safes with the following permissions:
+12. If the Keypair and/or the Safes already exist (not created by the solution), the Vault user must be the owner of these Safes with the following permissions:
 
 	|	 Key Pair Safe Permissions:|
 	| ------ |
@@ -54,6 +55,7 @@ This solution requires the following:
 		Delete Account
 		Update Accounts Properties
 		Initiate CPM account management operations
+
 
 #  Deployment using Ansible 
 Requirements for deployment:
@@ -145,6 +147,7 @@ netsh firewall set service RemoteAdmin enable
 	1. SafeHandler - Creates the safes for the solution and uploads the solution main key pair.
 	2. Elasticity - Onboard new instances to PAS.
 	3. TrustMechanism - Responsible for SSM integration.
+>**Note**: You can find the lambdas by searching in the cloudformation's resource tab `AWS::Lambda::Function`
 
 * All information about debugging is available through AWS CloudWatch and can be accessed easily through each lambda function under monitoring section.
 * Debugging level can be controlled by editing the SSM parameter -  `AOB_Debug_Level`.
@@ -175,7 +178,7 @@ git push origin my-new-feature
 # Deleting the solution 
 ### Order of deletion:
 1. Delete StackSet
-2. Delete the CloudFormations in the following order 
+2. Delete the CloudFormations in the following order:
 	- CyberArk-AOB-MultiRegion-CF-VaultEnvCreation
 	- CyberArk-AOB-MultiRegion-CF
 # Troubleshooting Tools 
