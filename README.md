@@ -150,8 +150,8 @@ netsh firewall set service RemoteAdmin enable
 * Debugging level can be controlled by editing the SSM parameter -  `AOB_Debug_Level`.
 * There are 3 debug levels :
 	* Info - displays general information and errors.
-	* Debug - display detailed information and errors.
-	* Trace - display every call made by the solution in details.
+	* Debug - displays detailed information and errors.
+	* Trace - displays every call made by the solution in details.
 
 # Contributing
 Feel free to open pull requests with additional features or improvements!
