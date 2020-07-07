@@ -1,6 +1,6 @@
 Protecting privileged accounts is never an easy task. They must be identified and managed, but in most cases it takes time and effort to cover the entire organization network. This process is challenged even more in Cloud environments, due to its dynamic nature. Instances (containers and virtual servers) are ephemeral and may be spun up and down all the time, which may cause a situation in which privilege accounts of critical applications and workloads are not managed while they are active.
 
-CyberArk provides a solution that detects unmanaged privileged SSH Keys in new created Unix/Linux EC2 instances in Amazon Web Services (AWS) environments, and automatically onboards them to the CyberArk Vault. Once an SSH Key is onboarded, it is changed immediately. This solution also detects when EC2 instances are terminated and subsequently deletes the irrelevant accounts from the Vault. 
+CyberArk provides a solution that detects unmanaged privileged SSH Keys in new created Unix/Linux EC2 instances and unmanaged Windows instances in Amazon Web Services (AWS) environments, and automatically onboards them to the CyberArk Vault. Once an SSH Key\Password is onboarded, it is changed immediately. This solution also detects when EC2 instances are terminated and subsequently deletes the irrelevant accounts from the Vault. 
 
 Unlike schedule-based scanners, this is an Event Driven discovery that detects changes in the environment in real time. AWS CloudWatch informs CyberArk about new EC2 instances, and triggers the CyberArk Lambda function that initiates the onboarding process.
 
@@ -23,8 +23,8 @@ This solution requires the following:
 1. CyberArk PAS solution installed on prem / Cloud / Hybrid with v9.10 or higher 
 2. Cyberark license must include SSH key manager 
 3. Network access from the Lambda VPC to CyberArk's PVWA
-4. The CPM that manages the SSH keys must have a network connection to the target devices
-5. To connect to new instances, PSM must have a network connection to the target devices
+4. The CPM that manages the SSH keys must have a network connection to the target devices (ex: vpc peering)
+5. To connect to new instances, PSM must have a network connection to the target devices (ex: vpc peering)
 6. The expected maximum number of instances must be within the number of accounts license limits  
 7. In the "UnixSSH" platform, set the "ChangeNotificationPeriod" value to 60 sec (this platform will be used for managing Unix accounts, and setting this parameter gives the instance time to boot before attempting to change the password) 
 8. In the "WinServerLocal" platform, set the "ChangeNotificationPeriod" value to 60 sec (this platform will be used for managing Unix accounts, and setting this parameter gives the instance time to boot before attempting to change the password) 
