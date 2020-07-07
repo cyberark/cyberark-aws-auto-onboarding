@@ -58,8 +58,8 @@ This solution requires the following:
 
 # Deployment using Cloud Formation 
 This solution requires NAT GW to allow Lambda access to the AWS resources  
-Reference for further information: https://docs.aws.amazon.com/lambda/latest/dg/vpc.html
-CyberArk example network template:
+Reference for further information: https://docs.aws.amazon.com/lambda/latest/dg/vpc.html  
+CyberArk example network template:  
 https://github.com/cyberark/pas-on-cloud/blob/master/aws/PAS-network-environment-NAT.json
 
 
