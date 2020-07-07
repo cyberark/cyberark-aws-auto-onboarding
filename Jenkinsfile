@@ -84,6 +84,9 @@ pipeline {
                      zip -r9 ${OLDPWD}/aws_environment_setup.zip .
                      cd $OLDPWD
                      zip -g aws_environment_setup.zip aws_services.py aws_environment_setup.py instance_processing.py kp_processing.py pvwa_api_calls.py pvwa_integration.py log_mechanism.py
+                     git add aws_environment_setup.zip
+                     git commit -m '- add zip files'
+                     git push
                  '''
               }
             }
@@ -99,6 +102,9 @@ pipeline {
                      zip -r9 ${OLDPWD}/aws_ec2_auto_onboarding.zip .
                      cd $OLDPWD
                      zip -g aws_ec2_auto_onboarding.zip aws_services.py aws_ec2_auto_onboarding.py instance_processing.py kp_processing.py pvwa_api_calls.py pvwa_integration.py puttygen log_mechanism.py
+                     git add aws_ec2_auto_onboarding.zip
+                     git commit -m '- add zip files'
+                     git push
                  '''
               }
             }
