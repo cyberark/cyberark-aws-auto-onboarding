@@ -85,6 +85,8 @@ pipeline {
                      zip -r9 ${OLDPWD}/aws_environment_setup.zip .
                      cd $OLDPWD
                      zip -g aws_environment_setup.zip aws_services.py aws_environment_setup.py instance_processing.py kp_processing.py pvwa_api_calls.py pvwa_integration.py log_mechanism.py
+                     git config --global user.name "Jenkins"
+                     git config --global user.email "Jenkins@nimbus.aws"
                      git add aws_environment_setup.zip
                      git commit -m '- add zip files'
                      git push
