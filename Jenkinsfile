@@ -75,6 +75,7 @@ pipeline {
             stage('Package aws_environment_setup lambda function') {
                steps {
                  sh '''
+                     rm -rf .git/index.lock
                      cp -R src/shared_libraries/* src/aws_environment_setup
                      ls src/aws_environment_setup
                      cd src/aws_environment_setup
@@ -93,6 +94,7 @@ pipeline {
             stage('Package aws_ec2_auto_onboarding lambda function') {
               steps {
                 sh '''
+                     rm -rf .git/index.lock
                      cp -R src/shared_libraries/* src/aws_ec2_auto_onboarding
                      ls src/aws_ec2_auto_onboarding
                      cd src/aws_ec2_auto_onboarding
