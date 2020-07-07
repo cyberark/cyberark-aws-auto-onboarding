@@ -15,7 +15,6 @@ This solution supports CyberArk environments that are deployed in Cloud, and Hyb
 - Automatic de-provision accounts for terminated AWS instances
 - Multi region support - Single solution deployment for all regions in the AWS account 
 - Near real time on boarding of new instances spinning up  
-- Deployment with Ansible
 
 
 # Prerequisites
@@ -55,33 +54,6 @@ This solution requires the following:
 		Delete Account
 		Update Accounts Properties
 		Initiate CPM account management operations
-
-
-#  Deployment using Ansible 
-Requirements for deployment:
-- PAS environment already deployed - Vault, PVWA, CPM, PSM, PSMP
-- Any Vault Admin user + password 
-- AWS IAM User strong privileges for deploying IAM roles and policies with CloudFormation
-- Python 3.6 or higher installed
-
-Steps:
-1. Install virtual environment
-`pip install virtualenv`
-2. Clone auto-onboarding repository
-`git clone https://github.com/cyberark/cyberark-aws-auto-onboarding.git`
-3. Create a new virtual environment using Requirements.txt
-`virtualenv AOB`
-3. Activate the virtualenv
-`source AOB/bin/activate`
-4. Change directory to cyberark-aws-auto-onboarding/deployment
-`cd cyberark-aws-auto-onboarding/deployment`
-5. Install required packages using requirements.txt
-`pip install -r cyberark-aws-auto-onboarding/`
-6. Edit vars/AOB-Params.yml according to the comments
-7. Run the playbook and provide two parameters - VaultUser , VaultPassword
-`ansible-playbook AutoOnboarding.yml VaultUser=<VaultUser> VaultPassword=<VaultPassword> `
-
-
 
 
 # Deployment using Cloud Formation 
