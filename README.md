@@ -176,8 +176,8 @@ git push origin my-new-feature
 ### Order of deletion:
 1. Delete StackSet
 2. Delete the CloudFormations in the following order 
-	a. CyberArk-AOB-MultiRegion-CF-VaultEnvCreation
-	b. CyberArk-AOB-MultiRegion-CF
+	- CyberArk-AOB-MultiRegion-CF-VaultEnvCreation
+	- CyberArk-AOB-MultiRegion-CF
 # Troubleshooting Tools 
 All Instance onboarding status is saved in a DynamoDB table that is located under :
 DynamoDB→ Tables → Instances   , Go to the Items tab
