@@ -1,3 +1,4 @@
+
 Protecting privileged accounts is never an easy task. They must be identified and managed, but in most cases it takes time and effort to cover the entire organization network. This process is challenged even more in Cloud environments, due to its dynamic nature. Instances (containers and virtual servers) are ephemeral and may be spun up and down all the time, which may cause a situation in which privilege accounts of critical applications and workloads are not managed while they are active.
 
 CyberArk provides a solution that detects unmanaged privileged SSH Keys in new created Unix/Linux EC2 instances and unmanaged Windows instances in Amazon Web Services (AWS) environments, and automatically onboards them to the CyberArk Vault. Once an SSH Key\Password is onboarded, it is changed immediately. This solution also detects when EC2 instances are terminated and subsequently deletes the irrelevant accounts from the Vault. 
@@ -30,26 +31,29 @@ This solution requires the following:
 8. In the "WinServerLocal" platform, set the "ChangeNotificationPeriod" value to 60 sec (this platform will be used for managing Unix accounts, and setting this parameter gives the instance time to boot before attempting to change the password) 
 9. Dedicated Vault user for the solution with the following authorizations (not Admin):
 
-| General Vault Permissions|
-| ------ |
-|Add Safes|
+	| General Vault Permissions:|
+	| ------ |
+		 Add Safes
 
-10. If the Keypair and/or the Safes already exist (not created by the solution), the Vault user must be the owner of these Safes with the following permissions:
+10. StackSet Enabled according to AWS documentation:
+    https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-prereqs-self-managed.html
 
-|Key Pair Safe Permissions|
-| ------ |
-|Add Accounts|
-|List Accounts|
-|Retrieve Account|
-|Update Accounts Properties|
+11. If the Keypair and/or the Safes already exist (not created by the solution), the Vault user must be the owner of these Safes with the following permissions:
 
-|Unix Accounts Safe Permissions|
-| ------ |
-|Add Accounts|
-|List Accounts|
-|Delete Account|
-|Update Accounts Properties|
-|Initiate CPM account management operations|
+	|	 Key Pair Safe Permissions:|
+	| ------ |
+		Add Accounts
+		List Accounts
+		Retrieve Account
+		Update Accounts Properties
+
+	|	 Unix Accounts Safe Permissions:|
+	| ------ |
+		Add Accounts
+		List Accounts
+		Delete Account
+		Update Accounts Properties
+		Initiate CPM account management operations
 
 #  Deployment using Ansible 
 Requirements for deployment:
@@ -81,58 +85,22 @@ Steps:
 # Deployment using Cloud Formation 
 This solution requires NAT GW to allow Lambda access to the AWS resources  
 Reference for further information: https://docs.aws.amazon.com/lambda/latest/dg/vpc.html
-(Cyberark reference network template already contain NAT GW so please use it for POC 
-https://github.com/cyberark/pas-on-cloud/blob/master/aws/PAS-network-environment-NAT.json)
+CyberArk example network template:
+https://github.com/cyberark/pas-on-cloud/blob/master/aws/PAS-network-environment-NAT.json
 
 
 1. Download cyberark-aws-auto-onboarding solution zip files and CloudFormation template from [https://github.com/cyberark/cyberark-aws-auto-onboarding/tree/master/dist](https://github.com/cyberark/cyberark-aws-auto-onboarding/tree/master/dist)
 
 2. Upload the solution to your S3 Bucket in the same region you want to deploy the solution.(* see note) 
-This template will be called by the main CFT as a nested template and will create the NAT GW in the VPC
-3. Open the CloudFormation, fill in all the details (see below) and launch it
-4. Upload the old/existing key pairs used to create instances in your AWS region to the Key Pair Safe in the Vault 
-
-Update the account User name with  the following naming convention: AWS.[AWS Account].[Region name].[key pair name]
-
-> ***Note:** that this solution must to be installed in every AWS region. For each region, use a dedicated Vault user and make sure the Lambda VPC has a network acess to the PVWA.
-
-# CloudFormation Template 
-The following table lists the parameters to provide in the CloudFormation:
-
-|Parameter Name | Description |
-| ------ | ------ |
-|Bucket Name|	The name of the S3 bucket where the Lambda is located|
-|PVWA IP|	PVWA server/instance IP address|
-|VPC |	Lambda's VPC that contains the subnet with access permissions to the PVWA|
-|Subnet	| The Lambda's subnet with access permissions to the PVWA|
-|Vault user name |The name of the Vault user that has permissions to create and delete accounts in target Safes. (Note: Follow the guidelines)|
-|Vaut user password|	The password for the Vault user|
-|Target safe for Unix accounts	| The name of the Safe to which the SSH Keys will be onboarded (Note: The deployment will fail if the safe already exist)|
-|CPMUnix name | The name of the CPM that will manage the onboarded SSH Keys|
-|Target safe for Windows accounts	| The name of the Safe to which the windows accounts will be onboarded (Note: The deployment will fail if the safe already exist)|
-|CPMWindows Name | The name of the CPM that will manage the onboarded SSH Keys|
-|Target safe for the Key Pairs| The name of the Safe to which the Key Pairs created by CyberArk will be onboarded (Note: The deployment will fail if the safe already exist)|
-|Key Pair name|The name of the Key Pair, if it needs to be created by CyberArk (Note: CyberArk creates the Key Pair and stores it in the Vault. The Key Pair is never downloaded to users' endpoints.)|
+3. Deploy CyberArk-AOB-MultiRegion-CF.json.
+4. Deploy CyberArk-AOB-MultiRegion-CF-VaultEnvCreation.yaml.
+5. Deploy CyberArk-AOB-MultiRegion-StackSet.json.
+6. Upload the old/existing key pairs used to create instances in your AWS region to the Key Pair Safe in the Vault according to the following name convention:
+[AWSAccount].[Region].[KeyPairName]
+example - 1231231231.us-east-2.Mykey
 
 
-
-# Deploy Secondary Cloud Formation - StackSet
-- When the Main CloudFormation deployment ends, click on the Stack and navigate to 'Resources' section
-  - Search 'Elasticity' and press on 'ElasticityLambda' link
-  - Save for later the 'ARN' of the Lambda 
-- From GIT copy the content of CyberArk-AOB-MultiRegion-StackSet.json and save it locally or in S3 Bucket
-- In Cloud Formation service, in left pane Navigate to 'StackSets'
-- Press on Create StackSet
-- Select 'Tempate is ready' and the location of the file you saved before
-- Enter a name for the Stack Set
-- Enter the 'ARN' of the lambda that you saved before
-- Press 'Next'
-- In 'Configure StackSet options' press 'Next'
-- In 'Set deployment options' Enter the Account ID that the solution is deployed (the current Account ID)
-- Choose the Regions to provision
-- Press 'Next'
-- In 'Review' press 'Submit'
-
+> ***Note:** this solution must to be installed in every AWS region. For each region, use a dedicated Vault user and make sure the Lambda VPC has a network acess to the PVWA.
 
 # Solution Upgrade Procedure 
 1. Replace the solution files in the bucket 
@@ -148,7 +116,7 @@ The following table lists the parameters to provide in the CloudFormation:
  - Fedora: fedora user
 > Amazon AMI/custom AMI with a key that was created by the solution or uploaded in advance to the Safe in the Vault supplied in the solution deployment (not supplied hard coded by Amazon)
 
-2. Existing AWS instances (pre-installed) are not onboarded automatically
+2. Existing AWS instances (pre-installed) are not onboarded automatically (only after restart)
 3. This solution currently handles a maximum of 100 events in 4 seconds
 4. EC2 instance public IPs must be elastic IPs to allow continous access and management after changing the instance state.
 5. in order for the CPM to manage new Windows instances for some versions (you can find the list below), the user must run the following command manually on all new Windows instances:
@@ -157,9 +125,9 @@ The following table lists the parameters to provide in the CloudFormation:
 netsh firewall set service RemoteAdmin enable
 ```
 
->**Note**: The CPM will fail to rotate the password in a case this command hasn't been executed
+>**Note**: CPM will fail to rotate the password in a case this command hasn't been executed
 
-###### List of Windows instances that require this command to be run manually:
+##### List of Windows instances that require this command to be run manually:
 
 - Microsoft Windows Server 2016 Base
 - Microsoft Windows Server 2016 Base with Containers
@@ -173,7 +141,17 @@ netsh firewall set service RemoteAdmin enable
 - Microsoft Windows Server 2016 with SQL Server 2016 Enterprise
 
 # Debugging
-All information about debugging is available through AWS CloudWatch
+* There are three main lambdas:
+	1. SafeHandler - Creates the safes for the solution and uploads the solution main key pair.
+	2. Elasticity - Onboard new instances to PAS.
+	3. TrustMechanism - Responsible for SSM integration.
+
+* All information about debugging is available through AWS CloudWatch and can be accessed easily through each lambda function under monitoring section.
+* Debugging level can be controlled by editing the SSM parameter -  `AOB_Debug_Level`.
+* There are 3 debug levels :
+	* Info - displays general information and errors.
+	* Debug - display detailed information and errors.
+	* Trace - display every call made by the solution in details.
 
 # Contributing
 Feel free to open pull requests with additional features or improvements!
@@ -195,43 +173,13 @@ git push origin my-new-feature
 
 
 # Deleting the solution 
-
-Delete StackSet
-
-- Open CloudFormation Service in the region that you deployed the following CFs:
-- From StackSet choose that stack for CyberArk-AOB-MultiRegion-StackSet.json
-- In Actions drop down list, click on "Delete stacks from StackSet"
-- In Account numbers enter the current Account ID (Secondary Account ID)
-- In Specify regions press on "Add all regions"
-- Press on "Next"
-- in next page press on "Submit"
-- Verify that new operation is in "Running" state, in type "DELETE"
-- Wait until Operation shows "SUCCEEDED"
-- Again - From Stacks choose that stack for CyberArk-AOB-MultiRegion-StackSet.json
-- From Actions choose "Delete StackSet"
-
-Delete the CloudFormation 
-
-- Open CloudFormation Service in the region that you deployed the following CFs:
-- CyberArk-AOB-MutliRegion-CF.json
-- From Stacks choose that stack for CyberArk-AOB-MutliRegion-CF.json
-- press Delete
-- Wait until finished (you can hit the refresh button to view progress)
-
-
-There is a known issue with auto-deleting the network interface of a Lambda deployed in an existing VPC. Therefore, follow these steps when deleting the stack: 
-
-1. Wait for the following status event in the cloud formation log:
-```sh
-“CloudFormation is waiting for NetworkInterfaces associated with the Lambda Function to be cleaned up.”
-```
-2. Go to: EC2 → Network Interfaces
-3. Choose the network interface of your stack and then perform Detach and Delete 
-
-
-
+### Order of deletion:
+1. Delete StackSet
+2. Delete the CloudFormations in the following order 
+	a. CyberArk-AOB-MultiRegion-CF-VaultEnvCreation
+	b. CyberArk-AOB-MultiRegion-CF
 # Troubleshooting Tools 
-All Instance on boarding status is saved in a DynamoDB table that is located under :
+All Instance onboarding status is saved in a DynamoDB table that is located under :
 DynamoDB→ Tables → Instances   , Go to the Items tab
 All solution logs are written to CloudWatch , available under :
 CloudWatch → Logs , Search for your cloud formation stack name 
