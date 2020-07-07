@@ -58,8 +58,8 @@ This solution requires the following:
 
 # Deployment using Cloud Formation 
 This solution requires NAT GW to allow Lambda access to the AWS resources  
-Reference for further information: https://docs.aws.amazon.com/lambda/latest/dg/vpc.html  
-CyberArk example network template:  
+Reference for further information: https://docs.aws.amazon.com/lambda/latest/dg/vpc.html \
+CyberArk example network template: \
 https://github.com/cyberark/pas-on-cloud/blob/master/aws/PAS-network-environment-NAT.json
 
 
@@ -69,8 +69,8 @@ https://github.com/cyberark/pas-on-cloud/blob/master/aws/PAS-network-environment
 3. Deploy CyberArk-AOB-MultiRegion-CF.json.
 4. Deploy CyberArk-AOB-MultiRegion-CF-VaultEnvCreation.yaml.
 5. Deploy CyberArk-AOB-MultiRegion-StackSet.json.
-6. Upload the old/existing key pairs used to create instances in your AWS region to the Key Pair Safe in the Vault according to the following name convention:
-[AWSAccount].[Region].[KeyPairName]
+6. Upload the old/existing key pairs used to create instances in your AWS region to the Key Pair Safe in the Vault according to the following name convention:\
+[AWSAccount].[Region].[KeyPairName]\
 example - 1231231231.us-east-2.Mykey
 
 
@@ -114,7 +114,7 @@ netsh firewall set service RemoteAdmin enable
 - Microsoft Windows Server 2016 with SQL Server 2016 Standard
 - Microsoft Windows Server 2016 with SQL Server 2016 Enterprise
 
-# Debugging
+# Debugging & Troubleshooting
 * There are three main lambdas:
 	1. SafeHandler - Creates the safes for the solution and uploads the solution main key pair.
 	2. Elasticity - Onboard new instances to PAS.
@@ -153,11 +153,6 @@ git push origin my-new-feature
 2. Delete the CloudFormations in the following order:
 	- CyberArk-AOB-MultiRegion-CF-VaultEnvCreation
 	- CyberArk-AOB-MultiRegion-CF
-# Troubleshooting Tools 
-All Instance onboarding status is saved in a DynamoDB table that is located under :
-DynamoDB→ Tables → Instances   , Go to the Items tab
-All solution logs are written to CloudWatch , available under :
-CloudWatch → Logs , Search for your cloud formation stack name 
 
 
 # Licensing
