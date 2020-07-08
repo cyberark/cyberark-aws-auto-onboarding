@@ -75,7 +75,7 @@ Parameters:
     MinLength: '1'
   PVWAVerificationKeyFileName:
     Type: String
-    Description: name of the PVWA' CA public certificate stored in S3 (for verification purpose).
+    Description: name of the PVWA's CA public certificate stored in S3 (for verification purpose).
     Default: VerificationKeyName
   UnixSafeName:
     Type: String
