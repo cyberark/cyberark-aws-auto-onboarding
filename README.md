@@ -26,7 +26,7 @@ This solution requires the following:
 4. The CPM that manages the SSH keys must have a network connection to the target devices (ex: vpc peering)
 5. To connect to new instances, PSM must have a network connection to the target devices (ex: vpc peering)
 6. The expected maximum number of instances must be within the number of accounts license limits  
-7. PVWA configured with SSL (unless its a POC environment), and the certificate itself in `.crt` format.
+7. PVWA configured with SSL (unless its a POC environment).
 8. In the "UnixSSH" platform, set the "ChangeNotificationPeriod" value to 60 sec (this platform will be used for managing Unix accounts, and setting this parameter gives the instance time to boot before attempting to change the password) 
 9. In the "WinServerLocal" platform, set the "ChangeNotificationPeriod" value to 60 sec (this platform will be used for managing Unix accounts, and setting this parameter gives the instance time to boot before attempting to change the password) 
 10. Dedicated Vault user for the solution with the following authorizations (not Admin):
