@@ -36,7 +36,7 @@ class PvwaIntegration:
         self.url = url
         self.header = header
         try:
-            self.logger.info(f'Invoking get request url:{url} header: {header}', DEBUG_LEVEL_DEBUG)
+            self.logger.info(f'Invoking get request url:{url}, header: {header}', DEBUG_LEVEL_DEBUG)
             rest_response = requests.get(self.url, timeout=30, verify=self.certificate, headers=self.header)
         except Exception as e:
             self.logger.error(f"An error occurred on calling PVWA REST service: {str(e)}")
@@ -49,7 +49,7 @@ class PvwaIntegration:
         self.url = url
         self.header = header
         try:
-            self.logger.info(f'Invoking delete request url {url} , header: {header}', DEBUG_LEVEL_DEBUG)
+            self.logger.info(f'Invoking delete request url {url}, header: {header}', DEBUG_LEVEL_DEBUG)
             response = requests.delete(self.url, timeout=30, verify=self.certificate, headers=self.header)
         except Exception as e:
             self.logger.error(f'Failed to Invoke delete request: {str(e)}')
@@ -58,12 +58,12 @@ class PvwaIntegration:
 
 
     def call_rest_api_post(self, url, request, header):
-        self.logger.trace(url, request, header, caller_name='call_rest_api_post')
+        self.logger.trace(url, header, caller_name='call_rest_api_post')
         self.url = url
         self.request = request
         self.header = header
         try:
-            self.logger.info(f'Invoking post request url: {url} ,  request: {request} , header: {header}', DEBUG_LEVEL_DEBUG)
+            self.logger.info(f'Invoking post request url: {url} , header: {header}', DEBUG_LEVEL_DEBUG)
             rest_response = requests.post(self.url, data=self.request, timeout=30, verify=self.certificate, headers=self.header,
                                           stream=True)
         except Exception as e:
@@ -75,7 +75,7 @@ class PvwaIntegration:
     # PvwaIntegration:
     # performs logon to PVWA and return the session token
     def logon_pvwa(self, username, password, pvwa_url, connection_session_id):
-        self.logger.trace(username, password, pvwa_url, connection_session_id, caller_name='logon_pvwa')
+        self.logger.trace(pvwa_url, connection_session_id, caller_name='logon_pvwa')
         self.username = username
         self.password = password
         self.pvwa_url = pvwa_url

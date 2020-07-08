@@ -64,10 +64,10 @@ Resources:
 Parameters:
   SafeHandlerLambdaARN:
     Type: String
-    Description: ARN of SafeHandlerLambda. An output of first CloudFormation Templates
+    Description: ARN of SafeHandlerLambda. An output of first CloudFormation Templates (CyberArk-AOB-MultiRegion-CF)
   S3BucketWithVerificationKey:
     Type: String
-    Description: The S3 Bucket where the PVWA Verification Key resides
+    Description: The s3 bucket where the PVWA public Certificate is stored.
     Default: S3BucketName
   PvwaIP:
     Type: String
@@ -75,7 +75,7 @@ Parameters:
     MinLength: '1'
   PVWAVerificationKeyFileName:
     Type: String
-    Description: The name of the file in S3 Bucket that contains PVwA Verification Key.
+    Description: name of the PVWA' CA public certificate stored in S3 (for verification purpose).
     Default: VerificationKeyName
   UnixSafeName:
     Type: String
@@ -115,18 +115,18 @@ Parameters:
   KeyPairsSafe:
     Type: String
     Description: >-
-      Name of the Safe that will store all Key Pairs used by the solution. The
+      Name of the safe that will store all Key Pairs used by the solution. The
       deployment will fail if the safe already exist.
     AllowedPattern: '^[^\\:\*<>\"\.\|\/]*$'
     MinLength: '1'
     MaxLength: '28'
   KeyPairName:
     Type: String
-    Description: Name of the Key pair
+    Description: Name of the solution's default key pair
     MaxLength: '255'
   Environment:
     Type: String
-    Description: The type of environment the solution will be deployed in
+    Description: The type of environment the solution will be deployed in.
     Default: Production
     AllowedValues:
       - POC

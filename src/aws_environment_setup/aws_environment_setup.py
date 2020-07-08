@@ -26,7 +26,8 @@ def lambda_handler(event, context):
         if event['RequestType'] == 'Delete':
             aob_mode = get_aob_mode()
             logger.info('Delete request received')
-            if not delete_password_from_param_store(aob_mode):
+            delete_params = delete_password_from_param_store(aob_mode)
+            if not delete_params:
                 return cfnresponse.send(event, context, cfnresponse.FAILED,
                                         "Failed to delete 'AOB_Vault_Pass' from parameter store, see detailed error in logs", {},
                                         physical_resource_id)
@@ -212,7 +213,7 @@ def create_new_key_pair_on_aws(key_pair_name):
 
 def create_key_pair_in_vault(pvwa_integration_class, session, aws_key_name, private_key_value, pvwa_ip, safe_name,
                              aws_account_id, aws_region_name):
-    logger.trace(pvwa_integration_class, session, aws_key_name, private_key_value, pvwa_ip, safe_name, aws_account_id,
+    logger.trace(pvwa_integration_class, session, aws_key_name, pvwa_ip, safe_name, aws_account_id,
                  aws_region_name, caller_name='create_key_pair_in_vault')
     header = DEFAULT_HEADER
     header.update({"Authorization": session})

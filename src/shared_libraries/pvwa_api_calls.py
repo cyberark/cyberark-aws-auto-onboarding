@@ -10,7 +10,7 @@ logger = LogMechanism()
 
 def create_account_on_vault(session, account_name, account_password, store_parameters_class, platform_id, address,
                             instance_id, username, safe_name):
-    logger.trace(session, account_name, account_password, store_parameters_class, platform_id, address,
+    logger.trace(session, account_name, store_parameters_class, platform_id, address,
                  instance_id, username, safe_name, caller_name='create_account_on_vault')
     logger.info(f'Creating account in vault for {instance_id}')
     header = DEFAULT_HEADER
