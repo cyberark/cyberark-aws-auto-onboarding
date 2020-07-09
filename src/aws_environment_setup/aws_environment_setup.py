@@ -26,7 +26,8 @@ def lambda_handler(event, context):
         if event['RequestType'] == 'Delete':
             aob_mode = get_aob_mode()
             logger.info('Delete request received')
-            if not delete_password_from_param_store(aob_mode):
+            delete_params = delete_password_from_param_store(aob_mode)
+            if not delete_params:
                 return cfnresponse.send(event, context, cfnresponse.FAILED,
                                         "Failed to delete 'AOB_Vault_Pass' from parameter store, see detailed error in logs", {},
                                         physical_resource_id)
