@@ -75,7 +75,7 @@ class PvwaIntegration:
     # PvwaIntegration:
     # performs logon to PVWA and return the session token
     def logon_pvwa(self, username, password, pvwa_url, connection_session_id):
-        self.logger.trace(username, password, pvwa_url, connection_session_id, caller_name='logon_pvwa')
+        self.logger.trace(username, pvwa_url, connection_session_id, caller_name='logon_pvwa')
         self.username = username
         self.password = password
         self.pvwa_url = pvwa_url
