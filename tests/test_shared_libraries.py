@@ -4,11 +4,10 @@ from unittest.mock import MagicMock
 from unittest.mock import patch
 import sys
 import boto3
-from boto.ec2.connection import EC2Connection
 import requests
 import json
 from moto import mock_ec2, mock_iam, mock_dynamodb2, mock_sts, mock_ssm
-sys.path.append('../shared_libraries')
+sys.path.append('../src/shared_libraries')
 import aws_services
 import kp_processing
 import instance_processing
@@ -154,11 +153,10 @@ class KpProcessingTest(unittest.TestCase):
     def test_decrypt_password(self):
         print('test_decrypt_password')
         command = kp_processing.decrypt_password(
-            ["echo", str.strip('V2KFpNbdQM5x90z7KCSqU2Iw8t/kA+8WhWpngtbrZ737Jax9Hj6RBPqyB+qrT0kpVAiAJ9+oXHIU8d7y2OlGdYWjPGB/FFJ'\
+            'V2KFpNbdQM5x90z7KCSqU2Iw8t/kA+8WhWpngtbrZ737Jax9Hj6RBPqyB+qrT0kpVAiAJ9+oXHIU8d7y2OlGdYWjPGB/FFJ'\
             'aVDcOsX+kwQBzeVswv+aD2GgnhvoSRX3feanN7jjbBOLpE+BpqV6a97qYiDSEoEU6l22Vh1TVlMUQ+rytt7c8oUnT3s/nJc01xFSmE1tVx6QNCeJLY'\
             'yfAJCkj6dWYJj7SxpReuBuqmyqvGiPe3pEFDqpl+Tvkz2qg62f8WYWv2dYdQ+/NLFL6nwEKQnyQjBfYoZfmrJev9kejHqLf3zjNWxYK+L62F8g1gZS'\
-            'TNkB3U4IDrg/vLiB4YQ=='), "|", "base64", "--decode", "|", "openssl", "rsautl", "-decrypt",
-             "-inkey", "/tmp/pemValue.pem"], True)
+            'TNkB3U4IDrg/vLiB4YQ==')
         self.assertEqual('Ziw$B-HC-9cLEZ?ypza$PUdWQdliW-i9', command[1])
 
 @mock_iam
@@ -386,7 +384,6 @@ def func_create_instance(ec2_class, ec2_object):
     @patch('instance_processing.get_instance_password_data', return_value='StrongPassword')
     @patch('kp_processing.convert_pem_to_ppk', return_value='VeryValue')
     @patch('kp_processing.decrypt_password', mocky)
-    @patch('kp_processing.print_process_outputs_on_end', return_value='StrongPassword')
     @patch('aws_services.get_session_from_dynamo', return_value=['3', '4'])
     @patch('pvwa_integration.PvwaIntegration.logon_pvwa', return_value='asbhdsyadbasASDUASDUHB2312312')
     @patch('pvwa_api_calls.retrieve_account_id_from_account_name', return_value=False)
