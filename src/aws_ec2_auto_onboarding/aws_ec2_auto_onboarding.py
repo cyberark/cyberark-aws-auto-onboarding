@@ -10,8 +10,6 @@ from log_mechanism import LogMechanism
 DEBUG_LEVEL_DEBUG = 'debug' # Outputs all information
 logger = LogMechanism()
 pvwa_integration_class = PvwaIntegration()
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
 
 def lambda_handler(event, context):
     logger.trace(event, context, caller_name='lambda_handler')
