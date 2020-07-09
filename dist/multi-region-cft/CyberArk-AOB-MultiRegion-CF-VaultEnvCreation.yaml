@@ -4,7 +4,7 @@ Resources:
     Type: 'AWS::SSM::Parameter'
     Properties:
       Name: AOB_PVWA_IP
-      Description: The IP of the PVWA
+      Description: The IP of the PVWA.
       Type: String
       Value: !Ref PvwaIP
   ParameterDebugLevel:
@@ -18,14 +18,14 @@ Resources:
     Type: 'AWS::SSM::Parameter'
     Properties:
       Name: AOB_Unix_Safe_Name
-      Description: Safe name for UNIX accounts
+      Description: Safe name for UNIX accounts.
       Type: String
       Value: !Ref UnixSafeName
   ParameterWindowsAccountsSafe:
     Type: 'AWS::SSM::Parameter'
     Properties:
       Name: AOB_Windows_Safe_Name
-      Description: Safe name for Windows accounts
+      Description: Safe name for Windows accounts.
       Type: String
       Value: !Ref WindowsSafeName
   ParameterUsername:
@@ -38,7 +38,7 @@ Resources:
     Type: 'AWS::SSM::Parameter'
     Properties:
       Name: AOB_KeyPair_Safe
-      Description: Safe where all the AWS KeyPair are stored
+      Description: Safe where all the AWS key-pairs are stored.
       Type: String
       Value: !Ref KeyPairsSafe
   CreateSafe:
@@ -64,7 +64,7 @@ Resources:
 Parameters:
   SafeHandlerLambdaARN:
     Type: String
-    Description: ARN of SafeHandlerLambda. An output of first CloudFormation Templates (CyberArk-AOB-MultiRegion-CF)
+    Description: ARN of SafeHandlerLambda. An output of first CloudFormation Templates (CyberArk-AOB-MultiRegion-CF).
   S3BucketWithVerificationKey:
     Type: String
     Description: The s3 bucket where the PVWA public Certificate is stored.
@@ -75,7 +75,7 @@ Parameters:
     MinLength: '1'
   PVWAVerificationKeyFileName:
     Type: String
-    Description: name of the PVWA's CA public certificate stored in S3 (for verification purpose).
+    Description: Name of the PVWA's CA public certificate stored in S3 (for verification purpose).
     Default: VerificationKeyName
   UnixSafeName:
     Type: String
@@ -104,25 +104,25 @@ Parameters:
     MinLength: '1'
   CPMNameUnixSafe:
     Type: String
-    Description: Name of the CPM manager to manage Unix Accounts Safe
+    Description: Name of the CPM manager to manage Unix Accounts Safe.
     MinLength: '1'
     Default: PasswordManager
   CPMNameWindowsSafe:
     Type: String
-    Description: Name of the CPM manager to manage Windows Accounts Safe
+    Description: Name of the CPM manager to manage Windows Accounts Safe.
     MinLength: '1'
     Default: PasswordManager
   KeyPairsSafe:
     Type: String
     Description: >-
-      Name of the safe that will store all Key Pairs used by the solution. The
+      Name of the safe that will store all key-pairs used by the solution. The
       deployment will fail if the safe already exist.
     AllowedPattern: '^[^\\:\*<>\"\.\|\/]*$'
     MinLength: '1'
     MaxLength: '28'
   KeyPairName:
     Type: String
-    Description: Name of the solution's default key pair
+    Description: Name of the solution's default key-pair.
     MaxLength: '255'
   Environment:
     Type: String
