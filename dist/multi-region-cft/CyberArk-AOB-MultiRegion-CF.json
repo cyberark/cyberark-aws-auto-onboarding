@@ -4,7 +4,7 @@
     "ElasticityLambdaPolicy": {
       "Type": "AWS::IAM::ManagedPolicy",
       "Properties": {
-        "Description": "Policy for Elasticity Lambda",
+        "Description": "Policy for Elasticity Lambda.",
         "PolicyDocument": {
           "Version": "2012-10-17",
           "Statement": [
@@ -176,7 +176,7 @@
     "SafehandlingLambdaPolicy": {
       "Type": "AWS::IAM::ManagedPolicy",
       "Properties": {
-        "Description": "Policy for SafeHandler Lambda",
+        "Description": "Policy for SafeHandler Lambda.",
         "PolicyDocument": {
           "Version": "2012-10-17",
           "Statement": [
@@ -318,7 +318,7 @@
             ]
           }
         },
-        "Description": "Lambda with permissions to get/set parameters on parameter store",
+        "Description": "Lambda with permissions to get/set parameters on parameter store.",
         "FunctionName": "TrustMechanism",
         "Handler": "index.lambda_handler",
         "Role": {
@@ -355,7 +355,7 @@
           },
           "S3Key": "aws_ec2_auto_onboarding.zip"
         },
-        "Description": "Main Auto Onboarding Lambda",
+        "Description": "Main Auto Onboarding Lambda.",
         "Handler": "aws_ec2_auto_onboarding.lambda_handler",
         "Role": {
           "Fn::GetAtt": [
@@ -842,7 +842,7 @@
           },
           "S3Key": "aws_environment_setup.zip"
         },
-        "Description": "Environment initial setup Lambda",
+        "Description": "Environment initial setup Lambda.",
         "Handler": "aws_environment_setup.lambda_handler",
         "Role": {
           "Fn::GetAtt": [
@@ -875,7 +875,7 @@
     "ElasticityLambdaSecurityGroup": {
       "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
-        "GroupDescription": "Security group for elasticity lambda",
+        "GroupDescription": "Security group for elasticity lambda.",
         "VpcId": {
           "Ref": "ComponentsVPC"
         }
@@ -901,7 +901,7 @@
     "TrustMechanismSecurityGroup": {
       "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
-        "GroupDescription": "Security group for TrustMechanism lambda",
+        "GroupDescription": "Security group for TrustMechanism lambda.",
         "VpcId": {
           "Ref": "ComponentsVPC"
         }
@@ -1000,19 +1000,19 @@
   "Parameters": {
     "LambdasBucket": {
       "Type": "String",
-      "Description": "Name of the bucket containing the solution zip files. The bucket must be in the same region as the solution"
+      "Description": "Name of the bucket containing the solution zip files. The bucket must be in the same region as the solution."
     },
     "ComponentsSubnet": {
       "Type": "AWS::EC2::Subnet::Id",
-      "Description": "Subnet where the solution will be deployed. The subnet must have access to the PVWA"
+      "Description": "Subnet where the solution will be deployed. The subnet must have access to the PVWA."
     },
     "ComponentsVPC": {
       "Type": "AWS::EC2::VPC::Id",
-      "Description": "VPC where the solution will be deployed. The VPC must contain a subnet with access to the PVWA"
+      "Description": "VPC where the solution will be deployed. The VPC must contain a subnet with access to the PVWA."
     },
     "PVWASG": {
       "Type": "AWS::EC2::SecurityGroup::Id",
-      "Description": "Security Group of the PVWA"
+      "Description": "Security Group of the PVWA."
     }
   },
   "Conditions": {},
