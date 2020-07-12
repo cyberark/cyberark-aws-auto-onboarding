@@ -4,7 +4,7 @@ success=true
 BTF=$(python3 dynamo_on_boarded.py $1)
 echo "[INFO] There are $BTF successful records in dynamo table"
 terraform init
-terraform apply -auto-approve -var="region_main=$1" -var="region_sec=$2" -var="subnet_id_main=$3" -var="subnet_id_sec=$4" -var="key_pair_main=$5" -var="key_pair_sec=$6"
+terraform apply -auto-approve -parallelism=500 -var="region_main=$1" -var="region_sec=$2" -var="subnet_id_main=$3" -var="subnet_id_sec=$4" -var="key_pair_main=$5" -var="key_pair_sec=$6"
 echo "[INFO] Finish deploy terraform"
 ATF=$(terraform state list | grep aws_instance | wc -l)
 echo "[INFO] terraform deployed $ATF instances"
@@ -24,7 +24,7 @@ do
 	sleep 10
 	CS=$(python3 dynamo_on_boarded.py $1)
 done
-terraform destroy -auto-approve -var="region_main=$1" -var="region_sec=$2" -var="subnet_id_main=$3" -var="subnet_id_sec=$4" -var="key_pair_main=$5" -var="key_pair_sec=$6"
+terraform destroy -auto-approve -parallelism=500 -var="region_main=$1" -var="region_sec=$2" -var="subnet_id_main=$3" -var="subnet_id_sec=$4" -var="key_pair_main=$5" -var="key_pair_sec=$6"
 CS=$(python3 dynamo_on_boarded.py $1)
 i=0
 while [ $CS -gt $BTF ]
