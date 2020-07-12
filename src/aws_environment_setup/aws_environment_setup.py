@@ -279,7 +279,7 @@ def save_verification_key_to_param_store(s3_bucket_name, verification_key_name):
 
 
 def add_param_to_parameter_store(value, parameter_name, parameter_description):
-    logger.trace(value, parameter_name, parameter_description, caller_name='add_param_to_parameter_store')
+    logger.trace(parameter_name, parameter_description, caller_name='add_param_to_parameter_store')
     try:
         logger.info(f'Adding parameter {parameter_name} to parameter store')
         ssm_client = boto3.client('ssm')
