@@ -12,7 +12,7 @@ logger = LogMechanism()
 pvwa_integration_class = PvwaIntegration()
 
 def lambda_handler(event, context):
-    logger.trace(event, context, caller_name='lambda_handler')
+    logger.trace(context, caller_name='lambda_handler')
     logger.info('Parsing event')
     try:
         message = event["Records"][0]["Sns"]["Message"]
