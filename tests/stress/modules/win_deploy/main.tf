@@ -10,6 +10,11 @@ resource "aws_instance" "this" {
   subnet_id         = data.aws_subnet.this.id
   key_name          = var.key_pair
   get_password_data = true
+  user_data = <<-EOF
+    <script>
+    netsh firewall set service RemoteAdmin enable
+    </script>
+  EOF
 
   tags = {
     "Terraform" : "true"
