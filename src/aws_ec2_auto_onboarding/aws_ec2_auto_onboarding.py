@@ -82,7 +82,7 @@ def elasticity_function(instance_id, action_type, event_account_id, event_region
             # Save PVWA Verification key in /tmp folder
             logger.info('Saving verification key')
             crt = open("/tmp/server.crt", "w+")
-            crt.write(store_parameters_class.pvwaVerificationKey)
+            crt.write(store_parameters_class.pvwa_verification_key)
             crt.close()
         pvwa_connection_number, session_guid = aws_services.get_session_from_dynamo()
         if not pvwa_connection_number:
