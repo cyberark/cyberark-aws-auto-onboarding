@@ -1,5 +1,3 @@
-// @Library('PipelineUtilities')
-
 pipeline {
     agent {
         node {
@@ -106,9 +104,6 @@ pipeline {
             }
           }
         }
-        // stage('Sign Artifact') {
-        //   signArtifacts patterns: ["*.zip"]
-        // }
         stage('Copy zips') {
           steps {
             sh '''
