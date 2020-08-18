@@ -106,9 +106,9 @@ pipeline {
             }
           }
         }
-        stage('Sign Artifact') {
-          signArtifacts patterns: ["*.zip"]
-        }
+        // stage('Sign Artifact') {
+        //   signArtifacts patterns: ["*.zip"]
+        // }
         stage('Copy zips') {
           steps {
             sh '''
