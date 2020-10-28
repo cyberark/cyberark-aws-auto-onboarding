@@ -21,6 +21,13 @@ Resources:
       Description: Safe name for UNIX accounts.
       Type: String
       Value: !Ref UnixSafeName
+  ParameterUnixAccountsPlatform:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: AOB_Unix_Platform_Name
+      Description: Platform name for UNIX accounts
+      Type: String
+      Value: !Ref UnixPlatformName
   ParameterWindowsAccountsSafe:
     Type: 'AWS::SSM::Parameter'
     Properties:
@@ -28,6 +35,13 @@ Resources:
       Description: Safe name for Windows accounts.
       Type: String
       Value: !Ref WindowsSafeName
+  ParameterWindowsAccountsPlatform:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: AOB_Windows_Platform_Name
+      Description: Platform name for Windows accounts
+      Type: String
+      Value: !Ref WindowsPlatformName
   ParameterUsername:
     Type: 'AWS::SSM::Parameter'
     Properties:
@@ -48,7 +62,9 @@ Resources:
       ServiceToken: !Ref SafeHandlerLambdaARN
       PVWAIP: !Ref PvwaIP
       UnixSafeName: !Ref UnixSafeName
+      UnixPlatformName: !Ref UnixPlatformName
       WindowsSafeName: !Ref WindowsSafeName
+      WindowsPlatformName: !Ref WindowsPlatformName
       Username: !Ref VaultUser
       Password: !Ref VaultPassword
       CPMUnix: !Ref CPMNameUnixSafe
@@ -85,11 +101,27 @@ Parameters:
     AllowedPattern: '^[^\\:\*<>\"\.\|\/]*$'
     MinLength: '1'
     MaxLength: '28'
+  UnixPlatformName:
+    Type: String
+    Description: >-
+      Name of the Platform assigned to all the Unix accounts created by the
+      solution. The platform must exist prior to onboarding accounts.
+    AllowedPattern: '^[^\\:\*<>\"\.\|\/]*$'
+    MinLength: '1'
+    MaxLength: '28'
   WindowsSafeName:
     Type: String
     Description: >-
       Name of the Safe that will store all the Windows accounts created by the
       solution. The deployment will fail if the safe already exist.
+    AllowedPattern: '^[^\\:\*<>\"\.\|\/]*$'
+    MinLength: '1'
+    MaxLength: '28'
+  WindowsPlatformName:
+    Type: String
+    Description: >-
+      Name of the Platform assigned to all the Local Windows accounts created by the
+      solution. The platform must exist prior to onboarding accounts.
     AllowedPattern: '^[^\\:\*<>\"\.\|\/]*$'
     MinLength: '1'
     MaxLength: '28'
@@ -153,8 +185,10 @@ Metadata:
           - VaultUser
           - VaultPassword
           - UnixSafeName
+          - UnixPlatformName
           - CPMNameUnixSafe
           - WindowsSafeName
+          - WindowsPlatformName
           - CPMNameWindowsSafe
           - KeyPairsSafe
           - EnableDebugLevel
@@ -175,8 +209,12 @@ Metadata:
         default: 'Verification Key File Name:'
       UnixSafeName:
         default: 'Target Safe for Unix accounts:'
+      UnixPlatformName:
+          default: 'Target Platform for Unix accounts:'
       WindowsSafeName:
         default: 'Target Safe for Windows accounts:'
+      WindowsPlatformName:
+          default: 'Target Platform for Windows accounts:'
       VaultUser:
         default: 'Vault user name:'
       VaultPassword:

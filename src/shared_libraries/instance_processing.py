@@ -89,7 +89,7 @@ def create_instance(instance_id, instance_details, store_parameters_class, log_n
         decrypted_password = kp_processing.decrypt_password(instance_password_data)
         aws_account_name = f'AWS.{instance_id}.Windows'
         instance_key = decrypted_password
-        platform = WINDOWS_PLATFORM
+        platform = store_parameters_class.windows_platform_name
         instance_username = ADMINISTRATOR
         safe_name = store_parameters_class.windows_safe_name
     else:
@@ -101,7 +101,7 @@ def create_instance(instance_id, instance_details, store_parameters_class, log_n
         trimmed_ppk_key = str(ppk_key).replace("\n", "\\n")
         instance_key = trimmed_ppk_key.replace("\r", "\\r")
         aws_account_name = f'AWS.{instance_id}.Unix'
-        platform = UNIX_PLATFORM
+        platform = store_parameters_class.unix_platform_name
         safe_name = store_parameters_class.unix_safe_name
         instance_username = get_os_distribution_user(instance_details['image_description'])
 
