@@ -1,0 +1,242 @@
+AWSTemplateFormatVersion: 2010-09-09
+Resources:
+  ExecutionRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      RoleName: CyberArkAOBStakSetExecutionRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS:
+                - !Ref 'AWS::AccountId'
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: CyberArkCreateStackSet
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'events:DescribeRule'
+                  - 'sns:GetTopicAttributes'
+                  - 'sns:DeleteTopic'
+                  - 'events:PutRule'
+                  - 'sns:CreateTopic'
+                  - 'sns:Unsubscribe'
+                  - 'sns:SetTopicAttributes'
+                  - 'cloudformation:DescribeStacks'
+                  - 'events:PutTargets'
+                  - 'events:DeleteRule'
+                  - 'sns:Publish'
+                  - 'cloudformation:CreateStack'
+                  - 'cloudformation:DeleteStack'
+                  - 'events:RemoveTargets'
+                  - 'sns:Subscribe'
+                Resource: '*'
+  AdministrationRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      RoleName: CyberArkAOBStakSetAdminRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudformation.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: AssumeRole-CyberArkAOBStakSetExecutionRole
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'sts:AssumeRole'
+                Resource:
+                  - 'arn:*:iam::*:role/CyberArkAOBStakSetExecutionRole'
+    DependsOn:
+      - ExecutionRole
+  AutoOnBoardStep1:
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      TemplateURL: !Sub >-
+        https://s3-${AWS::Region}.amazonaws.com/${S3Bucket}/CyberArk-AOB-MultiRegion-CF.yaml
+      Parameters:
+        LambdasBucket: !Ref S3Bucket
+        ComponentsSubnet: !Ref ComponentsSubnet
+        ComponentsVPC: !Ref ComponentsVPC
+        PVWASG: !Ref PVWASG
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 175d02d8-6b42-43fa-9974-b18c1e5166e1
+  AutoOnBoardStep2:
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      TemplateURL: !Sub >-
+        https://s3-${AWS::Region}.amazonaws.com/${S3Bucket}/CyberArk-AOB-MultiRegion-CF-VaultEnvCreation.yaml
+      Parameters:
+        SafeHandlerLambdaARN: !GetAtt AutoOnBoardStep1.Outputs.SafeHandlerLambdaARN
+        S3BucketWithVerificationKey: !Ref S3Bucket
+        PvwaIP: !Ref PvwaIP
+        PVWAVerificationKeyFileName: !Ref PVWAVerificationKeyFileName
+        UnixSafeName: !Ref UnixSafeName
+        WindowsSafeName: !Ref WindowsSafeName
+        VaultUser: !Ref VaultUser
+        VaultPassword: !Ref VaultPassword
+        CPMNameUnixSafe: !Ref CPMNameUnixSafe
+        CPMNameWindowsSafe: !Ref CPMNameWindowsSafe
+        KeyPairsSafe: !Ref KeyPairsSafe
+        KeyPairName: !Ref KeyPairName
+        Environment: !Ref Environment
+        EnableDebugLevel: !Ref EnableDebugLevel
+    DependsOn:
+      - AutoOnBoardStep1
+  AutoOnBoardStep3:
+    Type: 'AWS::CloudFormation::StackSet'
+    Properties:
+      StackSetName: CyberArkAOBStackSet
+      AdministrationRoleARN: !Sub 'arn:aws:iam::${AWS::AccountId}:role/CyberArkAOBStakSetAdminRole'
+      ExecutionRoleName: CyberArkAOBStakSetExecutionRole
+      PermissionModel: SELF_MANAGED
+      TemplateURL: !Sub >-
+        https://s3-${AWS::Region}.amazonaws.com/${S3Bucket}/CyberArk-AOB-MultiRegion-StackSet.yaml
+      Parameters:
+        - ParameterKey: LambdaARN
+          ParameterValue: !GetAtt AutoOnBoardStep1.Outputs.ElasticityLambdaARN
+      StackInstancesGroup:
+        - DeploymentTargets:
+            Accounts:
+              - !Sub '${AWS::AccountId}'
+          Regions:
+            - !Sub '${AWS::Region}'
+    DependsOn:
+      - AutoOnBoardStep1
+      - AutoOnBoardStep2
+      - AdministrationRole
+      - ExecutionRole      
+Parameters:
+  S3Bucket:
+    Type: String
+    Description: >-
+      Name of the bucket containing the solution zip files. The bucket must be
+      in the same region as the solution.
+  ComponentsSubnet:
+    Type: 'AWS::EC2::Subnet::Id'
+    Description: >-
+      Subnet where the solution will be deployed. The subnet must have access to
+      the PVWA.
+  ComponentsVPC:
+    Type: 'AWS::EC2::VPC::Id'
+    Description: >-
+      VPC where the solution will be deployed. The VPC must contain a subnet
+      with access to the PVWA.
+  PVWASG:
+    Type: 'AWS::EC2::SecurityGroup::Id'
+    Description: Security Group of the PVWA.
+  PvwaIP:
+    Type: String
+    Description: PVWA IP address or host name
+    MinLength: '1'
+  PVWAVerificationKeyFileName:
+    Type: String
+    Description: >-
+      Name of the PVWA's CA public certificate stored in S3 (for verification
+      purpose).
+    Default: VerificationKeyName
+  UnixSafeName:
+    Type: String
+    Description: >-
+      Name of the Safe that will store all the Unix accounts created by the
+      solution. The deployment will fail if the safe already exist.
+    AllowedPattern: '^[^\\:\*<>\"\.\|\/]*$'
+    MinLength: '1'
+    MaxLength: '28'
+  WindowsSafeName:
+    Type: String
+    Description: >-
+      Name of the Safe that will store all the Windows accounts created by the
+      solution. The deployment will fail if the safe already exist.
+    AllowedPattern: '^[^\\:\*<>\"\.\|\/]*$'
+    MinLength: '1'
+    MaxLength: '28'
+  VaultUser:
+    Type: String
+    Description: Vault user that will be used by the solution.
+    MinLength: '1'
+  VaultPassword:
+    Type: String
+    Description: Password of the Vault user.
+    NoEcho: true
+    MinLength: '1'
+  CPMNameUnixSafe:
+    Type: String
+    Description: Name of the CPM manager to manage Unix Accounts Safe.
+    MinLength: '1'
+    Default: PasswordManager
+  CPMNameWindowsSafe:
+    Type: String
+    Description: Name of the CPM manager to manage Windows Accounts Safe.
+    MinLength: '1'
+    Default: PasswordManager
+  KeyPairsSafe:
+    Type: String
+    Description: >-
+      Name of the safe that will store all key-pairs used by the solution. The
+      deployment will fail if the safe already exist.
+    AllowedPattern: '^[^\\:\*<>\"\.\|\/]*$'
+    MinLength: '1'
+    MaxLength: '28'
+  KeyPairName:
+    Type: String
+    Description: Name of the solution's default key-pair.
+    MaxLength: '255'
+  Environment:
+    Type: String
+    Description: The type of environment the solution will be deployed in.
+    Default: Production
+    AllowedValues:
+      - POC
+      - Production
+  EnableDebugLevel:
+    Type: String
+    Description: Choose the verbosity of output.
+    Default: Info
+    AllowedValues:
+      - Info
+      - Debug
+      - Trace
+Metadata:
+  'AWS::CloudFormation::Interface':
+    ParameterGroups:
+      - Label:
+          default: AWS parameters
+        Parameters:
+          - S3Bucket
+          - ComponentsVPC
+          - PVWASG
+          - ComponentsSubnet
+      - Label:
+          default: CyberArk parameters
+        Parameters:
+          - Environment
+          - PvwaIP
+          - S3BucketWithVerificationKey
+          - PVWAVerificationKeyFileName
+          - VaultUser
+          - VaultPassword
+          - UnixSafeName
+          - CPMNameUnixSafe
+          - WindowsSafeName
+          - CPMNameWindowsSafe
+          - KeyPairsSafe
+          - EnableDebugLevel
+      - Label:
+          default: 'Optional: Create new KeyPair for the solution:'
+        Parameters:
+          - KeyPairName
