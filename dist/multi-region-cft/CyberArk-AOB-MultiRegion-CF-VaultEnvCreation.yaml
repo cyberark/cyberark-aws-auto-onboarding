@@ -109,6 +109,7 @@ Parameters:
     AllowedPattern: '^[^\\:\*<>\"\.\|\/]*$'
     MinLength: '1'
     MaxLength: '28'
+    Default: UnixSSHKeys
   WindowsSafeName:
     Type: String
     Description: >-
@@ -125,6 +126,7 @@ Parameters:
     AllowedPattern: '^[^\\:\*<>\"\.\|\/]*$'
     MinLength: '1'
     MaxLength: '28'
+    Default: WinServerLocal
   VaultUser:
     Type: String
     Description: Vault user that will be used by the solution.

@@ -6,8 +6,6 @@ from pvwa_integration import PvwaIntegration
 from log_mechanism import LogMechanism
 
 DEBUG_LEVEL_DEBUG = 'debug' # Outputs all information
-UNIX_PLATFORM = "UnixSSHKeys"
-WINDOWS_PLATFORM = "WinServerLocal"
 ADMINISTRATOR = "Administrator"
 pvwa_integration_class = PvwaIntegration()
 logger = LogMechanism()
