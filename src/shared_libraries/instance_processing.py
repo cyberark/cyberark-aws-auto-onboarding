@@ -54,7 +54,7 @@ def get_instance_password_data(instance_id, solution_account_id, event_region, e
                                                 RoleSessionName="cross_acct_lambda")
             access_key = acct_b['Credentials']['AccessKeyId']
             secret_key = acct_b['Credentials']['SecretAccessKey']
-            session_token = acct_b['Credentials']['session_token']
+            session_token = acct_b['Credentials']['SessionToken']
 
             ec2_resource = boto3.client(
                 'ec2',
