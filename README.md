@@ -77,13 +77,13 @@ https://github.com/cyberark/pas-on-cloud/blob/master/aws/PAS-network-environment
 [https://github.com/cyberark/cyberark-aws-auto-onboarding/tree/master/dist](https://github.com/cyberark/cyberark-aws-auto-onboarding/tree/master/dist)
 
 2. Upload the solution to your S3 Bucket in the same region you want to deploy the solution.(* see note) 
-3. Deploy CyberArk-AOB-MultiRegion-CF.json.
-4. Deploy CyberArk-AOB-MultiRegion-CF-VaultEnvCreation.yaml.
-5. Deploy CyberArk-AOB-MultiRegion-StackSet.json.
-6. Upload the old/existing key pairs used to create instances in your AWS region to the Key Pair Safe in the Vault according to the following naming 
+3. Upload CyberArk-AOB-MultiRegion-CF.yaml, CyberArk-AOB-MultiRegion-CF-VaultEnvCreation.yaml, and CyberArk-AOB-MultiRegion-StackSet.yaml
+4. Deploy CyberArk-AOB-MultiRegion-NestedStack.yaml
+5. Upload the old/existing key pairs used to create instances in your AWS region to the Key Pair Safe in the Vault according to the following naming 
 convention:\
-[AWSAccount].[Region].[KeyPairName]\
-example - 1231231231.us-east-2.Mykey
+AWS.[AWSAccount].[Region].[KeyPairName]\
+example - AWS.1231231231.us-east-2.Mykey
+6. Using StackSet deploy to addtional regions if desired
 
 
 > ***Note:** Note: This solution must be installed in every AWS region. For each region, use a dedicated Vault user and make sure the Lambda VPC has network access to the PVWA.

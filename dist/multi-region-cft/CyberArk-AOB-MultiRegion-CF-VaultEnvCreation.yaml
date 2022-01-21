@@ -44,6 +44,11 @@ Resources:
   CreateSafe:
     Type: 'AWS::CloudFormation::CustomResource'
     Version: '1.0'
+    DeletionPolicy: Delete 
+    # To speed up removal update this line to "Retain"
+    # If using "Retain" you must manually remove the following items
+    # Remaining AWS_AOB SSM Paratmers
+    # DynamioDB table "Instances"
     Properties:
       ServiceToken: !Ref SafeHandlerLambdaARN
       PVWAIP: !Ref PvwaIP
@@ -191,32 +196,3 @@ Metadata:
         default: 'Key Pair name:'
       EnableDebugLevel:
         default: 'Error Verbosity Level:'
-Rules:
-  CheckVerificationParameters:
-    Assertions:
-      - Assert: !Or 
-          - !And 
-            - !Equals 
-              - !Ref Environment
-              - POC
-            - !And 
-              - !Equals 
-                - S3BucketName
-                - !Ref S3BucketWithVerificationKey
-              - !Equals 
-                - VerificationKeyName
-                - !Ref PVWAVerificationKeyFileName
-          - !And 
-            - !Equals 
-              - !Ref Environment
-              - Production
-            - !And 
-              - !Not 
-                - !Equals 
-                  - S3BucketName
-                  - !Ref S3BucketWithVerificationKey
-              - !Not 
-                - !Equals 
-                  - VerificationKeyName
-                  - !Ref PVWAVerificationKeyFileName
-        AssertDescription: Default values are only supported in POC mode
