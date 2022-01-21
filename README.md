@@ -29,14 +29,14 @@ This solution requires the following:
 
 1. The CyberArk PAS solution is installed on-prem / Cloud / hybrid with v9.10 or higher.
 2. The CyberArk license must include SSH key manager.
-3.  Network access from the Lambda VPC to CyberArk's PVWA.
+3. Network access from the Lambda VPC to CyberArk's PVWA.
 4. The CPM that manages the SSH keys must have a network connection to the target devices (for example, vpc peering).
 5. To connect to new instances, PSM must have a network connection to the target devices (for example, vpc peering).
 6. The expected maximum number of instances must be within the number of accounts license limits.
 7. PVWA is configured with SSL (unless its a POC environment).
-8. In the "UnixSSH" platform, set the "ChangeNotificationPeriod" value to 60 sec (this platform will be used for managing Unix accounts,
+8. A *Unix SSH Keys* Platform (UnixSSHKeys by default) with the "ChangeNotificationPeriod" value set to 60 sec (this platform will be used for managing Unix accounts,
 and setting this parameter gives the instance time to boot before attempting to change the password).
-9. In the "WinServerLocal" platform, set the "ChangeNotificationPeriod" value to 60 sec (this platform will be used for managing Unix accounts,
+9. A *Windows Local Accounts* Platform (WinServerLocal by default) with the "ChangeNotificationPeriod" value set to 60 sec (this platform will be used for managing Unix accounts,
 and setting this parameter gives the instance time to boot before attempting to change the password) .
 10. Dedicated Vault user for the solution with the following authorizations (not Admin):
 
