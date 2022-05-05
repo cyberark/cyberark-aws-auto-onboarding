@@ -8,27 +8,26 @@ pvwa_integration_class = PvwaIntegration()
 logger = LogMechanism()
 
 
-def create_account_on_vault(session, account_name, account_password, store_parameters_class, platform_id, address,
+def create_account_on_vault(session, account_name, account_password, secret_type, store_parameters_class, platform_id, address,
                             instance_id, username, safe_name):
     logger.trace(session, account_name, store_parameters_class, platform_id, address,
                  instance_id, username, safe_name, caller_name='create_account_on_vault')
     logger.info(f'Creating account in vault for {instance_id}')
     header = DEFAULT_HEADER
     header.update({"Authorization": session})
-    url = f"{store_parameters_class.pvwa_url}/WebServices/PIMServices.svc/Account"
+    url = f"{store_parameters_class.pvwa_url}/api/Accounts"
     data = f"""
     {{
-        "account" : {{
-            "safe":"{safe_name}",
+            "safeName":"{safe_name}",
             "platformID":"{platform_id}",
             "address":"{address}",
-            "accountName":"{account_name}",
-            "password":"{account_password}",
+            "secret":"{account_password}",
+            "secretType": "{secret_type}",
             "username":"{username}",
-            "disableAutoMgmt":"false"
-        }}
+            "name":"{account_name}"
     }}
     """
+    logger.trace(data, caller_name='create_account_on_vault')
     rest_response = pvwa_integration_class.call_rest_api_post(url, data, header)
     if rest_response.status_code == requests.codes.created:
         logger.info(f"Account for {instance_id} was successfully created")
@@ -74,16 +73,47 @@ def delete_account_from_vault(session, account_id, instance_id, pvwa_url):
     logger.info(f'Deleting {instance_id} from vault')
     header = DEFAULT_HEADER
     header.update({"Authorization": session})
-    rest_url = f"{pvwa_url}/WebServices/PIMServices.svc/Accounts/{account_id}"
+    rest_url = f"{pvwa_url}/api/Accounts/{account_id}"
     rest_response = pvwa_integration_class.call_rest_api_delete(rest_url, header)
 
     if rest_response.status_code != requests.codes.ok:
         if rest_response.status_code == requests.codes.not_found:
             logger.error(f"Failed to delete the account for {instance_id} from the vault. The account does not exists")
             raise Exception(f"Failed to delete the account for {instance_id} from the vault. The account does not exists")
-        logger.error(f"Failed to delete the account for {instance_id} from the vault. an error occurred")
-        raise Exception(f"Unknown status code received {rest_response.status_code}")
-
+        logger.error(f"Failed to delete the account for {instance_id} from the vault. An error occurred. Disabling automatic management and marking for manual deletion")
+        dataAddress = f"""
+        [
+            {{
+            "op": "replace",
+            "path": "/address",
+            "value": "TerminatedInAWS"
+             }}
+        ]
+        """
+        dataManagement = f"""
+        [
+        {{
+            "op": "replace",
+            "path": "/secretmanagement/manualmanagementreason",
+            "value": "Terminated in AWS"
+        }},
+        {{
+            "op": "replace",
+            "path": "/secretmanagement/automaticManagementEnabled",
+            "value": false
+        }}
+        ]
+        """
+        logger.trace(dataAddress, rest_url, caller_name='delete_account_from_vault_dataAddress')
+        rest_response_dataAddress = pvwa_integration_class.call_rest_api_patch(rest_url, dataAddress, header)
+        if rest_response_dataAddress.status_code != requests.codes.ok:
+            logger.error(f"Failed to delete and update the account for {instance_id} from the vault. Manual removal required")
+            raise Exception(f"rest_response_dataAddress: Unknown status code received {rest_response_dataAddress.status_code} {rest_response_dataAddress.text}")
+        logger.trace(dataManagement, rest_url, caller_name='delete_account_from_vault_dataManagement')
+        rest_response_dataManagement = pvwa_integration_class.call_rest_api_patch(rest_url, dataManagement, header)
+        if rest_response_dataManagement.status_code != requests.codes.ok:
+            logger.error(f"Failed to delete and update the account for {instance_id} from the vault. Manual removal required")
+            raise Exception(f"rest_response_dataManagement: Unknown status code received {rest_response_dataManagement.status_code} {rest_response_dataManagement.text}")
     logger.info(f"The account for {instance_id} was successfully deleted")
     return True
 
@@ -138,6 +168,7 @@ def retrieve_account_id_from_account_name(session, account_name, safe_name, inst
         # if response received, check account is not empty {"Count": 0,"accounts": []}
         if 'value' in rest_response.json() and rest_response.json()["value"]:
             parsed_json_response = rest_response.json()['value']
+            logger.trace(parsed_json_response, caller_name='retrieve_account_id_from_account_name')
             return filter_get_accounts_result(parsed_json_response, instance_id)
         logger.info(f'No match for account: {account_name}')
         return False

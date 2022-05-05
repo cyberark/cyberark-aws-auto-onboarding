@@ -36,11 +36,7 @@ def lambda_handler(event, context):
 
         if event['RequestType'] == 'Create':
             logger.info('Create request received')
-            request_unix_cpm_name = event['ResourceProperties']['CPMUnix']
-            request_windows_cpm_name = event['ResourceProperties']['CPMWindows']
             request_username = event['ResourceProperties']['Username']
-            request_unix_safe_name = event['ResourceProperties']['UnixSafeName']
-            request_windows_safe_name = event['ResourceProperties']['WindowsSafeName']
             request_pvwa_ip = event['ResourceProperties']['PVWAIP']
             request_password = event['ResourceProperties']['Password']
             request_key_pair_safe = event['ResourceProperties']['KeyPairSafe']
@@ -85,21 +81,6 @@ def lambda_handler(event, context):
                 return cfnresponse.send(event, context, cfnresponse.FAILED,
                                         "Failed to connect to PVWA, see detailed error in logs", {}, physical_resource_id)
 
-            is_safe_created = create_safe(pvwa_integration_class, request_unix_safe_name, request_unix_cpm_name, request_pvwa_ip,
-                                          pvwa_session_id, 1)
-            if not is_safe_created:
-                return cfnresponse.send(event, context, cfnresponse.FAILED,
-                                        f"Failed to create the Safe {request_unix_safe_name}, see detailed error in logs",
-                                        {}, physical_resource_id)
-
-            is_safe_created = create_safe(pvwa_integration_class, request_windows_safe_name, request_windows_cpm_name,
-                                          request_pvwa_ip, pvwa_session_id, 1)
-
-            if not is_safe_created:
-                return cfnresponse.send(event, context, cfnresponse.FAILED,
-                                        f"Failed to create the Safe {request_windows_safe_name}, see detailed error in logs",
-                                        {}, physical_resource_id)
-
             if not create_session_table():
                 return cfnresponse.send(event, context, cfnresponse.FAILED,
                                         "Failed to create 'Sessions' table in DynamoDB, see detailed error in logs",
@@ -138,7 +119,6 @@ def lambda_handler(event, context):
                                         f"{request_key_pair_safe}. see detailed error in logs", {}, physical_resource_id)
 
             return cfnresponse.send(event, context, cfnresponse.SUCCESS, None, {}, physical_resource_id)
-
     except Exception as e:
         logger.error(f"Exception occurred:{str(e)}:")
         return cfnresponse.send(event, context, cfnresponse.FAILED, f"Exception occurred: {str(e)}", {})
@@ -155,20 +135,18 @@ def create_safe(pvwa_integration_class, safe_name, cpm_name, pvwa_ip, session_id
                  caller_name='create_safe')
     header = DEFAULT_HEADER
     header.update({"Authorization": session_id})
-    create_safe_url = f"https://{pvwa_ip}/PasswordVault/WebServices/PIMServices.svc/Safes"
+    create_safe_url = f"https://{pvwa_ip}/PasswordVault/API/Safes/"
     # Create new safe, default number of days retention is 7, unless specified otherwise
     data = f"""
             {{
-            "safe":{{
                 "SafeName":"{safe_name}",
                 "Description":"",
                 "OLACEnabled":false,
                 "ManagingCPM":"{cpm_name}",
                 "NumberOfDaysRetention":"{number_of_days_retention}"
-              }}
             }}
             """
-
+    logger.trace(data,caller_name='create_safe')
     for i in range(0, 3):
         create_safe_rest_response = pvwa_integration_class.call_rest_api_post(create_safe_url, data, header)
 
@@ -225,18 +203,20 @@ def create_key_pair_in_vault(pvwa_integration_class, session, aws_key_name, priv
     unique_user_name = f"AWS.{aws_account_id}.{aws_region_name}.{aws_key_name}"
     logger.info(f"Creating account with username:{unique_user_name}")
 
-    url = f"https://{pvwa_ip}/PasswordVault/WebServices/PIMServices.svc/Account"
+    url = f"https://{pvwa_ip}/PasswordVault/api/Accounts"
     data = f"""
             {{
-              "account" : {{
-                  "safe":"{safe_name}",
+                  "safeName":"{safe_name}",
                   "platformID":"UnixSSHKeys",
-                  "address":1.1.1.1,
-                  "password":"{trimmed_pem_key}",
+                  "address":"1.1.1.1",
+                  "secretType": "key",
+                  "secret":"{trimmed_pem_key}",
                   "username":"{unique_user_name}",
-                  "disableAutoMgmt":"true",
-                  "disableAutoMgmtReason":"Unmanaged account"
-              }}
+                  "name":" "{unique_user_name}",
+                  "secretManagement": {{
+                    "automaticManagementEnabled": false,
+                    "manualManagementReason": "AWS Key Pair"
+                   }}
             }}
         """
     rest_response = pvwa_integration_class.call_rest_api_post(url, data, header)

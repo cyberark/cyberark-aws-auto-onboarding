@@ -70,6 +70,20 @@ class PvwaIntegration:
             self.logger.error(f"Error occurred during POST request to PVWA: {str(e)}")
             return None
         return rest_response
+    
+    def call_rest_api_patch(self, url, request, header):
+        self.logger.trace(url, header, caller_name='call_rest_api_patch')
+        self.url = url
+        self.request = request
+        self.header = header
+        try:
+            self.logger.info(f'Invoking PATCH request url: {url} , header: {header}', DEBUG_LEVEL_DEBUG)
+            rest_response = requests.patch(self.url, data=self.request, timeout=30, verify=self.certificate, headers=self.header,
+                                          stream=True)
+        except Exception as e:
+            self.logger.error(f"Error occurred during PATCH request to PVWA: {str(e)}")
+            return None
+        return rest_response
 
 
     # PvwaIntegration:
@@ -81,12 +95,12 @@ class PvwaIntegration:
         self.pvwa_url = pvwa_url
         self.connection_session_id = connection_session_id
         self.logger.info('Logging to PVWA')
-        logon_url = f'{self.pvwa_url}/WebServices/auth/Cyberark/CyberArkAuthenticationService.svc/Logon'
+        logon_url = f'{self.pvwa_url}/API/auth/Cyberark/Logon'
         rest_log_on_data = f"""
                             {{
                                 "username": "{self.username}",
                                 "password": "{self.password}",
-                                "connectionNumber": "{self.connection_session_id}"
+                                "concurrentSession": "True"
                             }}
                             """
         try:
@@ -98,9 +112,8 @@ class PvwaIntegration:
             self.logger.error("Connection to PVWA reached timeout")
             raise Exception("Connection to PVWA reached timeout")
         if rest_response.status_code == requests.codes.ok:
-            json_parsed_response = rest_response.json()
             self.logger.info("User authenticated")
-            return json_parsed_response['CyberArkLogonResult']
+            return rest_response.text.replace("\"","")
         self.logger.error(f"Authentication failed with response:\n{rest_response}")
         raise Exception("PVWA authentication failed")
 
@@ -112,7 +125,7 @@ class PvwaIntegration:
         self.logger.info('Logging off from PVWA')
         header = DEFAULT_HEADER
         header.update({"Authorization": self.connection_session_token})
-        log_off_url = f'{self.pvwa_url}/WebServices/auth/Cyberark/CyberArkAuthenticationService.svc/Logoff'
+        log_off_url = f'{self.pvwa_url}/API/Auth/Logoff'
         rest_log_off_data = ""
         try:
             rest_response = self.call_rest_api_post(log_off_url, rest_log_off_data, header)
@@ -120,7 +133,6 @@ class PvwaIntegration:
             return
 
         if rest_response.status_code == requests.codes.ok:
-            json_parsed_response = rest_response.json()
             self.logger.info("session logged off successfully")
             return True
         self.logger.error("Logoff failed")

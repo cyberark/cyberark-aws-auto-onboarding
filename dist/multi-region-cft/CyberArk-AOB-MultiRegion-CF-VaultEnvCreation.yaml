@@ -14,20 +14,6 @@ Resources:
       Description: Choose the log verbosity level.
       Type: String
       Value: !Ref EnableDebugLevel
-  ParameterUnixAccountsSafe:
-    Type: 'AWS::SSM::Parameter'
-    Properties:
-      Name: AOB_Unix_Safe_Name
-      Description: Safe name for UNIX accounts.
-      Type: String
-      Value: !Ref UnixSafeName
-  ParameterWindowsAccountsSafe:
-    Type: 'AWS::SSM::Parameter'
-    Properties:
-      Name: AOB_Windows_Safe_Name
-      Description: Safe name for Windows accounts.
-      Type: String
-      Value: !Ref WindowsSafeName
   ParameterUsername:
     Type: 'AWS::SSM::Parameter'
     Properties:
@@ -47,12 +33,8 @@ Resources:
     Properties:
       ServiceToken: !Ref SafeHandlerLambdaARN
       PVWAIP: !Ref PvwaIP
-      UnixSafeName: !Ref UnixSafeName
-      WindowsSafeName: !Ref WindowsSafeName
       Username: !Ref VaultUser
       Password: !Ref VaultPassword
-      CPMUnix: !Ref CPMNameUnixSafe
-      CPMWindows: !Ref CPMNameWindowsSafe
       KeyPairSafe: !Ref KeyPairsSafe
       KeyPairName: !Ref KeyPairName
       AWSRegionName: !Ref 'AWS::Region'
@@ -60,7 +42,7 @@ Resources:
       PVWAVerificationKeyFileName: !Ref PVWAVerificationKeyFileName
       S3BucketName: !Ref S3BucketWithVerificationKey
       Environment: !Ref Environment
-    DependsOn: [ParameterAWSKeyPairSafe, ParameterUsername, ParameterWindowsAccountsSafe, ParameterUnixAccountsSafe, ParameterDebugLevel, ParameterPVWA]
+    DependsOn: [ParameterAWSKeyPairSafe, ParameterUsername, ParameterDebugLevel, ParameterPVWA]
 Parameters:
   SafeHandlerLambdaARN:
     Type: String
@@ -77,22 +59,6 @@ Parameters:
     Type: String
     Description: Name of the PVWA's CA public certificate stored in S3 (for verification purpose).
     Default: VerificationKeyName
-  UnixSafeName:
-    Type: String
-    Description: >-
-      Name of the Safe that will store all the Unix accounts created by the
-      solution. The deployment will fail if the safe already exist.
-    AllowedPattern: '^[^\\:\*<>\"\.\|\/]*$'
-    MinLength: '1'
-    MaxLength: '28'
-  WindowsSafeName:
-    Type: String
-    Description: >-
-      Name of the Safe that will store all the Windows accounts created by the
-      solution. The deployment will fail if the safe already exist.
-    AllowedPattern: '^[^\\:\*<>\"\.\|\/]*$'
-    MinLength: '1'
-    MaxLength: '28'
   VaultUser:
     Type: String
     Description: Vault user that will be used by the solution.
@@ -102,16 +68,6 @@ Parameters:
     Description: Password of the Vault user.
     NoEcho: true
     MinLength: '1'
-  CPMNameUnixSafe:
-    Type: String
-    Description: Name of the CPM manager to manage Unix Accounts Safe.
-    MinLength: '1'
-    Default: PasswordManager
-  CPMNameWindowsSafe:
-    Type: String
-    Description: Name of the CPM manager to manage Windows Accounts Safe.
-    MinLength: '1'
-    Default: PasswordManager
   KeyPairsSafe:
     Type: String
     Description: >-
@@ -152,10 +108,6 @@ Metadata:
           - PVWAVerificationKeyFileName
           - VaultUser
           - VaultPassword
-          - UnixSafeName
-          - CPMNameUnixSafe
-          - WindowsSafeName
-          - CPMNameWindowsSafe
           - KeyPairsSafe
           - EnableDebugLevel
       - Label:
@@ -173,18 +125,10 @@ Metadata:
         default: 'PVWA IP/Host Name:'
       PVWAVerificationKeyFileName:
         default: 'Verification Key File Name:'
-      UnixSafeName:
-        default: 'Target Safe for Unix accounts:'
-      WindowsSafeName:
-        default: 'Target Safe for Windows accounts:'
       VaultUser:
         default: 'Vault user name:'
       VaultPassword:
         default: 'Vault password:'
-      CPMNameUnixSafe:
-        default: 'CPM name for managing Unix safe:'
-      CPMNameWindowsSafe:
-        default: 'CPM name for managing Windows safe:'
       KeyPairsSafe:
         default: 'Target Safe for the Key pairs:'
       KeyPairName:

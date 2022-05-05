@@ -3,10 +3,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [0.3.0] - 2022-05-05
+### Added
+- Added the ability to set Platform, Safe, and Username via EC2 Instance Tags; AOBPlatform, AOBSafe, AOBUsername
+
+### Changed
+- Fixed calls to PVWA to use v2 interface
+- Updated delete account command to account for more failures by updating address to show terminated and disabling password management
+- Updated Readme
+
 ## [0.2.0] - 2020-7-7
 ### Added
 - Log mechanism
-- POC mode (support no ssl for non produciton environments)
+- POC mode (support no ssl for non production environments)
 
 ## [0.1.2] - 2019-10-23
 
