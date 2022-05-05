@@ -234,7 +234,7 @@ class PvwaApiCallsTest(unittest.TestCase):
     def test_create_account_on_vault(self):
         ec2_class = EC2Details()
         method = 'create_account_on_vault'
-        parameters = ['1', 'my_account','password', ec2_class.sp_class, UNIX_PLATFORM, '1.1.1.1',
+        parameters = ['1', 'my_account','password','key', ec2_class.sp_class, UNIX_PLATFORM, '1.1.1.1',
                       INSTANCE_ID, 'user', 'safe']
         response = mock_pvwa_integration(method, parameters, 201)
         self.assertTrue(response)
@@ -242,7 +242,7 @@ class PvwaApiCallsTest(unittest.TestCase):
     def test_create_account_on_vault_exception(self):
         ec2_class = EC2Details()
         method = 'create_account_on_vault'
-        parameters = ['1', 'my_account','password', ec2_class.sp_class, UNIX_PLATFORM, '1.1.1.1',
+        parameters = ['1', 'my_account','password','key', ec2_class.sp_class, UNIX_PLATFORM, '1.1.1.1',
                       INSTANCE_ID, 'user', 'safe']
         response = mock_pvwa_integration(method, parameters, 404)
         self.assertFalse(response[0])

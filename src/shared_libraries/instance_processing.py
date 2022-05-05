@@ -6,9 +6,6 @@ from pvwa_integration import PvwaIntegration
 from log_mechanism import LogMechanism
 
 DEBUG_LEVEL_DEBUG = 'debug' # Outputs all information
-UNIX_PLATFORM = "UnixSSHKeys"
-WINDOWS_PLATFORM = "WinServerLocal"
-ADMINISTRATOR = "Administrator"
 pvwa_integration_class = PvwaIntegration()
 logger = LogMechanism()
 
@@ -18,12 +15,12 @@ def delete_instance(instance_id, session, store_parameters_class, instance_data,
     logger.info(f'Removing {instance_id} From AOB')
     instance_ip_address = instance_data["Address"]["S"]
     if instance_details['platform'] == "windows":
-        safe_name = store_parameters_class.windows_safe_name
-        instance_username = ADMINISTRATOR
+        safe_name = instance_details['AOBSafe']
+        instance_username = instance_details['AOBUsername']
     else:
-        safe_name = store_parameters_class.unix_safe_name
-        instance_username = get_os_distribution_user(instance_details['image_description'])
-    search_pattern = f"{instance_ip_address},{instance_username}"
+        safe_name = instance_details['AOBSafe']
+        instance_username = instance_details['AOBUsername']
+    search_pattern = f"{instance_ip_address} {instance_username}"
 
     instance_account_id = pvwa_api_calls.retrieve_account_id_from_account_name(session, search_pattern,
                                                                                safe_name, instance_id,
@@ -81,6 +78,13 @@ def create_instance(instance_id, instance_details, store_parameters_class, log_n
                     event_account_id, instance_account_password):
     logger.trace(instance_id, instance_details, store_parameters_class, log_name, solution_account_id, event_region,
                  event_account_id, caller_name='create_instance')
+    if not instance_details['AOBPlatform']:
+        raise Exception("AOBPlatform not set")
+    if not instance_details['AOBSafe']:
+        raise Exception("AOBSafe not set")
+    if not instance_details['AOBUsername']:
+        raise Exception("AOBUsername not set")
+
     logger.info(f'Adding {instance_id} to AOB')
     if instance_details['platform'] == "windows":  # Windows machine return 'windows' all other return 'None'
         logger.info('Windows platform detected')
@@ -89,9 +93,11 @@ def create_instance(instance_id, instance_details, store_parameters_class, log_n
         decrypted_password = kp_processing.decrypt_password(instance_password_data)
         aws_account_name = f'AWS.{instance_id}.Windows'
         instance_key = decrypted_password
-        platform = WINDOWS_PLATFORM
-        instance_username = ADMINISTRATOR
-        safe_name = store_parameters_class.windows_safe_name
+        secret_type = "password"
+        platform = instance_details['AOBPlatform']
+        safe_name = instance_details['AOBSafe']
+        instance_username = instance_details['AOBUsername']
+
     else:
         logger.info('Linux\\Unix platform detected')
         ppk_key = kp_processing.convert_pem_to_ppk(instance_account_password)
@@ -100,10 +106,11 @@ def create_instance(instance_id, instance_details, store_parameters_class, log_n
         # ppk_key contains \r\n on each row end, adding escape char '\'
         trimmed_ppk_key = str(ppk_key).replace("\n", "\\n")
         instance_key = trimmed_ppk_key.replace("\r", "\\r")
+        secret_type = "key"
         aws_account_name = f'AWS.{instance_id}.Unix'
-        platform = UNIX_PLATFORM
-        safe_name = store_parameters_class.unix_safe_name
-        instance_username = get_os_distribution_user(instance_details['image_description'])
+        platform = instance_details['AOBPlatform']
+        safe_name = instance_details['AOBSafe']
+        instance_username = instance_details['AOBUsername']
 
     # Check if account already exist - in case exist - just add it to DynamoDB
     print('pvwa_connection_number')
@@ -117,7 +124,7 @@ def create_instance(instance_id, instance_details, store_parameters_class, log_n
     if not session_token:
         return False
 
-    search_account_pattern = f"{instance_details['address']},{instance_username}"
+    search_account_pattern = f"{instance_details['address']} {instance_username}"
     print('retrieve_account_id_from_account_name')
     existing_instance_account_id = pvwa_api_calls.retrieve_account_id_from_account_name(session_token, search_account_pattern,
                                                                                         safe_name,
@@ -130,7 +137,7 @@ def create_instance(instance_id, instance_details, store_parameters_class, log_n
         return False
     else:
         account_created, error_message = pvwa_api_calls.create_account_on_vault(session_token, aws_account_name, instance_key,
-                                                                                store_parameters_class,
+                                                                                secret_type, store_parameters_class,
                                                                                 platform, instance_details['address'],
                                                                                 instance_id, instance_username, safe_name)
         if account_created:
@@ -149,25 +156,6 @@ def create_instance(instance_id, instance_details, store_parameters_class, log_n
     pvwa_integration_class.logoff_pvwa(store_parameters_class.pvwa_url, session_token)
     aws_services.release_session_on_dynamo(pvwa_connection_number, session_guid)
     return True
-
-
-def get_os_distribution_user(image_description):
-    logger.trace(image_description, caller_name='get_os_distribution_user')
-    if "centos" in image_description.lower():
-        linux_username = "centos"
-    elif "ubuntu" in image_description.lower():
-        linux_username = "ubuntu"
-    elif "debian" in image_description.lower():
-        linux_username = "admin"
-    elif "fedora" in image_description.lower():
-        linux_username = "fedora"
-    elif "opensuse" in image_description.lower():
-        linux_username = "root"
-    else:
-        linux_username = "ec2-user"
-
-    return linux_username
-
 
 class OnBoardStatus:
     on_boarded = "on boarded"
