@@ -86,7 +86,8 @@ example - AWS.1231231231.us-east-2.Mykey
 > ***Note:** Note: This solution must be installed in every AWS region. For each region, use a dedicated Vault user and make sure the Lambda VPC has network access to the PVWA.
 
 # Usage
-1. Set the tags on the EC2 instance. The default names are but can be changed when created. AOB_Username, AOB_Safe, AOB_Platform
+1. Set the tags on the EC2 instance. The default names are; AOB_Username, AOB_Safe, AOB_Platform
+	These tags can be changed when "CyberArk-AOB-MultiRegion-CF-VaultEnvCreation.yaml" is run.
 2. Launch or restart the EC2 instance.
 3. On termination the account will be deleted automatically if password based or if SSH Key based it will have it's address updated and automatic password management disabled.
 
