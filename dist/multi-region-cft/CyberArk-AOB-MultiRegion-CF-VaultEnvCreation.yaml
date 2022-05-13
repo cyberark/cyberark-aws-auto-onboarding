@@ -68,6 +68,21 @@ Parameters:
     Description: Password of the Vault user.
     NoEcho: true
     MinLength: '1'
+  EC2UsernameTag:
+    Type: String
+    Default: AOB_Username
+    Description: EC2 Instance tag that holds the username to vault
+    MinLength: '1'
+  EC2SafeTag:
+    Type: String
+    Default: AOB_Safe
+    Description: EC2 Instance tag that holds the safe that the account should be vaulted in
+    MinLength: '1'
+  EC2PlatformTag:
+    Type: String
+    Default: AOB_Platform
+    Description: EC2 Instance tag that holds the platform that the account should be attached to
+    MinLength: '1'
   KeyPairsSafe:
     Type: String
     Description: >-

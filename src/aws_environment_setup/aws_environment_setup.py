@@ -46,10 +46,30 @@ def lambda_handler(event, context):
             request_s3_bucket_name = event['ResourceProperties']['S3BucketName']
             request_verification_key_name = event['ResourceProperties']['PVWAVerificationKeyFileName']
             aob_mode = event['ResourceProperties']['Environment']
+            EC2UsernameTag = event['ResourceProperties']['EC2UsernameTag']
+            EC2SafeTag = event['ResourceProperties']['EC2SafeTag']
+            EC2PlatformTag = event['ResourceProperties']['EC2PlatformTag']
 
+            logger.info('Adding AOB_Safe to parameter store', DEBUG_LEVEL_DEBUG)
+            is_AOB_Safe_saved = add_param_to_parameter_store_string(EC2SafeTag, "AOB_Safe", "Vault Password")
+            if not is_AOB_Safe_saved:  # if AOB_Safe failed to be saved
+                return cfnresponse.send(event, context, cfnresponse.FAILED,
+                                        "Failed to create AOB_Safe in Parameter Store", {}, physical_resource_id)
 
+            logger.info('Adding AOB_Username to parameter store', DEBUG_LEVEL_DEBUG)
+            is_AOB_Username_saved = add_param_to_parameter_store_secure(EC2UsernameTag, "AOB_Username", "Vault Password")
+            if not is_AOB_Username_saved:  # if AOB_Username failed to be saved
+                return cfnresponse.send(event, context, cfnresponse.FAILED,
+                                        "Failed to create AOB_Username in Parameter Store", {}, physical_resource_id)
+
+            logger.info('Adding AOB_Platform to parameter store', DEBUG_LEVEL_DEBUG)
+            is_AOB_Platform_saved = add_param_to_parameter_store_secure(EC2PlatformTag, "AOB_Platform", "Vault Password")
+            if not is_AOB_Platform_saved:  # if AOB_Platform failed to be saved
+                return cfnresponse.send(event, context, cfnresponse.FAILED,
+                                        "Failed to create AOB_Platform in Parameter Store", {}, physical_resource_id)
             logger.info('Adding AOB_Vault_Pass to parameter store', DEBUG_LEVEL_DEBUG)
-            is_password_saved = add_param_to_parameter_store(request_password, "AOB_Vault_Pass", "Vault Password")
+            
+            is_password_saved = add_param_to_parameter_store_secure(request_password, "AOB_Vault_Pass", "Vault Password")
             if not is_password_saved:  # if password failed to be saved
                 return cfnresponse.send(event, context, cfnresponse.FAILED,
                                         "Failed to create Vault user's password in Parameter Store", {}, physical_resource_id)
@@ -59,7 +79,7 @@ def lambda_handler(event, context):
                 raise Exception('S3 Bucket cannot be empty if Verification Key is provided')
             else:
                 logger.info('Adding AOB_mode to parameter store', DEBUG_LEVEL_DEBUG)
-                is_aob_mode_saved = add_param_to_parameter_store(aob_mode, 'AOB_mode',
+                is_aob_mode_saved = add_param_to_parameter_store_secure(aob_mode, 'AOB_mode',
                                                                  'Dictates if the solution will work in POC(no SSL) or ' \
                                                                  'Production(with SSL) mode')
                 if not is_aob_mode_saved:  # if password failed to be saved
@@ -251,23 +271,39 @@ def save_verification_key_to_param_store(s3_bucket_name, verification_key_name):
         logger.info('Downloading verification key from s3')
         s3_resource = boto3.resource('s3')
         s3_resource.Bucket(s3_bucket_name).download_file(verification_key_name, '/tmp/server.crt')
-        add_param_to_parameter_store(open('/tmp/server.crt').read(), "AOB_PVWA_Verification_Key", "PVWA Verification Key")
+        add_param_to_parameter_store_secure(open('/tmp/server.crt').read(), "AOB_PVWA_Verification_Key", "PVWA Verification Key")
     except Exception as e:
         logger.error(f"An error occurred while downloading Verification Key from S3 Bucket - {s3_bucket_name}. Exception: {e}")
         return False
     return True
 
 
-def add_param_to_parameter_store(value, parameter_name, parameter_description):
-    logger.trace(parameter_name, parameter_description, caller_name='add_param_to_parameter_store')
+def add_param_to_parameter_store_secure(value, parameter_name, parameter_description):
+    logger.trace(parameter_name, parameter_description, caller_name='add_param_to_parameter_store_secure')
     try:
-        logger.info(f'Adding parameter {parameter_name} to parameter store')
+        logger.info(f'Adding parameter {parameter_name} to parameter store as Secure String')
         ssm_client = boto3.client('ssm')
         ssm_client.put_parameter(
             Name=parameter_name,
             Description=parameter_description,
             Value=value,
             Type="SecureString"
+        )
+    except Exception as e:
+        logger.error(f"Unable to create parameter {parameter_name} in Parameter Store. Exception: {e}")
+        return False
+    return True
+
+def add_param_to_parameter_store_string(value, parameter_name, parameter_description):
+    logger.trace(parameter_name, parameter_description, caller_name='add_param_to_parameter_store_string')
+    try:
+        logger.info(f'Adding parameter {parameter_name} to parameter store with the value of {value} as String')
+        ssm_client = boto3.client('ssm')
+        ssm_client.put_parameter(
+            Name=parameter_name,
+            Description=parameter_description,
+            Value=value,
+            Type="String"
         )
     except Exception as e:
         logger.error(f"Unable to create parameter {parameter_name} in Parameter Store. Exception: {e}")
@@ -288,6 +324,21 @@ def delete_password_from_param_store(aob_mode):
             Name='AOB_mode'
         )
         logger.info("Parameter 'AOB_mode' deleted successfully from Parameter Store")
+        ssm_client.delete_parameter(
+            Name='AOB_Safe'
+        )
+        logger.info("Parameter 'AOB_Safe' deleted successfully from Parameter Store")
+
+        ssm_client.delete_parameter(
+            Name='AOB_Username'
+        )
+        logger.info("Parameter 'AOB_Username' deleted successfully from Parameter Store")
+
+        ssm_client.delete_parameter(
+            Name='AOB_Platform'
+        )
+        logger.info("Parameter 'AOB_Platform' deleted successfully from Parameter Store")
+
         if aob_mode == 'Production':
             ssm_client.delete_parameter(
                 Name='AOB_PVWA_Verification_Key'

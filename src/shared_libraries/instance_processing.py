@@ -78,12 +78,12 @@ def create_instance(instance_id, instance_details, store_parameters_class, log_n
                     event_account_id, instance_account_password):
     logger.trace(instance_id, instance_details, store_parameters_class, log_name, solution_account_id, event_region,
                  event_account_id, caller_name='create_instance')
-    if not instance_details['AOBPlatform']:
-        raise Exception("AOBPlatform not set")
-    if not instance_details['AOBSafe']:
-        raise Exception("AOBSafe not set")
-    if not instance_details['AOBUsername']:
-        raise Exception("AOBUsername not set")
+    if not instance_details[store_parameters_class.EC2PlatformTag]:
+        raise Exception("{store_parameters_class.EC2PlatformTag} not set")
+    if not instance_details[store_parameters_class.EC2SafeTag]:
+        raise Exception("{store_parameters_class.EC2SafeTag} not set")
+    if not instance_details[store_parameters_class.EC2UsernameTag]:
+        raise Exception("{store_parameters_class.EC2UsernameTag} not set")
 
     logger.info(f'Adding {instance_id} to AOB')
     if instance_details['platform'] == "windows":  # Windows machine return 'windows' all other return 'None'
@@ -94,9 +94,9 @@ def create_instance(instance_id, instance_details, store_parameters_class, log_n
         aws_account_name = f'AWS.{instance_id}.Windows'
         instance_key = decrypted_password
         secret_type = "password"
-        platform = instance_details['AOBPlatform']
-        safe_name = instance_details['AOBSafe']
-        instance_username = instance_details['AOBUsername']
+        platform = instance_details[store_parameters_class.EC2PlatformTag]
+        safe_name = instance_details[store_parameters_class.EC2SafeTag]
+        instance_username = instance_details[store_parameters_class.EC2PlatformTag]
 
     else:
         logger.info('Linux\\Unix platform detected')
@@ -108,9 +108,10 @@ def create_instance(instance_id, instance_details, store_parameters_class, log_n
         instance_key = trimmed_ppk_key.replace("\r", "\\r")
         secret_type = "key"
         aws_account_name = f'AWS.{instance_id}.Unix'
-        platform = instance_details['AOBPlatform']
-        safe_name = instance_details['AOBSafe']
-        instance_username = instance_details['AOBUsername']
+        platform = instance_details[store_parameters_class.EC2PlatformTag]
+        safe_name = instance_details[store_parameters_class.EC2SafeTag]
+        instance_username = instance_details[store_parameters_class.EC2PlatformTag]
+
 
     # Check if account already exist - in case exist - just add it to DynamoDB
     print('pvwa_connection_number')

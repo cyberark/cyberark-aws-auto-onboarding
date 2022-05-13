@@ -6,6 +6,10 @@ from log_mechanism import LogMechanism
 from dynamo_lock import LockerClient
 
 DEBUG_LEVEL_DEBUG = 'debug' # Outputs all information
+SAFE = "AOB_Safe"
+USERNAME = "AOB_Username"
+PLATFORM = "AOB_Platform"
+
 logger = LogMechanism()
 
 
@@ -68,11 +72,11 @@ def get_ec2_details(instance_id, ec2_object, event_account_id):
         raise Exception("Determining OS type failed")
 
     for tag in instance_resource.tags:
-        if tag['Key']=="AOBSafe":
+        if tag['Key']==SAFE:
             AOBSafe = tag['Value']
-        elif tag['Key']=="AOBUsername":
+        elif tag['Key']==USERNAME:
             AOBUsername=tag['Value']
-        elif tag['Key']=="AOBPlatform":
+        elif tag['Key']==PLATFORM:
             AOBPlatform=tag['Value']
 
     details = dict()
@@ -118,12 +122,15 @@ def get_params_from_param_store():
     PVWA_VERIFICATION_KEY = "AOB_PVWA_Verification_Key"
     AOB_MODE = "AOB_mode"
     AOB_DEBUG_LEVEL = "AOB_Debug_Level"
+    AOB_USERNAME = "AOB_Username"
+    AOB_SAFE = "AOB_Safe"
+    AOB_PLATFORM = "AOB_Platform"
 
     lambda_client = boto3.client('lambda')
     lambda_request_data = dict()
     lambda_request_data["Parameters"] = [VAULT_USER_PARAM, PVWA_IP_PARAM,
                                          AWS_KEYPAIR_SAFE, VAULT_PASSWORD_PARAM_, PVWA_VERIFICATION_KEY, AOB_MODE,
-                                         AOB_DEBUG_LEVEL]
+                                         AOB_DEBUG_LEVEL, AOB_USERNAME, AOB_SAFE, AOB_PLATFORM]
     try:
         response = lambda_client.invoke(FunctionName='TrustMechanism',
                                         InvocationType='RequestResponse',
@@ -151,10 +158,18 @@ def get_params_from_param_store():
             aob_mode = ssm_store_item['Value']
             if aob_mode == 'POC':
                 pvwa_verification_key = ''
+        elif ssm_store_item['Name'] == AOB_USERNAME:
+            EC2UsernameTag = ssm_store_item['Value']
+        elif ssm_store_item['Name'] == AOB_SAFE:
+            EC2SafeTag = ssm_store_item['Value']
+        elif ssm_store_item['Name'] == AOB_PLATFORM:
+            EC2PlatformTag = ssm_store_item['Value']
         else:
             continue
     store_parameters_class = StoreParameters(vault_username, vault_password, pvwa_ip,
-                                             key_pair_safe_name, pvwa_verification_key, aob_mode, debug_level)
+                                             key_pair_safe_name, pvwa_verification_key, 
+                                             aob_mode, debug_level, EC2UsernameTag,
+                                             EC2SafeTag, EC2PlatformTag)
     return store_parameters_class
 
 
@@ -281,7 +296,7 @@ class StoreParameters:
 
 
     def __init__(self, username, password, ip, key_pair_safe, pvwa_verification_key, mode,
-                 debug):
+                 debug, EC2UsernameTag, EC2SafeTag, EC2PlatformTag):
         self.vault_username = username
         self.vault_password = password
         self.pvwa_url = f"https://{ip}/PasswordVault"
@@ -289,3 +304,6 @@ class StoreParameters:
         self.pvwa_verification_key = pvwa_verification_key
         self.aob_mode = mode
         self.debug_level = debug
+        self.EC2UsernameTag = EC2UsernameTag
+        self.EC2SafeTag = EC2SafeTag
+        self.EC2PlatformTag = EC2PlatformTag
