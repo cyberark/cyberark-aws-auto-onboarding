@@ -87,7 +87,7 @@ example - AWS.1231231231.us-east-2.Mykey
 
 # Usage
 1. Set the tags on the EC2 instance. The default names are; AOB_Username, AOB_Safe, AOB_Platform
-	These tags can be changed when "CyberArk-AOB-MultiRegion-CF-VaultEnvCreation.yaml" is run.
+	* These tags can be changed when "CyberArk-AOB-MultiRegion-CF-VaultEnvCreation.yaml" is run.
 2. Launch or restart the EC2 instance.
 3. On termination the account will be deleted automatically if password based or if SSH Key based it will have it's address updated and automatic password management disabled.
 
