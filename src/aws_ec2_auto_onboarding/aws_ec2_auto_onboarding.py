@@ -6,14 +6,14 @@ import instance_processing
 import pvwa_api_calls
 from log_mechanism import LogMechanism
 
-
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 DEBUG_LEVEL_DEBUG = 'debug' # Outputs all information
 logger = LogMechanism()
 pvwa_integration_class = PvwaIntegration()
 
 def lambda_handler(event, context):
     logger.trace(context, caller_name='lambda_handler')
-    logger.info('Parsing event')
+    logger.debug('Parsing event')
     try:
         message = event["Records"][0]["Sns"]["Message"]
         data = json.loads(message)
@@ -51,11 +51,11 @@ def elasticity_function(instance_id, action_type, event_account_id, event_region
         instance_data = aws_services.get_instance_data_from_dynamo_table(instance_id)
         if action_type == 'terminated':
             if not instance_data:
-                logger.info(f"Item {instance_id} does not exist on DB")
+                logger.debug(f"Item '{instance_id}' does not exist on DB")
                 return None
             instance_status = instance_data["Status"]["S"]
             if instance_status == OnBoardStatus.on_boarded_failed:
-                logger.error(f"Item {instance_id} is in status OnBoard failed, removing from DynamoDB table")
+                logger.error(f"Item '{instance_id}' is in status OnBoard failed, removing from DynamoDB table")
                 aws_services.remove_instance_from_dynamo_table(instance_id)
                 return None
         elif action_type == 'running':
@@ -65,14 +65,14 @@ def elasticity_function(instance_id, action_type, event_account_id, event_region
             if instance_data:
                 instance_status = instance_data["Status"]["S"]
                 if instance_status == OnBoardStatus.on_boarded:
-                    logger.info(f"Item {instance_id} already exists on DB, no need to add it to Vault")
+                    logger.info(f"Item '{instance_id}' already exists in the DB, no need to add it to Vault")
                     return None
                 elif instance_status == OnBoardStatus.on_boarded_failed:
-                    logger.error(f"Item {instance_id} exists with status 'OnBoard failed', adding to Vault")
+                    logger.error(f"Item '{instance_id}' exists with status 'OnBoard failed', adding to Vault")
                 else:
-                    logger.info(f"Item {instance_id} does not exist on DB, adding to Vault")
+                    logger.debug(f"Item '{instance_id}' does not exist on DB, adding to Vault")
         else:
-            logger.info('Unknown instance state')
+            logger.debug(f'Unknown instance state of {action_type}')
             return
 
         store_parameters_class = aws_services.get_params_from_param_store()
@@ -80,27 +80,27 @@ def elasticity_function(instance_id, action_type, event_account_id, event_region
             return
         if store_parameters_class.aob_mode == 'Production':
             # Save PVWA Verification key in /tmp folder
-            logger.info('Saving verification key')
+            logger.debug('Saving verification key')
             crt = open("/tmp/server.crt", "w+")
             crt.write(store_parameters_class.pvwa_verification_key)
             crt.close()
-        pvwa_connection_number, session_guid = aws_services.get_session_from_dynamo()
-        if not pvwa_connection_number:
-            return
         session_token = pvwa_integration_class.logon_pvwa(store_parameters_class.vault_username,
                                                           store_parameters_class.vault_password,
-                                                          store_parameters_class.pvwa_url,
-                                                          pvwa_connection_number)
+                                                          store_parameters_class.pvwa_url)
         if not session_token:
             return
         disconnect = False
         if action_type == 'terminated':
-            logger.info(f'Detected termination of {instance_id}')
-            instance_processing.delete_instance(instance_id, session_token, store_parameters_class, instance_data,
+            logger.info(f"Detected termination of instance '{instance_id}'")
+            removed = instance_processing.delete_instance(instance_id, session_token, store_parameters_class, instance_data,
                                                 instance_details)
+            if removed:                                               
+                logger.info(f"The account for instance'{instance_id}' was successfully deleted or marked for deletion")
+            else:
+                logger.info(f"Instance '{instance_id}' not found. No action taken.")    
         elif action_type == 'running':
             # get key pair
-            logger.info('Retrieving account id where the key-pair is stored')
+            logger.debug('Retrieving account id where the key-pair is stored')
             # Retrieving the account id of the account where the instance keyPair is stored
             # AWS.<AWS Account>.<Event Region name>.<key pair name>
             key_pair_value_on_safe = f'AWS.{instance_details["aws_account_id"]}.{event_region}.{instance_details["key_name"]}'
@@ -117,17 +117,21 @@ def elasticity_function(instance_id, action_type, event_account_id, event_region
             if instance_account_password is False:
                 return
             pvwa_integration_class.logoff_pvwa(store_parameters_class.pvwa_url, session_token)
-            aws_services.release_session_on_dynamo(pvwa_connection_number, session_guid)
             disconnect = True
+            
+            logger.info(f"Adding instance '{instance_id}' to the database and vault")
             instance_processing.create_instance(instance_id, instance_details, store_parameters_class, log_name,
                                                 solution_account_id, event_region, event_account_id, instance_account_password)
+            logger.info(f"Successfully added instance '{instance_id}' to the database and vault")
         else:
             logger.error('Unknown instance state')
             return
 
         if not disconnect:
             pvwa_integration_class.logoff_pvwa(store_parameters_class.pvwa_url, session_token)
-            aws_services.release_session_on_dynamo(pvwa_connection_number, session_guid)
+
+    except UnboundLocalError:
+        logger.error(f"Not all tags are properly set on '{instance_id}' for auto on boarding. No action taken.")
 
     except Exception as e:
         logger.error(f"Unknown error occurred: {e}")
@@ -139,7 +143,6 @@ def elasticity_function(instance_id, action_type, event_account_id, event_region
             aws_services.put_instance_to_dynamo_table(instance_id, instance_details["address"], OnBoardStatus.on_boarded_failed,
                                                       str(e), log_name)
 # TODO: Retry mechanism?
-        aws_services.release_session_on_dynamo(pvwa_connection_number, session_guid)
         return
 
 

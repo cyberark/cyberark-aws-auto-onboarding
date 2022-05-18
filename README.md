@@ -102,7 +102,6 @@ example - AWS.1231231231.us-east-2.Mykey
 4. For the CPM to manage new Windows instances for some versions (see the list below), the user must ensure required ports are open in the window local firewall. This can be done by runing the following command manually on all
 new Windows instances:
 5. Only one account may be onboarded automatically.
-	This is being worked on and when update is available it will be
 
 ```sh
 netsh firewall set service RemoteAdmin enable

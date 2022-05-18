@@ -31,3 +31,7 @@ manifest*.json
 *.plan
 *.tfstate*
 .terraform
+
+#testing
+tests/*
+.gitignore

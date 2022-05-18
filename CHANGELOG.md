@@ -3,6 +3,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [0.4.0] - 2022-05-17
+### Added
+- Added the ability to set what tags should be looked to set Platform, Safe, and Username
+- Added error handleing when proper EC2 tags are not set to output error with better description of the issue
+
+### Changed
+- Updated logging to decrease output of logs when set to "Info" to only include necessary information and errors
+- Added "debug" logging setting and moved most "info" logs to "debug"
+- Added and updated logging for troubleshooting purposes
+- Updated CloudFormation Template to support code changes
+- Suppressed warning about "InsecureRequestWarning" in logs
+
 ## [0.3.0] - 2022-05-05
 ### Added
 - Added the ability to set Platform, Safe, and Username via EC2 Instance Tags; AOBPlatform, AOBSafe, AOBUsername
