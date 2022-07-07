@@ -85,6 +85,8 @@ def get_ec2_details(instance_id, ec2_object, event_account_id):
             elif tag['Key']==parmstore.EC2PlatformTag:
                 AOBPlatform=tag['Value']
                 logger.trace(f'AOBPlatform = {AOBPlatform}', caller_name='get_ec2_details_AOBPlatform')
+    except TypeError as e:
+        raise e
     except Exception as e:
         logger.error(f'Error on getting tag: {str(e)}')
         raise e

@@ -132,6 +132,8 @@ def elasticity_function(instance_id, action_type, event_account_id, event_region
 
     except UnboundLocalError:
         logger.error(f"Not all tags are properly set on '{instance_id}' for auto on boarding. No action taken.")
+    except TypeError:
+        logger.error(f"Not all tags are properly set on '{instance_id}' for auto on boarding. No action taken.")
 
     except Exception as e:
         logger.error(f"Unknown error occurred: {e}")
