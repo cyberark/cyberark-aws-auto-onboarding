@@ -8,17 +8,20 @@ class LogMechanism:
     def __init__(self):
         self.debug_level = get_debug_level()
 
+    def error(self, message, debug_level=DEBUG_LEVEL_INFO):
+        message = str(message)
+        if debug_level == self.debug_level.lower() or self.debug_level.lower() == 'debug' or self.debug_level.lower() == 'trace':
+            print(f'[ERROR] {message}')
 
     def info(self, message, debug_level=DEBUG_LEVEL_INFO):
         message = str(message)
-        if debug_level == self.debug_level.lower() or self.debug_level.lower() == 'trace':
+        if debug_level == self.debug_level.lower() or self.debug_level.lower() == 'debug' or self.debug_level.lower() == 'trace':
             print(f'[INFO] {message}')
 
-
-    def error(self, message, debug_level=DEBUG_LEVEL_INFO):
+    def debug(self, message, debug_level=DEBUG_LEVEL_DEBUG):
         message = str(message)
         if debug_level == self.debug_level.lower() or self.debug_level.lower() == 'trace':
-            print(f'[ERROR] {message}')
+            print(f'[DEBUG] {message}')
 
 
     def trace(self, *args, caller_name):
