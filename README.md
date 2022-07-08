@@ -85,6 +85,12 @@ example - AWS.1231231231.us-east-2.Mykey
 
 > ***Note:** Note: This solution must be installed in every AWS region. For each region, use a dedicated Vault user and make sure the Lambda VPC has network access to the PVWA.
 
+# Usage
+1. Set the tags on the EC2 instance. The default names are; AOB_Username, AOB_Safe, AOB_Platform
+	* These tags can be changed when "CyberArk-AOB-MultiRegion-CF-VaultEnvCreation.yaml" is run.
+2. Launch or restart the EC2 instance.
+3. On termination the account will be deleted automatically if password based or if SSH Key based it will have it's address updated and automatic password management disabled.
+
 # Solution Upgrade Procedure 
 1. Replace the solution files in the bucket 
 2. Update the cloudFormation stack with the new template
@@ -95,6 +101,7 @@ example - AWS.1231231231.us-east-2.Mykey
 3. EC2 instance public IPs must be elastic IPs to allow continuous access and management after changing the instance state.
 4. For the CPM to manage new Windows instances for some versions (see the list below), the user must ensure required ports are open in the window local firewall. This can be done by runing the following command manually on all
 new Windows instances:
+5. Only one account may be onboarded automatically.
 
 ```sh
 netsh firewall set service RemoteAdmin enable
