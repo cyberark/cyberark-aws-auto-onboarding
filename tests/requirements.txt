@@ -10,7 +10,7 @@ cfn-lint==0.33.2
 cfnresponse==1.0.2
 chardet==3.0.4
 coverage==5.1
-cryptography==2.9.2
+cryptography==39.0.1
 decorator==4.4.2
 docker==4.2.1
 docutils==0.15.2
