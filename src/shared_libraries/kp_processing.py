@@ -11,7 +11,7 @@ logger = LogMechanism()
 def save_key_pair(pemKey):
     # Save pem to file
     logger.trace(caller_name='save_key_pair')
-    logger.info('Saving key pair to file')
+    logger.debug('Saving key pair to file')
     savePemToFileCommand = 'echo {0} > /tmp/pemValue.pem'.format(pemKey)
     subprocess.call([savePemToFileCommand], shell=True)
     subprocess.call(["chmod 777 /tmp/pemValue.pem"], shell=True)
@@ -19,7 +19,7 @@ def save_key_pair(pemKey):
 
 def convert_pem_to_ppk(pemKey):
     logger.trace(caller_name='convert_pem_to_ppk')
-    logger.info('Converting pem to ppk')
+    logger.debug('Converting pem to ppk')
     #  convert pem file, get ppk value
     #  Uses Puttygen sent to the lambda
     save_key_pair(pemKey=pemKey)
@@ -31,9 +31,9 @@ def convert_pem_to_ppk(pemKey):
     if conversionResult == 0:
         ppkKey = subprocess.check_output("cat /tmp/ppkValue.ppk", shell=True).decode("utf-8")
         if 'Private-Lines' in ppkKey:
-            print("Pem key successfully converted")
+            logger.debug("Pem key successfully converted")
         else:
-            print("Failed to convert pem key to ppk")
+            logger.error("Failed to convert pem key to ppk")
             raise Exception("Failed to convert pem key to ppk")
     return ppkKey
 

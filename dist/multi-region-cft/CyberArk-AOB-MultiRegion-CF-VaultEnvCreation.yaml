@@ -1,5 +1,26 @@
 AWSTemplateFormatVersion: 2010-09-09
 Resources:
+  ParameterAWSEC2UsernameTag:
+    Type: 'AWS::SSM::Parameter'
+    Properties:
+      Name: AOB_Username
+      Description: Safe where all the AWS key-pairs are stored.
+      Type: String
+      Value: !Ref EC2UsernameTag
+  ParameterAWSEC2SafeTag:
+    Type: 'AWS::SSM::Parameter'
+    Properties:
+      Name: AOB_Safe
+      Description: Safe where all the AWS key-pairs are stored.
+      Type: String
+      Value: !Ref EC2SafeTag
+  ParameterAWSEEC2PlatformTag:
+    Type: 'AWS::SSM::Parameter'
+    Properties:
+      Name: AOB_Platform
+      Description: Safe where all the AWS key-pairs are stored.
+      Type: String
+      Value: !Ref EC2PlatformTag
   ParameterPVWA:
     Type: 'AWS::SSM::Parameter'
     Properties:
@@ -14,20 +35,6 @@ Resources:
       Description: Choose the log verbosity level.
       Type: String
       Value: !Ref EnableDebugLevel
-  ParameterUnixAccountsSafe:
-    Type: 'AWS::SSM::Parameter'
-    Properties:
-      Name: AOB_Unix_Safe_Name
-      Description: Safe name for UNIX accounts.
-      Type: String
-      Value: !Ref UnixSafeName
-  ParameterWindowsAccountsSafe:
-    Type: 'AWS::SSM::Parameter'
-    Properties:
-      Name: AOB_Windows_Safe_Name
-      Description: Safe name for Windows accounts.
-      Type: String
-      Value: !Ref WindowsSafeName
   ParameterUsername:
     Type: 'AWS::SSM::Parameter'
     Properties:
@@ -47,12 +54,8 @@ Resources:
     Properties:
       ServiceToken: !Ref SafeHandlerLambdaARN
       PVWAIP: !Ref PvwaIP
-      UnixSafeName: !Ref UnixSafeName
-      WindowsSafeName: !Ref WindowsSafeName
       Username: !Ref VaultUser
       Password: !Ref VaultPassword
-      CPMUnix: !Ref CPMNameUnixSafe
-      CPMWindows: !Ref CPMNameWindowsSafe
       KeyPairSafe: !Ref KeyPairsSafe
       KeyPairName: !Ref KeyPairName
       AWSRegionName: !Ref 'AWS::Region'
@@ -60,7 +63,10 @@ Resources:
       PVWAVerificationKeyFileName: !Ref PVWAVerificationKeyFileName
       S3BucketName: !Ref S3BucketWithVerificationKey
       Environment: !Ref Environment
-    DependsOn: [ParameterAWSKeyPairSafe, ParameterUsername, ParameterWindowsAccountsSafe, ParameterUnixAccountsSafe, ParameterDebugLevel, ParameterPVWA]
+      EC2UsernameTag: !Ref EC2UsernameTag
+      EC2SafeTag: !Ref EC2SafeTag
+      EC2PlatformTag: !Ref EC2PlatformTag
+    DependsOn: [ParameterAWSKeyPairSafe, ParameterUsername, ParameterDebugLevel, ParameterPVWA, ParameterAWSEC2UsernameTag, ParameterAWSEC2SafeTag, ParameterAWSEEC2PlatformTag]
 Parameters:
   SafeHandlerLambdaARN:
     Type: String
@@ -77,22 +83,6 @@ Parameters:
     Type: String
     Description: Name of the PVWA's CA public certificate stored in S3 (for verification purpose).
     Default: VerificationKeyName
-  UnixSafeName:
-    Type: String
-    Description: >-
-      Name of the Safe that will store all the Unix accounts created by the
-      solution. The deployment will fail if the safe already exist.
-    AllowedPattern: '^[^\\:\*<>\"\.\|\/]*$'
-    MinLength: '1'
-    MaxLength: '28'
-  WindowsSafeName:
-    Type: String
-    Description: >-
-      Name of the Safe that will store all the Windows accounts created by the
-      solution. The deployment will fail if the safe already exist.
-    AllowedPattern: '^[^\\:\*<>\"\.\|\/]*$'
-    MinLength: '1'
-    MaxLength: '28'
   VaultUser:
     Type: String
     Description: Vault user that will be used by the solution.
@@ -102,16 +92,21 @@ Parameters:
     Description: Password of the Vault user.
     NoEcho: true
     MinLength: '1'
-  CPMNameUnixSafe:
+  EC2UsernameTag:
     Type: String
-    Description: Name of the CPM manager to manage Unix Accounts Safe.
+    Default: AOB_Username
+    Description: EC2 Instance tag that holds the username to vault
     MinLength: '1'
-    Default: PasswordManager
-  CPMNameWindowsSafe:
+  EC2SafeTag:
     Type: String
-    Description: Name of the CPM manager to manage Windows Accounts Safe.
+    Default: AOB_Safe
+    Description: EC2 Instance tag that holds the safe that the account should be vaulted in
     MinLength: '1'
-    Default: PasswordManager
+  EC2PlatformTag:
+    Type: String
+    Default: AOB_Platform
+    Description: EC2 Instance tag that holds the platform that the account should be attached to
+    MinLength: '1'
   KeyPairsSafe:
     Type: String
     Description: >-
@@ -143,20 +138,22 @@ Metadata:
   'AWS::CloudFormation::Interface':
     ParameterGroups:
       - Label:
-          default: General parameters
+          default: Configration parameters (After deployment do not change values in SSM)
         Parameters:
-          - Environment
           - SafeHandlerLambdaARN
-          - PvwaIP
+          - Environment
           - S3BucketWithVerificationKey
           - PVWAVerificationKeyFileName
+      - Label:
+          default: Changable parameters stored in the SSM Parameter Store
+        Parameters:
+          - PvwaIP
           - VaultUser
           - VaultPassword
-          - UnixSafeName
-          - CPMNameUnixSafe
-          - WindowsSafeName
-          - CPMNameWindowsSafe
           - KeyPairsSafe
+          - EC2PlatformTag
+          - EC2SafeTag
+          - EC2UsernameTag
           - EnableDebugLevel
       - Label:
           default: 'Optional: Create new KeyPair for the solution:'
@@ -173,18 +170,10 @@ Metadata:
         default: 'PVWA IP/Host Name:'
       PVWAVerificationKeyFileName:
         default: 'Verification Key File Name:'
-      UnixSafeName:
-        default: 'Target Safe for Unix accounts:'
-      WindowsSafeName:
-        default: 'Target Safe for Windows accounts:'
       VaultUser:
         default: 'Vault user name:'
       VaultPassword:
         default: 'Vault password:'
-      CPMNameUnixSafe:
-        default: 'CPM name for managing Unix safe:'
-      CPMNameWindowsSafe:
-        default: 'CPM name for managing Windows safe:'
       KeyPairsSafe:
         default: 'Target Safe for the Key pairs:'
       KeyPairName:
