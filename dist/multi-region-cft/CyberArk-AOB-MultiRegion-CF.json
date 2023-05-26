@@ -327,7 +327,7 @@
             "Arn"
           ]
         },
-        "Runtime": "python3.6",
+        "Runtime": "python3.9",
         "Timeout": 10,
         "VpcConfig": {
           "SecurityGroupIds": [
@@ -364,7 +364,7 @@
           ]
         },
         "ReservedConcurrentExecutions": 100,
-        "Runtime": "python3.6",
+        "Runtime": "python3.9",
         "Timeout": 360,
         "VpcConfig": {
           "SecurityGroupIds": [
@@ -850,7 +850,7 @@
             "Arn"
           ]
         },
-        "Runtime": "python3.6",
+        "Runtime": "python3.9",
         "Timeout": 35,
         "VpcConfig": {
           "SecurityGroupIds": [
